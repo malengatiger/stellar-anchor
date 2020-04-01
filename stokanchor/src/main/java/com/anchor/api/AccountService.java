@@ -16,15 +16,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.*;
-import org.stellar.sdk.responses.*;
-import org.stellar.sdk.xdr.TransactionEnvelope;
-import org.stellar.sdk.xdr.XdrDataInputStream;
+import org.stellar.sdk.responses.AccountResponse;
+import org.stellar.sdk.responses.SubmitTransactionResponse;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Base64;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
@@ -89,61 +86,60 @@ public class AccountService {
     }
 
     public AccountResponseBag createStellarAccount() throws Exception {
-        this.isDevelopment = status.equalsIgnoreCase("dev");
-        setServerAndNetwork();
+        LOGGER.info("\uD83D\uDC99 ... ... ... createStellarAccount starting .......");
+
         AccountResponse accountResponse;
         try {
-
+            setServerAndNetwork();
             KeyPair pair = KeyPair.random();
             String secret = new String(pair.getSecretSeed());
+            LOGGER.info("\uD83D\uDC99 ... new secret seed generated: \uD83D\uDC99 : " + secret
+            + " accountId: " + pair.getAccountId() + "\ngetting NEW account from server IS A PROBLEM ??? ...");
             if (isDevelopment) {
                 talkToFriendBot(pair.getAccountId());
-                server = new Server(DEV_SERVER);
-            } else {
-                LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 ...... looks like we are in PRODUCTION ..." +
-                        "Toto, we are not in Kansas anymore ... ");
-                server = new Server(PROD_SERVER);
             }
             accountResponse = server.accounts().account(pair.getAccountId());
             LOGGER.info("\uD83D\uDC99  " +
-                    "Stellar account has been created Kool!: \uD83C\uDF4E \uD83C\uDF4E YEBOOOO!!!");
+                    "Stellar account has been created!: \uD83C\uDF4E \uD83C\uDF4E YEBOOOO!!!");
+
             AccountResponseBag bag = new AccountResponseBag(accountResponse, secret);
-            LOGGER.info(("\uD83C\uDF4E \uD83C\uDF4E RESPONSE BAG from Stellar; " +
-                    "\uD83D\uDC99 new accountId: ").concat(bag.getAccountResponse().getAccountId()));
+            LOGGER.info(("\uD83C\uDF4E \uD83C\uDF4E RESPONSE from Stellar; " +
+                    "\uD83D\uDC99 new Account: ").concat(bag.getAccountResponse().getAccountId()));
             return bag;
-        } catch (IOException e) {
-            LOGGER.severe("Failed to create account - see below ...");
+        } catch (Exception e) {
+            LOGGER.warning(" \uD83D\uDD34 Failed to create account -  \uD83D\uDD34 message:"
+            + e.getMessage());
             throw new Exception("\uD83D\uDD34 Unable to create Account", e);
         }
     }
 
     private void talkToFriendBot(String accountId) throws IOException {
-        InputStream response;
+        LOGGER.info("\uD83E\uDD6C ... Begging Ms. FriendBot for some \uD83C\uDF51 pussy \uD83C\uDF51 ... " +
+                " \uD83D\uDD34 I heard she gives out!!");
+                InputStream response;
         String friendBotUrl = String.format(FRIEND_BOT, accountId);
         response = new URL(friendBotUrl).openStream();
         String body = new Scanner(response, "UTF-8").useDelimiter("\\A").next();
         LOGGER.info("\uD83E\uDD6C " +
-                "FriendBot responded with largess: \uD83E\uDD6C 10,000 Lumens. ... Yebo, Gogo!! \uD83E\uDD6C " + body);
+                "FriendBot responded with largess: \uD83E\uDD6C 10,000 Lumens obtained. ... Yebo, Gogo!! \uD83E\uDD6C ");
+        if (isDevelopment) {
+            LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 Booty from Ms. FriendBot: \uD83C\uDF51 " + body);
+        }
     }
 
     public AccountResponseBag createAndFundStellarAccount(String seed, String startingBalance) throws Exception {
-        this.isDevelopment = status.equalsIgnoreCase("dev");
+        LOGGER.info("\uD83D\uDC99 ... ... ... ... createAndFundStellarAccount starting ....... startingBalance: " + startingBalance);
         setServerAndNetwork();
         AccountResponse accountResponse;
         try {
             KeyPair newAccountKeyPair = KeyPair.random();
             KeyPair sourceKeyPair = KeyPair.fromSecretSeed(seed);
             String secret = new String(newAccountKeyPair.getSecretSeed());
-            if (isDevelopment) {
-                server = new Server(DEV_SERVER);
-            } else {
-                LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 ...... looks like we are in PRODUCTION ..." +
-                        "Toto, we are not in Kansas anymore ... ");
-                server = new Server(PROD_SERVER);
-            }
             AccountResponse sourceAccount = server.accounts().account(sourceKeyPair.getAccountId());
+
             Transaction transaction = new Transaction.Builder(sourceAccount, network)
-                    .addOperation(new CreateAccountOperation.Builder(newAccountKeyPair.getAccountId(), startingBalance).build())
+                    .addOperation(new CreateAccountOperation.Builder(
+                            newAccountKeyPair.getAccountId(), startingBalance).build())
                     .addMemo(Memo.text("CreateAccount Tx"))
                     .setTimeout(180)
                     .setOperationFee(100)
@@ -155,13 +151,18 @@ public class AccountService {
             if (submitTransactionResponse.isSuccess()) {
                 accountResponse = server.accounts().account(newAccountKeyPair.getAccountId());
                 LOGGER.info("\uD83D\uDC99  " +
-                        "Stellar account has been created and funded!: \uD83C\uDF4E \uD83C\uDF4E YEBOOOO!!!");
+                        "Stellar account has been created and funded!: \uD83C\uDF4E \uD83C\uDF4E YEBO!!!");
                 AccountResponseBag bag = new AccountResponseBag(accountResponse, secret);
-                LOGGER.info(("\uD83C\uDF4E \uD83C\uDF4E RESPONSE BAG from Stellar; " +
+                LOGGER.info(("\uD83C\uDF4E \uD83C\uDF4E RESPONSE from Stellar; " +
                         "\uD83D\uDC99 new accountId: ").concat(bag.getAccountResponse().getAccountId()));
+                LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 Account created, check the funded balance, " +
+                        "\uD83D\uDC99 should be: " + startingBalance + " " + G.toJson(bag));
                 return bag;
             } else {
-                throw new Exception("CreateAccount transactionResponse is NOT success");
+                LOGGER.warning("CreateAccountOperation ERROR: \uD83C\uDF45 resultXdr: "
+                        + submitTransactionResponse.getResultXdr().get());
+
+                throw new Exception("CreateAccountOperation transactionResponse is NOT success");
             }
 
 
@@ -171,20 +172,15 @@ public class AccountService {
         }
     }
 
-    public SubmitTransactionResponse issueAsset(String sourceAccount, String distributionSeed, String limit, String assetType, String assetCode) throws Exception {
+    public SubmitTransactionResponse issueAsset(String issuingAccount, String distributionSeed, String limit, String assetCode) throws Exception {
         LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 .......... issueAsset ........ \uD83C\uDF40 " +
-                "type: " + assetType + " \uD83C\uDF40 code: " + assetCode + " \uD83C\uDF40 limit: " + limit
-        + " sourceAccount: " + sourceAccount);
+                " \uD83C\uDF40 code: " + assetCode + " \uD83C\uDF40 limit: " + limit
+        + " issuingAccount: " + issuingAccount);
         try {
-            isDevelopment = status.equalsIgnoreCase("dev");
             KeyPair distKeyPair = KeyPair.fromSecretSeed(distributionSeed);
-            Asset asset = Asset.create(assetType,assetCode, sourceAccount);
-            LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51 Asset created: " + asset.getType());
-            if (isDevelopment) {
-                server = new Server(DEV_SERVER);
-            } else {
-                server = new Server(PROD_SERVER);
-            }
+            Asset asset = Asset.createNonNativeAsset(assetCode, issuingAccount);
+            LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51 nonNative Asset created: " + asset.getType());
+            setServerAndNetwork();
             AccountResponse distributionAccountResponse = server.accounts().account(distKeyPair.getAccountId());
             LOGGER.info("\uD83C\uDF40 Distribution account: " + distributionAccountResponse.getAccountId() + " \uD83C\uDF51 ... add trust line");
             Transaction transaction = new Transaction.Builder(distributionAccountResponse, network)
@@ -196,7 +192,7 @@ public class AccountService {
                     .build();
 
             transaction.sign(distKeyPair);
-            LOGGER.info("\uD83C\uDF40 Transaction has been signed by BOTH KeyPairs ... \uD83C\uDF51 on to submission ... ");
+            LOGGER.info("\uD83C\uDF40 Transaction has been signed by distribution KeyPair... \uD83C\uDF51 on to submission ... ");
                     SubmitTransactionResponse submitTransactionResponse = server.submitTransaction(transaction);
             if (submitTransactionResponse.isSuccess()) {
                 LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 \uD83D\uDC99  " +
@@ -211,11 +207,7 @@ public class AccountService {
                 }
 
             } else {
-                LOGGER.info("ERROR: \uD83C\uDF45 resultXdr: " + submitTransactionResponse.getResultXdr().get());
-                byte[] bytes = Base64.getDecoder().decode(submitTransactionResponse.getResultXdr().get());
-                XdrDataInputStream in = new XdrDataInputStream(new ByteArrayInputStream(bytes));
-                String envelope = TransactionEnvelope.decode(in).toString();
-                LOGGER.info("Printing xdr?: \uD83C\uDF45 " + envelope + " \uD83C\uDF45");
+                LOGGER.warning("ChangeTrustOperation ERROR: \uD83C\uDF45 resultXdr: " + submitTransactionResponse.getResultXdr().get());
                 throw new Exception("ChangeTrustOperation transactionResponse is \uD83C\uDF45 NOT success \uD83C\uDF45");
             }
             return submitTransactionResponse;
@@ -225,24 +217,26 @@ public class AccountService {
     }
 
     public SubmitTransactionResponse createAsset(String issuingAccountSeed, String distributionAccount,
-                                                 String assetType, String assetCode, String amount) throws Exception {
-        LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 .......... createAsset ........ \uD83C\uDF40 " +
-                "type: " + assetType + " \uD83C\uDF40 code: " + assetCode + " \uD83C\uDF40 "
-                + " issuingAccountSeed: " + issuingAccountSeed);
+                                                 String assetCode, String amount) throws Exception {
+        LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51  .......... createAsset ........ \uD83C\uDF40 " +
+                 " \uD83C\uDF40 code: " + assetCode + " \uD83C\uDF40 " + " amount:" + amount
+                + "\n \uD83C\uDF51 issuingAccountSeed: " + issuingAccountSeed + " \uD83C\uDF51 distributionAccount: "
+                + distributionAccount);
         try {
-            isDevelopment = status.equalsIgnoreCase("dev");
+            setServerAndNetwork();
             KeyPair issuingKeyPair = KeyPair.fromSecretSeed(issuingAccountSeed);
-            Asset asset = Asset.create(assetType,assetCode, issuingKeyPair.getAccountId());
+            Asset asset = Asset.createNonNativeAsset(assetCode, issuingKeyPair.getAccountId());
             LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51 Asset created: " + asset.getType());
-            if (isDevelopment) {
-                server = new Server(DEV_SERVER);
-            } else {
-                server = new Server(PROD_SERVER);
-            }
-            AccountResponse issuingAccountResponse = server.accounts().account(issuingKeyPair.getAccountId());
-            LOGGER.info("\uD83C\uDF40 Issuing account: " + issuingAccountResponse.getAccountId() + " \uD83C\uDF51 ... add payment operation");
-            Transaction transaction = new Transaction.Builder(issuingAccountResponse, network)
-                    .addOperation(new PaymentOperation.Builder(distributionAccount,asset,amount).build())
+
+            AccountResponse issuingAccount = server.accounts().account(issuingKeyPair.getAccountId());
+            LOGGER.info("\uD83C\uDF40 Issuing account: " + issuingAccount.getAccountId()
+                    + " \uD83C\uDF51 ... add payment operation starting ...");
+
+            Transaction transaction = new Transaction.Builder(issuingAccount, network)
+                    .addOperation(new PaymentOperation.Builder(
+                            distributionAccount,asset,amount)
+                            .setSourceAccount(issuingKeyPair.getAccountId())
+                            .build())
                     .addMemo(Memo.text("Payment Tx"))
                     .setOperationFee(100)
                     .setTimeout(180)
@@ -250,6 +244,7 @@ public class AccountService {
 
             transaction.sign(issuingKeyPair);
             LOGGER.info("\uD83C\uDF40 Transaction has been signed by issuing KeyPair ... \uD83C\uDF51 on to submission ... ");
+
             SubmitTransactionResponse submitTransactionResponse = server.submitTransaction(transaction);
             if (submitTransactionResponse.isSuccess()) {
                 LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 \uD83D\uDC99  " +
@@ -274,15 +269,17 @@ public class AccountService {
     }
 
     private void setServerAndNetwork() {
-
+        isDevelopment = status.equalsIgnoreCase("dev");
         if (isDevelopment) {
-            LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Setting up Stellar Testnet Server ...");
             server = new Server(DEV_SERVER);
             network = Network.TESTNET;
+            LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F DEVELOPMENT: ... Stellar TestNet Server and Network ... \uD83C\uDF4F \uD83C\uDF4F \n");
+
         } else {
-            LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Setting up Stellar Public Server ...");
             server = new Server(PROD_SERVER);
             network = Network.PUBLIC;
+            LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F PRODUCTION: ... Stellar Public Server and Network... \uD83C\uDF4F \uD83C\uDF4F \n");
+
         }
 
     }

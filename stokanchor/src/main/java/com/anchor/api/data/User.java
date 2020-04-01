@@ -1,12 +1,14 @@
 package com.anchor.api.data;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class User {
-    String firstName, middleName, lastName, email, cellphone, date, anchorId, userId, IdNumber;
+    String firstName, middleName, lastName, email, cellphone, anchorId, userId, IdNumber;
     boolean active;
     List<Account> accounts;
+    String date;
 
     public List<Account> getAccounts() {
         return accounts;
@@ -20,6 +22,14 @@ public class User {
             accounts = new ArrayList<>();
         }
         accounts.add(account);
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
     }
 
     public String getIdNumber() {
@@ -82,13 +92,6 @@ public class User {
         this.cellphone = cellphone;
     }
 
-    public String getDate() {
-        return date;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
-    }
 
     public String getAnchorId() {
         return anchorId;

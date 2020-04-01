@@ -1,5 +1,6 @@
 package com.anchor.api.data;
 
+import java.util.Date;
 import java.util.List;
 
 public class Anchor {
@@ -7,6 +8,7 @@ public class Anchor {
     List<AnchorCredential> anchorCredentials;
     Account baseAccount, issuingAccount, distributionAccount;
     User user;
+    String date;
 
     public Anchor(String anchorId, String name, String cellphone,
                   String email, List<AnchorCredential> anchorCredentials,
@@ -24,6 +26,14 @@ public class Anchor {
     }
 
     public Anchor() {
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
     }
 
     public User getUser() {

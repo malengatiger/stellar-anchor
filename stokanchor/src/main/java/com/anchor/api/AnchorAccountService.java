@@ -13,6 +13,7 @@ import com.google.firebase.cloud.FirestoreClient;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sendgrid.*;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -54,6 +55,9 @@ public class AnchorAccountService {
         List<AccountResponseBag> mList = new ArrayList<>();
         AccountService service = context.getBean(AccountService.class);
         Anchor anchor = new Anchor();
+
+        DateTime dateTime = new DateTime();
+        anchor.setDate(dateTime.toDateTimeISO().toString());
         anchor.setName(newAnchor.getName());
         anchor.setEmail(newAnchor.getEmail());
         anchor.setCellphone(newAnchor.getCellphone());
@@ -71,14 +75,15 @@ public class AnchorAccountService {
         anchor.setDistributionAccount(new Account(distributionAccount));
 
         try {
-            SubmitTransactionResponse transactionResponse = service.issueAsset(baseAccount.getAccountResponse().getAccountId(),
+            SubmitTransactionResponse transactionResponse = service.issueAsset(
+                    issuingAccount.getAccountResponse().getAccountId(),
                     distributionAccount.getSecretSeed(),
-                    "90000000.00", "fiat", "ZAR");
+                    "90000000.00", "ZAR");
             LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: createAnchorAccounts " +
                     ".... \uD83C\uDF45 TrustLine Transaction Response isSuccess:  " + transactionResponse.isSuccess());
 
-            SubmitTransactionResponse response = service.createAsset(baseAccount.getSecretSeed(),
-                    distributionAccount.getAccountResponse().getAccountId(),"fiat","ZAR","999000000.00");
+            SubmitTransactionResponse response = service.createAsset(issuingAccount.getSecretSeed(),
+                    distributionAccount.getAccountResponse().getAccountId(),"ZAR","999.39");
             LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: createAnchorAccounts " +
                     ".... \uD83C\uDF45 Payment Transaction Response isSuccess:  " + response.isSuccess());
 
@@ -114,7 +119,8 @@ public class AnchorAccountService {
         user.setCellphone(anchor.getCellphone());
         user.setUserId(userRecord.getUid());
         user.setAnchorId(anchor.getAnchorId());
-        user.setDate(new Date().toString());
+        DateTime dateTime = new DateTime();
+        user.setDate(dateTime.toDateTimeISO().toString());
         user.setActive(true);
         LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 about to write Anchor USER to Firestore: ".concat(user.getFirstName()));
         Firestore fs = FirestoreClient.getFirestore();
