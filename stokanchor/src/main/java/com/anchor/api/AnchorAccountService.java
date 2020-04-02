@@ -1,8 +1,7 @@
 package com.anchor.api;
 
-
-import com.anchor.api.data.AccountResponseBag;
 import com.anchor.api.data.Account;
+import com.anchor.api.data.AccountResponseBag;
 import com.anchor.api.data.Anchor;
 import com.anchor.api.data.User;
 import com.google.api.core.ApiFuture;
@@ -17,14 +16,12 @@ import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -45,13 +42,28 @@ public class AnchorAccountService {
     @Value("${fromMail}")
     private String fromMail;
 
+    @Value("${seed}")
+    private String seed;
+
+    @Value("${account}")
+    private String account;
+
+    @Value("${startingBalance}")
+    private String startingBalance;
+    @Value("${distributionStartingBalance}")
+    private String distributionStartingBalance;
+    @Value("${issuingStartingBalance}")
+    private String issuingStartingBalance;
+    @Value("${limit}")
+    private String limit;
+
     public AnchorAccountService() {
         LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService Constructor fired ...\uD83C\uDF40 " +
                 "manages the setup of Anchor base and issuing accounts \uD83C\uDF51 ");
     }
 
-    public Anchor createAnchorAccounts(Anchor newAnchor, String password, String startingBalance) throws Exception {
-        LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: createAnchorAccounts .... DEV STATUS: " + status);
+    public Anchor createAnchorAccounts(Anchor newAnchor, String password, String assetCode, String assetAmount) throws Exception {
+        LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: creating Anchor Accounts .... \uD83C\uDF40 DEV STATUS: " + status);
         List<AccountResponseBag> mList = new ArrayList<>();
         AccountService service = context.getBean(AccountService.class);
         Anchor anchor = new Anchor();
@@ -66,9 +78,9 @@ public class AnchorAccountService {
         User user = createAnchorUser(anchor, password);
         anchor.setUser(user);
 
-        AccountResponseBag baseAccount = service.createStellarAccount();
-        AccountResponseBag distributionAccount = service.createAndFundStellarAccount(baseAccount.getSecretSeed(),startingBalance);
-        AccountResponseBag issuingAccount = service.createAndFundStellarAccount(baseAccount.getSecretSeed(),startingBalance);
+        AccountResponseBag baseAccount = service.createAndFundStellarAccount(seed,startingBalance);
+        AccountResponseBag distributionAccount = service.createAndFundStellarAccount(baseAccount.getSecretSeed(),distributionStartingBalance);
+        AccountResponseBag issuingAccount = service.createAndFundStellarAccount(baseAccount.getSecretSeed(),issuingStartingBalance);
 
         anchor.setBaseAccount(new Account(baseAccount));
         anchor.setIssuingAccount(new Account(issuingAccount));
@@ -78,12 +90,14 @@ public class AnchorAccountService {
             SubmitTransactionResponse transactionResponse = service.issueAsset(
                     issuingAccount.getAccountResponse().getAccountId(),
                     distributionAccount.getSecretSeed(),
-                    "90000000.00", "ZAR");
+                    limit, assetCode);
             LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: createAnchorAccounts " +
                     ".... \uD83C\uDF45 TrustLine Transaction Response isSuccess:  " + transactionResponse.isSuccess());
 
-            SubmitTransactionResponse response = service.createAsset(issuingAccount.getSecretSeed(),
-                    distributionAccount.getAccountResponse().getAccountId(),"ZAR","999.39");
+            SubmitTransactionResponse response = service.createAsset(
+                    issuingAccount.getSecretSeed(),
+                    distributionAccount.getAccountResponse().getAccountId(),
+                    assetCode,assetAmount);
             LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: createAnchorAccounts " +
                     ".... \uD83C\uDF45 Payment Transaction Response isSuccess:  " + response.isSuccess());
 
@@ -105,6 +119,14 @@ public class AnchorAccountService {
             e.printStackTrace();
             LOGGER.severe("Email sending failed");
         }
+        //todo - list accounts and check balances
+        AccountResponse response1 = service.getAccount(baseAccount.getSecretSeed());
+        AccountResponse response2 = service.getAccount(issuingAccount.getSecretSeed());
+        AccountResponse response3 = service.getAccount(distributionAccount.getSecretSeed());
+        LOGGER.info("\n\n \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ..... CHECKING ACCOUNTS AFTER ALL THAT .... \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ");
+        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 BASE ACCOUNT: " + G.toJson(response1));
+        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ISSUING ACCOUNT: " + G.toJson(response2));
+        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 DISTRIBUTION ACCOUNT: " + G.toJson(response3));
         return anchor;
     }
 

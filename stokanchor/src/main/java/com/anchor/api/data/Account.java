@@ -1,4 +1,6 @@
 package com.anchor.api.data;
+import org.joda.time.DateTime;
+
 import java.util.Date;
 
 public class Account {
@@ -8,13 +10,15 @@ public class Account {
     public Account(AccountResponseBag bag) {
         accountId = bag.accountResponse.getAccountId();
         seed = bag.secretSeed;
-        date = new Date().toString();
+        DateTime dateTime = new DateTime();
+        date = dateTime.toDateTimeISO().toString();
     }
 
-    public Account(String accountId, String seed, String date) {
+    public Account(String accountId, String seed) {
         this.accountId = accountId;
         this.seed = seed;
-        this.date = date;
+        DateTime dateTime = new DateTime();
+        date = dateTime.toDateTimeISO().toString();
     }
 
     public String getAccountId() {

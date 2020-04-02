@@ -1,6 +1,7 @@
 package com.anchor.api;
 
 import com.anchor.api.data.Anchor;
+import com.anchor.api.data.AnchorBag;
 import com.anchor.api.data.User;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -34,13 +35,14 @@ public class MainController {
                 + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C";
     }
     @PostMapping("/createAnchor")
-    public Anchor createAnchor(@RequestBody Anchor anchor) throws Exception {
+    public Anchor createAnchor(@RequestBody AnchorBag anchorBag) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:createAnchor ...");
         AnchorAccountService service = context.getBean(AnchorAccountService.class);
-        Anchor bag = service.createAnchorAccounts(anchor,"anchor#01Pass","100");
+        Anchor anchor = service.createAnchorAccounts(anchorBag.getAnchor(),
+                anchorBag.getPassword(),anchorBag.getAssetCode(),anchorBag.getAssetAmount());
         LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 Stellar returns Anchor: \uD83C\uDF4E "
-                + bag.getName() + " anchorId: " + bag.getAnchorId());
-        return bag;
+                + anchor.getName() + " anchorId: " + anchor.getAnchorId());
+        return anchor;
     }
     @PostMapping("/createUser")
     public User createUser(@RequestBody User user) throws Exception {
