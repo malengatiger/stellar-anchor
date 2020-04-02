@@ -22,6 +22,8 @@ import org.stellar.sdk.responses.SubmitTransactionResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
@@ -49,6 +51,9 @@ public class AccountService {
 
     @Value("${seed}")
     private String seed;
+
+    @Value("${defaultCurrencies}")
+    private String defaultCurrencies;
 
     @Value("${account}")
     private String account;
@@ -190,37 +195,35 @@ public class AccountService {
         }
     }
 
-    public SubmitTransactionResponse issueAsset(String issuingAccount, String distributionSeed, String limit, String assetCode) throws Exception {
+    public SubmitTransactionResponse issueAsset(
+            String issuingAccount, String distributionSeed, String limit, String assetCode) throws Exception {
         LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 .......... issueAsset ........ \uD83C\uDF40 " +
                 " \uD83C\uDF40 code: " + assetCode + " \uD83C\uDF40 limit: " + limit
                 + " issuingAccount: " + issuingAccount);
         try {
             KeyPair distKeyPair = KeyPair.fromSecretSeed(distributionSeed);
             Asset asset = Asset.createNonNativeAsset(assetCode, issuingAccount);
-            Asset dollar = Asset.createNonNativeAsset("USD", issuingAccount);
-            Asset euro = Asset.createNonNativeAsset("EUR", issuingAccount);
-            Asset pound = Asset.createNonNativeAsset("GBP", issuingAccount);
-            Asset yuan = Asset.createNonNativeAsset("CNY", issuingAccount);
-            LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51 5 Assets created, 4 default and 1 custom asset: " + asset.getType());
+            List<Asset> assets = getDefaultAssets(issuingAccount, assetCode);
+            assets.add(asset);
+            LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51 " + assets.size()
+                    + " Fiat Currency Assets created,  1 custom asset: " + asset.getType());
 
             setServerAndNetwork();
             AccountResponse distributionAccountResponse = server.accounts().account(distKeyPair.getAccountId());
-            LOGGER.info("\uD83C\uDF40 Distribution account: " + distributionAccountResponse.getAccountId() + " \uD83C\uDF51 ... add trust line");
-            Transaction transaction = new Transaction.Builder(distributionAccountResponse, network)
-                    .addOperation(new ChangeTrustOperation.Builder(asset, limit)
-                            .build())
-                    .addOperation(new ChangeTrustOperation.Builder(dollar, limit)
-                            .build())
-                    .addOperation(new ChangeTrustOperation.Builder(euro, limit)
-                            .build())
-                    .addOperation(new ChangeTrustOperation.Builder(pound, limit)
-                            .build())
-                    .addOperation(new ChangeTrustOperation.Builder(yuan, limit)
-                            .build())
-                    .addMemo(Memo.text("Issue Fiat Tokens"))
-                    .setOperationFee(100)
-                    .setTimeout(360)
-                    .build();
+            LOGGER.info("\uD83C\uDF40 Distribution account: " + distributionAccountResponse.getAccountId()
+                    + " \uD83C\uDF51 ... add trust lines ...");
+
+            Transaction.Builder transactionBuilder = new Transaction.Builder(distributionAccountResponse, network);
+            for (Asset mAsset : assets) {
+                transactionBuilder.addOperation(new ChangeTrustOperation.Builder(
+                        mAsset, limit)
+                        .build());
+            }
+
+            transactionBuilder.addMemo(Memo.text("Issue Fiat Tokens"));
+            transactionBuilder.setOperationFee(100);
+            transactionBuilder.setTimeout(360);
+            Transaction transaction = transactionBuilder.build();
 
             transaction.sign(distKeyPair);
             LOGGER.info("\uD83C\uDF40 Transaction has been signed by distribution KeyPair... \uD83C\uDF51 on to submission ... ");
@@ -232,7 +235,7 @@ public class AccountService {
                 //todo - remove check ...
                 AccountResponse finalResp = server.accounts().account(distKeyPair.getAccountId());
                 try {
-                    LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 \uD83D\uDC99 Distribution account after trust operation, " +
+                    LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 \uD83D\uDC99 Distribution account after trust operations, " +
                             "\uD83C\uDF4E check assets and balances \uD83C\uDF4E " + G.toJson(finalResp) + " \uD83C\uDF4E \uD83C\uDF4E \uD83C\uDF4E ");
                 } catch (Exception e) {
                     //ignore
@@ -248,6 +251,36 @@ public class AccountService {
         }
     }
 
+    private List<Asset> getDefaultAssets(String issuingAccount, String customAsset) {
+        List<Asset> mList = new ArrayList<>();
+        boolean addCurrencies = defaultCurrencies.equalsIgnoreCase("true");
+        if (!addCurrencies) {
+            return mList;
+        }
+
+        if (!customAsset.equalsIgnoreCase("USD")) {
+            mList.add(Asset.createNonNativeAsset("USD",issuingAccount));
+        }
+        if (!customAsset.equalsIgnoreCase("GBP")) {
+            mList.add(Asset.createNonNativeAsset("GBP",issuingAccount));
+        }
+        if (!customAsset.equalsIgnoreCase("CNY")) {
+            mList.add(Asset.createNonNativeAsset("CNY",issuingAccount));
+        }
+        if (!customAsset.equalsIgnoreCase("CHF")) {
+            mList.add(Asset.createNonNativeAsset("CHF",issuingAccount));
+        }
+        if (!customAsset.equalsIgnoreCase("EUR")) {
+            mList.add(Asset.createNonNativeAsset("EUR",issuingAccount));
+        }
+        int cnt = 0;
+        for (Asset asset : mList) {
+            cnt++;
+            LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 DEFAULT asset: #" + cnt + " - "  + asset.getType());
+        }
+
+        return mList;
+    }
     public SubmitTransactionResponse createAsset(String issuingAccountSeed, String distributionAccount,
                                                  String assetCode, String amount) throws Exception {
         LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51  .......... createAsset ........ \uD83C\uDF40 " +
@@ -258,42 +291,26 @@ public class AccountService {
             setServerAndNetwork();
             KeyPair issuingKeyPair = KeyPair.fromSecretSeed(issuingAccountSeed);
             Asset asset = Asset.createNonNativeAsset(assetCode, issuingKeyPair.getAccountId());
-            Asset dollar = Asset.createNonNativeAsset("USD", issuingKeyPair.getAccountId());
-            Asset euro = Asset.createNonNativeAsset("EUR", issuingKeyPair.getAccountId());
-            Asset pound = Asset.createNonNativeAsset("GBP", issuingKeyPair.getAccountId());
-            Asset yuan = Asset.createNonNativeAsset("CNY", issuingKeyPair.getAccountId());
-
-            LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51 5 Assets created, 4 default and 1 custom asset: " + asset.getType());
+            List<Asset> assets = getDefaultAssets(issuingKeyPair.getAccountId(), assetCode);
+            assets.add(asset);
+            LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51 " + assets.size()
+                    + " Fiat Currency Assets created,  1 custom asset: " + asset.getType());
 
             AccountResponse issuingAccount = server.accounts().account(issuingKeyPair.getAccountId());
             LOGGER.info("\uD83C\uDF40 Issuing account: " + issuingAccount.getAccountId()
-                    + " \uD83C\uDF51 ... add payment operation starting ...");
+                    + " \uD83C\uDF51 ... create transaction with multiple payment operations ... starting ...");
 
-            Transaction transaction = new Transaction.Builder(issuingAccount, network)
-                    .addOperation(new PaymentOperation.Builder(
-                            distributionAccount, asset, amount)
-                            .setSourceAccount(issuingKeyPair.getAccountId())
-                            .build())
-                    .addOperation(new PaymentOperation.Builder(
-                            distributionAccount, dollar, amount)
-                            .setSourceAccount(issuingKeyPair.getAccountId())
-                            .build())
-                    .addOperation(new PaymentOperation.Builder(
-                            distributionAccount, euro, amount)
-                            .setSourceAccount(issuingKeyPair.getAccountId())
-                            .build())
-                    .addOperation(new PaymentOperation.Builder(
-                            distributionAccount, pound, amount)
-                            .setSourceAccount(issuingKeyPair.getAccountId())
-                            .build())
-                    .addOperation(new PaymentOperation.Builder(
-                            distributionAccount, yuan, amount)
-                            .setSourceAccount(issuingKeyPair.getAccountId())
-                            .build())
-                    .addMemo(Memo.text("Create Fiat Tokens"))
-                    .setOperationFee(100)
-                    .setTimeout(360)
-                    .build();
+            Transaction.Builder trBuilder = new Transaction.Builder(issuingAccount, network);
+            for (Asset mAsset : assets) {
+                trBuilder.addOperation(new PaymentOperation.Builder(
+                        distributionAccount, mAsset, amount)
+                        .setSourceAccount(issuingKeyPair.getAccountId())
+                        .build());
+            }
+            trBuilder.addMemo(Memo.text("Create Fiat Tokens"));
+            trBuilder.setOperationFee(100);
+            trBuilder.setTimeout(360);
+            Transaction transaction = trBuilder.build();
 
             transaction.sign(issuingKeyPair);
             LOGGER.info("\uD83C\uDF40 Transaction has been signed by issuing KeyPair ... \uD83C\uDF51 on to submission ... ");

@@ -120,13 +120,13 @@ public class AnchorAccountService {
             LOGGER.severe("Email sending failed");
         }
         //todo - list accounts and check balances
-        AccountResponse response1 = service.getAccount(baseAccount.getSecretSeed());
-        AccountResponse response2 = service.getAccount(issuingAccount.getSecretSeed());
-        AccountResponse response3 = service.getAccount(distributionAccount.getSecretSeed());
-        LOGGER.info("\n\n \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ..... CHECKING ACCOUNTS AFTER ALL THAT .... \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ");
-        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 BASE ACCOUNT: " + G.toJson(response1));
-        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ISSUING ACCOUNT: " + G.toJson(response2));
-        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 DISTRIBUTION ACCOUNT: " + G.toJson(response3));
+//        AccountResponse response1 = service.getAccount(baseAccount.getSecretSeed());
+//        AccountResponse response2 = service.getAccount(issuingAccount.getSecretSeed());
+//        AccountResponse response3 = service.getAccount(distributionAccount.getSecretSeed());
+//        LOGGER.info("\n\n \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ..... CHECKING ACCOUNTS AFTER ALL THAT .... \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ");
+//        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 BASE ACCOUNT: " + G.toJson(response1));
+//        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ISSUING ACCOUNT: " + G.toJson(response2));
+//        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 DISTRIBUTION ACCOUNT: " + G.toJson(response3));
         return anchor;
     }
 
