@@ -1,4 +1,4 @@
-package com.anchor.api.data;
+package com.anchor.api.data.account;
 
 import org.stellar.sdk.responses.AccountResponse;
 

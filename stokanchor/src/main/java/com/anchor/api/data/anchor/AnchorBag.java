@@ -1,4 +1,4 @@
-package com.anchor.api.data;
+package com.anchor.api.data.anchor;
 
 public class AnchorBag {
     String assetCode, assetAmount, password;

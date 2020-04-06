@@ -1,6 +1,8 @@
-package com.anchor.api.data;
+package com.anchor.api.data.anchor;
 
-import java.util.Date;
+import com.anchor.api.data.account.Account;
+import com.anchor.api.data.User;
+
 import java.util.List;
 
 public class Anchor {

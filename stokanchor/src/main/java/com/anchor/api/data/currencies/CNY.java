@@ -1,24 +1,36 @@
-package com.anchor.api.data;
+package com.anchor.api.data.currencies;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class USD {
+public class CNY {
 
     @SerializedName("enabled")
     @Expose
     private Boolean enabled;
+
     @SerializedName("fee_fixed")
     @Expose
-    private Integer feeFixed;
+    private Double feeFixed;
+
     @SerializedName("fee_percent")
     @Expose
-    private Integer feePercent;
+    private Double feePercent;
+
     @SerializedName("min_amount")
     @Expose
     private Double minAmount;
+
     @SerializedName("max_amount")
     @Expose
-    private Integer maxAmount;
+    private Double maxAmount;
+
+    public CNY(Boolean enabled, Double feeFixed, Double feePercent, Double minAmount, Double maxAmount) {
+        this.enabled = enabled;
+        this.feeFixed = feeFixed;
+        this.feePercent = feePercent;
+        this.minAmount = minAmount;
+        this.maxAmount = maxAmount;
+    }
 
     public Boolean getEnabled() {
         return enabled;
@@ -28,19 +40,19 @@ public class USD {
         this.enabled = enabled;
     }
 
-    public Integer getFeeFixed() {
+    public Double getFeeFixed() {
         return feeFixed;
     }
 
-    public void setFeeFixed(Integer feeFixed) {
+    public void setFeeFixed(Double feeFixed) {
         this.feeFixed = feeFixed;
     }
 
-    public Integer getFeePercent() {
+    public Double getFeePercent() {
         return feePercent;
     }
 
-    public void setFeePercent(Integer feePercent) {
+    public void setFeePercent(Double feePercent) {
         this.feePercent = feePercent;
     }
 
@@ -52,11 +64,11 @@ public class USD {
         this.minAmount = minAmount;
     }
 
-    public Integer getMaxAmount() {
+    public Double getMaxAmount() {
         return maxAmount;
     }
 
-    public void setMaxAmount(Integer maxAmount) {
+    public void setMaxAmount(Double maxAmount) {
         this.maxAmount = maxAmount;
     }
 

@@ -3,6 +3,4 @@ env: flex
 
 handlers:
   - url: /.*
-  - url: /.well-known
-    static_dir: _well-known
     script: this field is required, but ignored

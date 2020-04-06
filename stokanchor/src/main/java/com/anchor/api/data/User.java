@@ -1,7 +1,8 @@
 package com.anchor.api.data;
 
+import com.anchor.api.data.account.Account;
+
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class User {

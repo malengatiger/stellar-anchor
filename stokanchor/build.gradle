@@ -25,8 +25,8 @@ repositories {
 
 bootJar {
 	baseName = 'anchor'
-	version =  '1.0.1'
-	mainClassName = "com.anchor.api.StokanchorApplication"
+	version =  '1.0.0+1'
+	mainClassName = "com.anchor.api.AnchorApplication"
 }
 ext {
 	set('springCloudVersion', "Hoxton.SR3")

@@ -1,13 +1,10 @@
-package com.anchor.api;
+package com.anchor.api.services;
 
-import com.anchor.api.data.Anchor;
+import com.anchor.api.data.anchor.Anchor;
+import com.anchor.api.data.info.Info;
 import com.google.api.core.ApiFuture;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.firestore.CollectionReference;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.QueryDocumentSnapshot;
-import com.google.cloud.firestore.QuerySnapshot;
-import com.google.errorprone.annotations.Var;
+import com.google.cloud.firestore.*;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -16,29 +13,19 @@ import com.google.firebase.auth.UserRecord;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
-import javax.management.loading.MLet;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
 @Service
-public class FirebaseScaffold {
-    public static final Logger LOGGER = Logger.getLogger(FirebaseScaffold.class.getSimpleName());
+public class FirebaseService {
+    public static final Logger LOGGER = Logger.getLogger(FirebaseService.class.getSimpleName());
     private static final Gson G = new GsonBuilder().setPrettyPrinting().create();
 
     @Autowired
@@ -46,8 +33,8 @@ public class FirebaseScaffold {
     @Value("${status}")
     private String status;
 
-    public FirebaseScaffold() {
-        LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 FirebaseScaffold Constructor: \uD83D\uDC99 .......");
+    public FirebaseService() {
+        LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 FirebaseService Constructor: \uD83D\uDC99 .......");
     }
 
     public void initializeFirebase() throws Exception {
@@ -55,23 +42,16 @@ public class FirebaseScaffold {
                 ".... \uD83D\uDC99 DEV STATUS: \uD83C\uDF51 " + status + " \uD83C\uDF51");
 
         FirebaseApp app;
-        if (status.equalsIgnoreCase("dev")) {
-            Resource resource = new ClassPathResource("anchor.json");
-            File file = resource.getFile();
-            FileInputStream serviceAccount = new FileInputStream(file);
-
-            FirebaseOptions devOptions = new FirebaseOptions.Builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .setDatabaseUrl("https://stellar-anchor-333.firebaseio.com")
-                    .build();
-            app = FirebaseApp.initializeApp(devOptions);
-        } else {
+        try {
             FirebaseOptions prodOptions = new FirebaseOptions.Builder()
                     .setCredentials(GoogleCredentials.getApplicationDefault())
-                    .setDatabaseUrl("https://stellar-stokvel.firebaseio.com/")
+                    .setDatabaseUrl("https://stellar-anchor-333.firebaseio.com/")
                     .build();
 
             app = FirebaseApp.initializeApp(prodOptions);
+        } catch (Exception e) {
+            LOGGER.severe("Unable to initialize Firebase");
+            throw new Exception("Unable to initialize Firebase", e);
         }
         LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 Firebase has been set up and initialized. " +
                 "\uD83D\uDC99 URL: " + app.getOptions().getDatabaseUrl() + " \uD83D\uDC99");
@@ -101,14 +81,13 @@ public class FirebaseScaffold {
         return userRecord;
 
     }
+    static final GsonBuilder gsonBuilder = new GsonBuilder();
+    static final Gson gson = gsonBuilder.create();
     public List<Anchor> getAnchors() throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         List<Anchor> mList = new ArrayList<>();
         ApiFuture<QuerySnapshot> future = fs.collection("anchors").get();
         int cnt = 0;
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        Gson gson = gsonBuilder.create();
-
         for (QueryDocumentSnapshot document : future.get().getDocuments()) {
             Map<String, Object> map = document.getData();
             String object = gson.toJson(map);
@@ -120,5 +99,65 @@ public class FirebaseScaffold {
             mList.add(anchor);
         }
         return mList;
+    }
+
+    public String addAnchorInfo(Info info) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        Info current = getAnchorInfo(info.getAnchorId());
+        if (current == null) {
+            ApiFuture<DocumentReference> future = fs.collection("infos").add(info);
+            LOGGER.info("Info added at path: ".concat(future.get().getPath()));
+            return "Info added";
+        } else {
+            ApiFuture<QuerySnapshot> future = fs.collection("infos")
+                    .whereEqualTo("anchorId",current.getAnchorId()).get();
+            for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+                ApiFuture<WriteResult> m = document.getReference().delete();
+                LOGGER.info("Info deleted, updateTime: ".concat(m.get().getUpdateTime().toString()));
+            }
+            ApiFuture<DocumentReference> future2 = fs.collection("infos").add(info);
+            LOGGER.info("Info added after delete, at path: ".concat(future2.get().getPath()));
+            return "Info Updated";
+        }
+    }
+    public Info getAnchorInfo(String anchorId) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        Info info;
+        List<Info> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection("infos")
+                .whereEqualTo("anchorId",anchorId).get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = gson.toJson(map);
+            Info mInfo = gson.fromJson(object,Info.class);
+            mList.add(mInfo);
+        }
+        if (mList.isEmpty()) {
+            return null;
+        } else {
+            info = mList.get(0);
+        }
+
+        return info;
+    }
+    public Anchor getAnchorByName(String name) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        Anchor info;
+        List<Anchor> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection("anchors")
+                .whereEqualTo("name",name).get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = gson.toJson(map);
+            Anchor mInfo = gson.fromJson(object,Anchor.class);
+            mList.add(mInfo);
+        }
+        if (mList.isEmpty()) {
+            return null;
+        } else {
+            info = mList.get(0);
+        }
+
+        return info;
     }
 }

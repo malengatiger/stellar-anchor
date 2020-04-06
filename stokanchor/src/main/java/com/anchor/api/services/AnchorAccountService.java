@@ -1,8 +1,8 @@
-package com.anchor.api;
+package com.anchor.api.services;
 
-import com.anchor.api.data.Account;
-import com.anchor.api.data.AccountResponseBag;
-import com.anchor.api.data.Anchor;
+import com.anchor.api.data.account.Account;
+import com.anchor.api.data.account.AccountResponseBag;
+import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.User;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
-import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.io.IOException;
@@ -63,7 +62,7 @@ public class AnchorAccountService {
     }
 
     public Anchor createAnchorAccounts(Anchor newAnchor, String password, String assetCode, String assetAmount) throws Exception {
-        LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: creating Anchor Accounts .... \uD83C\uDF40 DEV STATUS: " + status);
+        LOGGER.info("\n\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: creating Anchor Accounts .... \uD83C\uDF40 DEV STATUS: " + status + "\n\n");
         List<AccountResponseBag> mList = new ArrayList<>();
         AccountService service = context.getBean(AccountService.class);
         Anchor anchor = new Anchor();
@@ -132,7 +131,7 @@ public class AnchorAccountService {
 
     private User createAnchorUser(Anchor anchor, String password) throws Exception {
 
-        FirebaseScaffold scaffold = context.getBean(FirebaseScaffold.class);
+        FirebaseService scaffold = context.getBean(FirebaseService.class);
 
         UserRecord userRecord = scaffold.createUser(anchor.getName(),anchor.getEmail(),password);
         User user = new User();

@@ -1,5 +1,7 @@
-package com.anchor.api.data;
+package com.anchor.api.data.anchor;
 
+
+import com.anchor.api.data.account.AccountType;
 
 public class AnchorCredential {
 

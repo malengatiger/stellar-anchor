@@ -1,4 +1,4 @@
-package com.anchor.api;
+package com.anchor.api.util;
 
 import com.google.cloud.kms.v1.*;
 import com.google.protobuf.ByteString;

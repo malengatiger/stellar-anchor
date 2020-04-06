@@ -1,7 +1,5 @@
-package com.anchor.api.data;
+package com.anchor.api.data.account;
 import org.joda.time.DateTime;
-
-import java.util.Date;
 
 public class Account {
     String accountId, seed;

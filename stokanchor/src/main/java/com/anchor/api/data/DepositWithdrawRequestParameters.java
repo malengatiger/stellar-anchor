@@ -1,13 +1,27 @@
 package com.anchor.api.data;
 
-import com.google.rpc.Code;
+import com.anchor.api.data.kyc.OrganizationKYCFields;
+import com.anchor.api.data.kyc.PersonalKYCFields;
 
-public class Deposit {
-    String asset_code, account, memo_type,
-    memo, wallet_name, wallet_url, lang;
+/*
+Request
+POST TRANSFER_SERVER_SEP0024/transactions/deposit/interactive
+Content-Type: multipart/form-data
+ */
+public class DepositWithdrawRequestParameters {
+    private String asset_code, account, memo_type,
+            memo, wallet_name,
+            wallet_url, lang;
 
-    public Deposit(String asset_code, String account, String memo_type, String memo,
-                   String wallet_name, String wallet_url, String lang) {
+    private PersonalKYCFields personalKYCFields;
+    private OrganizationKYCFields organizationKYCFields;
+
+    public DepositWithdrawRequestParameters() {
+    }
+
+    public DepositWithdrawRequestParameters(String asset_code, String account,
+                                            String memo_type, String memo, String wallet_name,
+                                            String wallet_url, String lang) {
         this.asset_code = asset_code;
         this.account = account;
         this.memo_type = memo_type;
@@ -17,7 +31,20 @@ public class Deposit {
         this.lang = lang;
     }
 
-    public Deposit() {
+    public PersonalKYCFields getPersonalKYCFields() {
+        return personalKYCFields;
+    }
+
+    public void setPersonalKYCFields(PersonalKYCFields personalKYCFields) {
+        this.personalKYCFields = personalKYCFields;
+    }
+
+    public OrganizationKYCFields getOrganizationKYCFields() {
+        return organizationKYCFields;
+    }
+
+    public void setOrganizationKYCFields(OrganizationKYCFields organizationKYCFields) {
+        this.organizationKYCFields = organizationKYCFields;
     }
 
     public String getAsset_code() {

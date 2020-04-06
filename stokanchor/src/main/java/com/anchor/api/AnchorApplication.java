@@ -1,5 +1,6 @@
 package com.anchor.api;
 
+import com.anchor.api.services.FirebaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -7,11 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.annotation.Bean;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 
-import java.util.Properties;
 import java.util.logging.Logger;
 
 @SpringBootApplication
@@ -24,8 +21,10 @@ public class AnchorApplication implements ApplicationListener<ApplicationReadyEv
 		LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C AnchorApplication started ..." +
 				" \uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C");
 	}
+
 	@Autowired
 	private ApplicationContext context;
+
 	@Value("${status}")
 	private String status;
 
@@ -35,11 +34,12 @@ public class AnchorApplication implements ApplicationListener<ApplicationReadyEv
 		LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C onApplicationEvent: " +
 				"ApplicationReadyEvent fired: \uD83C\uDF3C \uD83C\uDF3C app is ready to initialize Firebase .... ");
 
-		FirebaseScaffold scaffold = context.getBean(FirebaseScaffold.class);
+		LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C onApplicationEvent: DEVELOPMENT STATUS: \uD83C\uDF51 " + status + " \uD83C\uDF51 ");
+		FirebaseService scaffold = context.getBean(FirebaseService.class);
 		try {
 			scaffold.initializeFirebase();
 		} catch (Exception e) {
-			LOGGER.severe("Firebase initialization FAILED");
+			LOGGER.severe(" \uD83C\uDF45 Firebase initialization FAILED");
 			e.printStackTrace();
 		}
 	}

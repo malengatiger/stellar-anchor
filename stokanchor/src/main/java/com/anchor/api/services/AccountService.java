@@ -1,8 +1,8 @@
-package com.anchor.api;
+package com.anchor.api.services;
 
 
-import com.anchor.api.data.Account;
-import com.anchor.api.data.AccountResponseBag;
+import com.anchor.api.data.account.Account;
+import com.anchor.api.data.account.AccountResponseBag;
 import com.anchor.api.data.User;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
@@ -16,8 +16,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.*;
+import org.stellar.sdk.requests.EventListener;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
+import shadow.com.google.common.base.Optional;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,7 +70,7 @@ public class AccountService {
         if (user.getAccounts() == null || user.getAccounts().isEmpty()) {
             throw new Exception("Account is missing");
         }
-        FirebaseScaffold scaffold = context.getBean(FirebaseScaffold.class);
+        FirebaseService scaffold = context.getBean(FirebaseService.class);
         UserRecord record = scaffold.createUser(user.getFullName(), user.getEmail(), "temp#33pass");
         user.setUserId(record.getUid());
 
@@ -87,7 +89,7 @@ public class AccountService {
         AccountResponseBag bag = createAndFundStellarAccount(seed, startingBalance);
         Account account = new Account(bag);
         user.addAccount(account);
-        FirebaseScaffold scaffold = context.getBean(FirebaseScaffold.class);
+        FirebaseService scaffold = context.getBean(FirebaseService.class);
         UserRecord record = scaffold.createUser(user.getFullName(), user.getEmail(), "temp#33pass");
         user.setUserId(record.getUid());
 
@@ -162,7 +164,8 @@ public class AccountService {
 
             Transaction transaction = new Transaction.Builder(sourceAccount, network)
                     .addOperation(new CreateAccountOperation.Builder(
-                            newAccountKeyPair.getAccountId(), startingBalance).build())
+                            newAccountKeyPair.getAccountId(), startingBalance)
+                            .build())
                     .addMemo(Memo.text("CreateAccount Tx"))
                     .setTimeout(180)
                     .setOperationFee(100)
@@ -208,6 +211,17 @@ public class AccountService {
             LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51 " + assets.size()
                     + " Fiat Currency Assets created,  1 custom asset: " + asset.getType());
 
+            server.accounts().forAsset((AssetTypeCreditAlphaNum) asset).stream(new EventListener<AccountResponse>() {
+                @Override
+                public void onEvent(AccountResponse object) {
+
+                }
+
+                @Override
+                public void onFailure(Optional<Throwable> optional, Optional<Integer> optional1) {
+
+                }
+            });
             setServerAndNetwork();
             AccountResponse distributionAccountResponse = server.accounts().account(distKeyPair.getAccountId());
             LOGGER.info("\uD83C\uDF40 Distribution account: " + distributionAccountResponse.getAccountId()
@@ -272,11 +286,6 @@ public class AccountService {
         }
         if (!customAsset.equalsIgnoreCase("EUR")) {
             mList.add(Asset.createNonNativeAsset("EUR",issuingAccount));
-        }
-        int cnt = 0;
-        for (Asset asset : mList) {
-            cnt++;
-            LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 DEFAULT asset: #" + cnt + " - "  + asset.getType());
         }
 
         return mList;
