@@ -1,5 +1,6 @@
 package com.anchor.api.services;
 
+import com.anchor.api.data.account.AccountResponseWithDate;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.info.Info;
 import com.google.api.core.ApiFuture;
@@ -17,6 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import org.stellar.sdk.responses.AccountResponse;
+import org.stellar.sdk.responses.TransactionResponse;
+import org.stellar.sdk.responses.operations.OperationResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +34,7 @@ public class FirebaseService {
 
     @Autowired
     private ApplicationContext context;
+
     @Value("${status}")
     private String status;
 
@@ -159,5 +164,29 @@ public class FirebaseService {
         }
 
         return info;
+    }
+
+    public String addAccountResponse(AccountResponse accountResponse) throws Exception {
+        LOGGER.info("\uD83C\uDFBD Adding accountResponse to Firestore: ".concat(accountResponse.getAccountId()));
+//        Firestore fs = FirestoreClient.getFirestore();
+//        AccountResponseWithDate withDate = new AccountResponseWithDate(accountResponse,null);
+//        ApiFuture<DocumentReference> future2 = fs.collection("accountResponses").add(withDate);
+//        LOGGER.info("\uD83C\uDFBD AccountResponseWithDate added, \uD83C\uDFBD at path: ".concat(future2.get().getPath()));
+        return "\uD83C\uDF51 AccountResponse added";
+    }
+    public String addOperationResponse(OperationResponse operationResponse) throws Exception {
+        LOGGER.info("\uD83C\uDFBD Adding operationResponse to Firestore: ".concat(operationResponse.getSourceAccount()));
+//        Firestore fs = FirestoreClient.getFirestore();
+//        operationResponse.getTransaction().get().
+//        ApiFuture<DocumentReference> future2 = fs.collection("operationResponses").add(operationResponse);
+//        LOGGER.info("\uD83C\uDFBD operationResponse added, \uD83C\uDFBD at path: ".concat(future2.get().getPath()));
+        return "\uD83C\uDF51 operationResponse added";
+    }
+    public String addTransactionResponse(TransactionResponse transactionResponse) throws Exception {
+        LOGGER.info("\uD83C\uDFBD Adding transactionResponse to Firestore: createdAt: ".concat(transactionResponse.getCreatedAt()));
+//        Firestore fs = FirestoreClient.getFirestore();
+//        ApiFuture<DocumentReference> future2 = fs.collection("transactionResponses").add(transactionResponse);
+//        LOGGER.info("\uD83C\uDFBD transactionResponse added, \uD83C\uDFBD at path: ".concat(future2.get().getPath()));
+        return "\uD83C\uDF51 transactionResponse added";
     }
 }

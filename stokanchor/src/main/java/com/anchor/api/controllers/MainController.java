@@ -11,6 +11,7 @@ import com.anchor.api.data.User;
 import com.anchor.api.util.Util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.moandjiezana.toml.Toml;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -56,6 +57,9 @@ public class MainController {
         File file = new File(Objects.requireNonNull(classLoader.getResource("_well-known/stellar.toml")).getFile());
         if (file.exists()) {
             LOGGER.info(" \uD83C\uDF45 File has been found \uD83C\uDF45 " + file.getAbsolutePath());
+            Toml toml = new Toml().read(file);
+            List<Object> currencies = toml.getList("CURRENCIES");
+
             return IOUtils.toByteArray(new FileInputStream(file));
         } else {
             LOGGER.info(" \uD83C\uDF45 File NOT found. this is where .toml needs to go;  \uD83C\uDF45 ");

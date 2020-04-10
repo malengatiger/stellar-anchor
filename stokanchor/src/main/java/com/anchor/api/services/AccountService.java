@@ -1,9 +1,10 @@
 package com.anchor.api.services;
 
 
+import com.anchor.api.data.User;
 import com.anchor.api.data.account.Account;
 import com.anchor.api.data.account.AccountResponseBag;
-import com.anchor.api.data.User;
+import com.anchor.api.data.transfer.sep10.Sep10Challenge;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.stellar.sdk.*;
 import org.stellar.sdk.requests.EventListener;
 import org.stellar.sdk.responses.AccountResponse;
+import org.stellar.sdk.responses.RootResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 import shadow.com.google.common.base.Optional;
 
@@ -27,6 +29,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Service
@@ -46,8 +49,26 @@ public class AccountService {
         LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C AccountService Constructor fired ... \uD83C\uDF3C Manage Stellar Accounts");
     }
 
+    public void printStellarHorizonServer() {
+        setServerAndNetwork();
+        try {
+            RootResponse serverResponse = server.root();
+            LOGGER.info("\uD83E\uDD8B \uD83E\uDD8B \uD83C\uDF3C HorizonVersion: ".concat(serverResponse.getHorizonVersion()
+            .concat(" \uD83E\uDD8B NetworkPassphrase: ").concat(serverResponse.getNetworkPassphrase()
+                    .concat(" \uD83E\uDD8B StellarCoreVersion: ").concat(serverResponse.getStellarCoreVersion()
+                            .concat(" \uD83E\uDD8B CurrentProtocolVersion: ").concat("" + serverResponse.getCurrentProtocolVersion())))));
+            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C \uD83C\uDF3C Connected to Stellar Horizon Server \uD83E\uDD8B \uD83E\uDD8B ".concat(G.toJson(serverResponse)
+            .concat(" \uD83C\uDF3C \uD83C\uDF3C ")) );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Autowired
     private ApplicationContext context;
+    @Autowired
+    private FirebaseService firebaseService;
+
     @Value("${status}")
     private String status;
 
@@ -60,8 +81,14 @@ public class AccountService {
     @Value("${account}")
     private String account;
 
+    @Value("${domain}")
+    private String domain;
+
     @Value("${startingBalance}")
     private String startingBalance;
+
+    @Value("${anchorName}")
+    private String anchorName;
 
     public User createUserWithExistingAccount(User user) throws Exception {
         if (user.getAnchorId() == null) {
@@ -156,6 +183,7 @@ public class AccountService {
         LOGGER.info("\uD83D\uDC99 ... ... ... ... createAndFundStellarAccount starting ....... startingBalance: " + startingBalance);
         setServerAndNetwork();
         AccountResponse accountResponse;
+
         try {
             KeyPair newAccountKeyPair = KeyPair.random();
             KeyPair sourceKeyPair = KeyPair.fromSecretSeed(seed);
@@ -240,7 +268,7 @@ public class AccountService {
             Transaction transaction = transactionBuilder.build();
 
             transaction.sign(distKeyPair);
-            LOGGER.info("\uD83C\uDF40 Transaction has been signed by distribution KeyPair... \uD83C\uDF51 on to submission ... ");
+            LOGGER.info("\uD83C\uDF40 GetTransactionsResponse has been signed by distribution KeyPair... \uD83C\uDF51 on to submission ... ");
 
             SubmitTransactionResponse submitTransactionResponse = server.submitTransaction(transaction);
             if (submitTransactionResponse.isSuccess()) {
@@ -322,7 +350,7 @@ public class AccountService {
             Transaction transaction = trBuilder.build();
 
             transaction.sign(issuingKeyPair);
-            LOGGER.info("\uD83C\uDF40 Transaction has been signed by issuing KeyPair ... \uD83C\uDF51 on to submission ... ");
+            LOGGER.info("\uD83C\uDF40 GetTransactionsResponse has been signed by issuing KeyPair ... \uD83C\uDF51 on to submission ... ");
 
             SubmitTransactionResponse submitTransactionResponse = server.submitTransaction(transaction);
             if (submitTransactionResponse.isSuccess()) {
@@ -347,7 +375,132 @@ public class AccountService {
         }
     }
 
+    public void listenForTransactions() throws Exception {
+        setServerAndNetwork();
+        //todo - what do we want to listen for ???
+        LOGGER.info("\uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45 ... Listen For Stellar Accounts ...");
+        server.accounts().stream(new EventListener<AccountResponse>() {
+            @Override
+            public void onEvent(AccountResponse accountResponse) {
+                LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 Accounts Listener fired, " +
+                        "accountResponse received, add to Firestore ...");
+                try {
+                    firebaseService.addAccountResponse(accountResponse);
+                } catch (Exception e) {
+                    LOGGER.log(Level.SEVERE,"AccountListener failed", e);
+                }
+            }
+
+            @Override
+            public void onFailure(Optional<Throwable> optional, Optional<Integer> optional1) {
+                try {
+                    LOGGER.info("\uD83C\uDF45 accountListener onFailure: " + optional.get().getMessage());
+                    LOGGER.severe("AccountListener failed");
+                } catch (Exception e) {
+                    //ignore
+                }
+            }
+        });
+
+//        LOGGER.info("\uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45 ... Listen For Stellar Payments ...");
+//        SSEStream<OperationResponse> mm = server.payments().stream(new EventListener<OperationResponse>() {
+//            @Override
+//            public void onEvent(OperationResponse operationResponse) {
+//                LOGGER.info("isTransactionSuccessful: ".concat(operationResponse.isTransactionSuccessful().toString()
+//                .concat(" SourceAccount: ").concat(operationResponse.getSourceAccount())));
+//                try {
+//                    firebaseService.addOperationResponse(operationResponse);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Optional<Throwable> optional, Optional<Integer> optional1) {
+//                try {
+//                    LOGGER.info("\uD83C\uDF45 operationResponse onFailure: " + optional.get().getMessage());
+//                    LOGGER.severe("operationResponse failed");
+//                } catch (Exception e) {
+//                    //ignore
+//                }
+//            }
+//        });
+//        LOGGER.info("\uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45 ... Listen For Stellar Transactions ...");
+//        server.transactions().stream(new EventListener<TransactionResponse>() {
+//            @Override
+//            public void onEvent(TransactionResponse transactionResponse) {
+//                LOGGER.info("\uD83C\uDF4E  transactionListener:onEvent:TransactionResponse: isSuccessful: "
+//                        + transactionResponse.isSuccessful()
+//                        + " \uD83D\uDC99 source account: " + transactionResponse.getSourceAccount());
+//                try {
+//                    firebaseService.addTransactionResponse(transactionResponse);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Optional<Throwable> optional, Optional<Integer> optional1) {
+//                try {
+//                    LOGGER.info("\uD83C\uDF45 transactionListener onFailure: " + optional.get().getMessage());
+//                    LOGGER.severe("transactionListener failed");
+//                } catch (Exception e) {
+//                    //ignore
+//                }
+//            }
+//        });
+
+    }
+    public SubmitTransactionResponse setOptions(final String seed, int clearFlags, int highThreshold, int lowThreshold,
+                                                   String inflationDestination, int masterKeyWeight) throws Exception {
+
+        setServerAndNetwork();
+        KeyPair keyPair = KeyPair.fromSecretSeed(seed);
+        AccountResponse sourceAccount = server.accounts().account(keyPair.getAccountId());
+        SetOptionsOperation operation = new SetOptionsOperation.Builder()
+                .setClearFlags(clearFlags)
+                .setHighThreshold(highThreshold)
+                .setLowThreshold(lowThreshold)
+                .setInflationDestination(inflationDestination)
+                .setSourceAccount(keyPair.getAccountId())
+                .setMasterKeyWeight(masterKeyWeight)
+                .setHomeDomain(domain)
+                .build();
+
+        Transaction transaction = new Transaction.Builder(sourceAccount, network)
+                .addOperation(operation)
+                .setTimeout(TIMEOUT_IN_SECONDS)
+                .setOperationFee(100)
+                .build();
+        try {
+            transaction.sign(keyPair);
+            SubmitTransactionResponse response = server.submitTransaction(transaction);
+            LOGGER.info("setOptions: SubmitTransactionResponse: \uD83D\uDC99 Success? : " + response.isSuccess() + " \uD83D\uDC99 ");
+            LOGGER.info(response.isSuccess() ? "setOptions transaction is SUCCESSFUL" : "setOptions transaction failed");
+            return response;
+        } catch (Exception e) {
+            String msg = "Failed to setOptions: ";
+            LOGGER.severe(msg + e.getMessage());
+            throw new Exception(msg, e);
+        }
+    }
+    @Autowired
+    Sep10Challenge sep10Challenge;
+    public String handleChallenge(final String seed) throws Exception {
+
+        setServerAndNetwork();
+        KeyPair keyPair = KeyPair.fromSecretSeed(seed);
+        AccountResponse sourceAccount = server.accounts().account(keyPair.getAccountId());
+
+
+        return null;
+
+    }
     private void setServerAndNetwork() {
+        if (status == null) {
+            LOGGER.info("\uD83D\uDE08 \uD83D\uDC7F Set status to dev because status is NULL");
+            status = "dev";
+        }
         isDevelopment = status.equalsIgnoreCase("dev");
         if (isDevelopment) {
             server = new Server(DEV_SERVER);
@@ -360,6 +513,5 @@ public class AccountService {
             LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F PRODUCTION: ... Stellar Public Server and Network... \uD83C\uDF4F \uD83C\uDF4F \n");
 
         }
-
     }
 }

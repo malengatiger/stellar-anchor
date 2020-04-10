@@ -42,6 +42,9 @@ dependencies {
 	implementation 'com.google.cloud:google-cloud-kms:1.35.0'
 	// https://mvnrepository.com/artifact/joda-time/joda-time
 	implementation group: 'joda-time', name: 'joda-time', version: '2.10.5'
+	// https://mvnrepository.com/artifact/com.moandjiezana.toml/toml4j
+	implementation group: 'com.moandjiezana.toml', name: 'toml4j', version: '0.7.2'
+
 
 	// https://mvnrepository.com/artifact/javax.mail/mail
 	implementation group: 'javax.mail', name: 'mail', version: '1.5.0-b01'

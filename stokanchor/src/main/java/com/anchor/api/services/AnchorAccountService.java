@@ -91,18 +91,18 @@ public class AnchorAccountService {
                     distributionAccount.getSecretSeed(),
                     limit, assetCode);
             LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: createAnchorAccounts " +
-                    ".... \uD83C\uDF45 TrustLine Transaction Response isSuccess:  " + transactionResponse.isSuccess());
+                    ".... \uD83C\uDF45 TrustLine GetTransactionsResponse Response isSuccess:  " + transactionResponse.isSuccess());
 
             SubmitTransactionResponse response = service.createAsset(
                     issuingAccount.getSecretSeed(),
                     distributionAccount.getAccountResponse().getAccountId(),
                     assetCode,assetAmount);
             LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: createAnchorAccounts " +
-                    ".... \uD83C\uDF45 Payment Transaction Response isSuccess:  " + response.isSuccess());
+                    ".... \uD83C\uDF45 Payment GetTransactionsResponse Response isSuccess:  " + response.isSuccess());
 
         } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.severe("Transaction for Asset Issue/Payment failed \uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45");
+            LOGGER.severe("GetTransactionsResponse for Asset Issue/Payment failed \uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45");
         }
         LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C Anchor created and will be added to Firestore: " +
                 " " + anchor.getName());

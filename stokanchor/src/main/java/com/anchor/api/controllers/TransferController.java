@@ -1,6 +1,10 @@
 package com.anchor.api.controllers;
 
+import com.anchor.api.WithdrawRequestParameters;
 import com.anchor.api.data.*;
+import com.anchor.api.data.account.Options;
+import com.anchor.api.data.transfer.sep27.InfoServerResponse;
+import com.anchor.api.services.AccountService;
 import com.anchor.api.services.FirebaseService;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.info.Info;
@@ -9,9 +13,13 @@ import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.stellar.sdk.responses.SubmitTransactionResponse;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -20,7 +28,6 @@ import java.util.logging.Logger;
 public class TransferController {
     public static final Logger LOGGER = Logger.getLogger(TransferController.class.getSimpleName());
     private static final Gson G = new GsonBuilder().setPrettyPrinting().create();
-
     /*
     😈 👿 😈 👿
     Every other HTTP status code will be considered an error.
@@ -40,12 +47,11 @@ public class TransferController {
     @Autowired
     private ApplicationContext context;
 
+    @Autowired
+    private AccountService accountService;
+
     @Value("${anchorName}")
     private String anchorName;
-
-//    //this boolean value decides if anchor wants user to interactively provide information
-//    @Value("${requiresCustomerInteraction}")
-//    private String requiresCustomerInteraction;
 
     @Autowired
     private FirebaseService firebaseService;
@@ -70,8 +76,8 @@ public class TransferController {
 
     the end-result: 🔵 user has new balance for this asset code
      */
-    @PostMapping("/transactions/deposit/interactive")
-    public DepositOKResponse deposit(@RequestBody DepositWithdrawRequestParameters requestParameters) throws Exception {
+    @PostMapping("deposit")
+    public DepositOKResponse deposit(@RequestBody DepositRequestParameters requestParameters) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:deposit ...");
        
         return null;
@@ -99,28 +105,32 @@ public class TransferController {
     }
 
      */
-    @PostMapping("/transactions/withdraw/interactive")
-    public WithdrawOKResponse withdraw(@RequestBody DepositWithdrawRequestParameters requestParameters) throws Exception {
+    @PostMapping("/withdraw")
+    public WithdrawOKResponse withdraw(@RequestBody WithdrawRequestParameters requestParameters) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:withdraw ...");
         //todo - check
 
         
         return null;
     }
+    @PostMapping
+    public SubmitTransactionResponse setOptions(@RequestBody Options options) throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:setOptions ...");
+        return accountService.setOptions(options.getSeed(),options.getClearFlags(),options.getHighThreshold(),
+                options.getLowThreshold(),options.getInflationDestination(),options.getMasterKeyWeight());
+    }
     @PostMapping("/setAnchorInfo")
     public String setAnchorInfo(@RequestBody Info info) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:withdraw ...");
         return firebaseService.addAnchorInfo(info);
     }
-    @GetMapping("/info")
-    public Info info() throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:info ...");
-        if (anchorName == null) {
-            throw new Exception("Anchor Name missing in application properties");
-        }
 
-        Anchor mAnchor = firebaseService.getAnchorByName(anchorName);
-        return firebaseService.getAnchorInfo(mAnchor.getAnchorId());
+    @GetMapping("/server_info")
+    public InfoServerResponse getServerInfo(@RequestParam String assetCode,
+                                            @RequestParam String assetIssuer,
+                                            @RequestParam String lang) throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:getServerInfo ...");
+      return null;
     }
 
     /*
@@ -171,7 +181,7 @@ public class TransferController {
 
         On success the endpoint should return 200 OK HTTP status code and a JSON object with the following fields:
 
-        Name	Type	Description
+        Name	    Type	Description
         transaction	object	The transaction that was requested by the client.
 
         If the transaction cannot be found, the endpoint should return a 404 NOT FOUND result.
@@ -185,20 +195,50 @@ public class TransferController {
             }
      */
     @GetMapping("/transaction")
-    public Transaction transaction(@RequestParam String id, @RequestParam String stellar_transaction_id,
-                                   @RequestParam String external_transaction_id) {
+    public ResponseEntity<GetTransactionsResponse> transaction(@RequestParam String id,
+                                      @RequestParam String stellar_transaction_id,
+                                      @RequestParam String external_transaction_id) throws NotFoundException {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:transaction ...");
-
-        return null;
+        GetTransactionsResponse transactionsResponse = null;
+        ResponseEntity<GetTransactionsResponse> responseEntity = null;
+        if (responseEntity == null) {
+            responseEntity = new ResponseEntity("Transaction not found", HttpStatus.NOT_FOUND);
+        } else {
+            responseEntity = new ResponseEntity<>(transactionsResponse, HttpStatus.OK);
+        }
+        return responseEntity;
     }
-    @GetMapping("/transactions")
-    public List<Transaction> transactions(@RequestParam String asset_code,
-                                          @RequestParam String no_older_than,
-                                          @RequestParam String kind,
-                                          @RequestParam String paging_id) {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:transactions ...");
+    /*
+    🥏 🥏 🥏 GET TRANSFER_SERVER/transactions
+        🍎 Request parameters:
 
-        return null;
+        Name	Type	Description
+        asset_code	    string	The code of the asset of interest. E.g. BTC, ETH, USD, INR, etc.
+        asset_issuer	string	The issuer of the asset the user wants to deposit with the anchor.
+        account	        string	The stellar account ID involved in the transactions.
+        no_older_than   string  UTC ISO 8601 string	(optional) The response should contain transactions starting on or after this date & time.
+        limit	        int	    (optional) The response should contain at most limit transactions.
+        kind	        string	(optional) The kind of transaction that is desired. Should be either deposit or withdrawal.
+        paging_id	    string	(optional) The response should contain transactions starting prior to this ID (exclusive).
+
+        🥬 🥬 On success the endpoint should return 200 OK HTTP status code and a JSON object with the following fields:
+
+        Name	        Type	Description
+        transactions	array	List of transactions as requested by the client, sorted in time-descending order.
+        🥬 🥬
+     */
+    @GetMapping("/transactions")
+    public List<GetTransactionsResponse> transactions(@RequestParam String asset_code,
+                                                      @RequestParam String asset_issuer,
+                                                      @RequestParam String account,
+                                                      @RequestParam int limit,
+                                                      @RequestParam String no_older_than,
+                                                      @RequestParam String kind,
+                                                      @RequestParam String paging_id) {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:transactions ...");
+        List<GetTransactionsResponse> mList = new ArrayList<>();
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 transactions found: " + mList.size());
+        return mList;
     }
 
 }

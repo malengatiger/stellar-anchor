@@ -1,44 +1,62 @@
 package com.anchor.api.data;
 
-import java.util.UUID;
+import com.anchor.api.data.transfer.sep26.ExtraInfoItem;
+
+import java.util.List;
 
 /*
+    👽 👽 👽 👽
+    POST TRANSFER_SERVER_SEP0024/transactions/withdraw/interactive
+    Content-Type: multipart/form-data
 
-POST TRANSFER_SERVER_SEP0024/transactions/withdraw/interactive
-Content-Type: multipart/form-data
+    asset_code=USD&email_address=myaccount@gmail.com&account=GACW7NONV43MZIFHCOKCQJAKSJSISSICFVUJ2C6EZIW5773OU3HD64VI
+    1. Success: no additional information needed
+    Response code: 200 OK
 
-asset_code=USD&email_address=myaccount@gmail.com&account=GACW7NONV43MZIFHCOKCQJAKSJSISSICFVUJ2C6EZIW5773OU3HD64VI
-1. Success: no additional information needed
-Response code: 200 OK
+    🐳  🐳
+    This is the correct response if the anchor is able to execute the withdrawal
+    and needs no additional information about the user.
+    It should also be used if the anchor requires information about the user,
+    but the information has previously been submitted and accepted.
 
-🐳  🐳
-This is the correct response if the anchor is able to execute the withdrawal
-and needs no additional information about the user.
-It should also be used if the anchor requires information about the user,
-but the information has previously been submitted and accepted.
+    🥬 🥬 🥬 Success: no additional information needed
+    🥬 🥬 🥬 Response code: 200 OK
 
-The response body should be a JSON object with the following fields:
+    This is the correct response if the anchor is able to execute the withdrawal and needs no additional information about the user. It should also be used if the anchor requires information about the user, but the information has previously been submitted and accepted.
+
+    The response body should be a JSON object with the following fields:
+
+    🍎 Name	        Type	Description
+    account_id	    string	The account the user should send its token back to.
+    memo_type	    string	(optional) Type of memo to attach to transaction, one of text, id or hash.
+    memo	        string	(optional) Value of memo to attach to transaction, for hash this should be base64-encoded.
+    eta	            int	    (optional) Estimate of how long the withdrawal will take to credit in seconds.
+    min_amount	    float	(optional) Minimum amount of an asset that a user can withdraw.
+    max_amount	    float	(optional) Maximum amount of asset that a user can withdraw.
+    fee	            float	(optional) If there is a fee for withdraw. Already calculated. In units of the withdrawn asset.
+    extra_info	    array	(optional) JSON array with additional information about the withdrawal process. Each element in the array is formatted as follows {key: KEY, value: VALUE}. Wallets are encouraged to present extra_info in a tabular manner and enable easy copy to clipboard for each line value.
  */
 public class WithdrawOKResponse {
     private String id, account_id, memo_type, memo;
     private int eta;
-    private float min_amount, max_amount, fee_fixed, fee_percent, fee_minimum;
-    private Object extra_info;
+    private float min_amount, max_amount, fee;
+    private List<ExtraInfoItem> extra_info;
 
-    public WithdrawOKResponse(String account_id, String memo_type, String memo, int eta,
-                              float min_amount, float max_amount, float fee_fixed, float fee_percent,
-                              float fee_minimum, Object extra_info) {
+    public WithdrawOKResponse(String id, String account_id, String memo_type, String memo, int eta,
+                              float min_amount, float max_amount, float fee,
+                              List<ExtraInfoItem> extra_info) {
+        this.id = id;
         this.account_id = account_id;
         this.memo_type = memo_type;
         this.memo = memo;
         this.eta = eta;
         this.min_amount = min_amount;
         this.max_amount = max_amount;
-        this.fee_fixed = fee_fixed;
-        this.fee_percent = fee_percent;
-        this.fee_minimum = fee_minimum;
+        this.fee = fee;
         this.extra_info = extra_info;
-        this.id = UUID.randomUUID().toString();
+    }
+
+    public WithdrawOKResponse() {
     }
 
     public String getId() {
@@ -97,35 +115,20 @@ public class WithdrawOKResponse {
         this.max_amount = max_amount;
     }
 
-    public float getFee_fixed() {
-        return fee_fixed;
+    public float getFee() {
+        return fee;
     }
 
-    public void setFee_fixed(float fee_fixed) {
-        this.fee_fixed = fee_fixed;
+    public void setFee(float fee) {
+        this.fee = fee;
     }
 
-    public float getFee_percent() {
-        return fee_percent;
-    }
 
-    public void setFee_percent(float fee_percent) {
-        this.fee_percent = fee_percent;
-    }
-
-    public float getFee_minimum() {
-        return fee_minimum;
-    }
-
-    public void setFee_minimum(float fee_minimum) {
-        this.fee_minimum = fee_minimum;
-    }
-
-    public Object getExtra_info() {
+    public List<ExtraInfoItem> getExtra_info() {
         return extra_info;
     }
 
-    public void setExtra_info(Object extra_info) {
+    public void setExtra_info(List<ExtraInfoItem> extra_info) {
         this.extra_info = extra_info;
     }
 }
