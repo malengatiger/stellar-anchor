@@ -5,6 +5,9 @@ import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.info.Info;
 import com.anchor.api.services.AccountService;
 import com.anchor.api.services.FirebaseService;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTCreationException;
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -48,13 +51,13 @@ public class AnchorSep10Challenge {
     @Autowired
     private FirebaseService firebaseService;
 
-    public static final int TIME_BOUNDS_MIN = 60, TIME_BOUNDS_MAX = 180;
+
     /**
      * Returns a valid <a href="https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0010.md#response" target="_blank">SEP 10</a> challenge, for use in web authentication.
      *
      * @param clientAccountId The stellar account belonging to the client.
      */
-    public  String newChallenge(String clientAccountId) throws Exception {
+    public  ChallengeResponse newChallenge(String clientAccountId) throws Exception {
 
         Anchor anchor = firebaseService.getAnchorByName(anchorName);
         if (anchor == null) {
@@ -99,7 +102,46 @@ public class AnchorSep10Challenge {
 
         transaction.sign(signer);
 
-        return transaction.toEnvelopeXdrBase64();
+        ChallengeResponse challengeResponse = new ChallengeResponse(transaction.toEnvelopeXdrBase64(),network.getNetworkPassphrase());
+        return challengeResponse;
+    }
+
+    public String getToken(String transaction) throws Exception {
+        setServerAndNetwork();
+        AnchorSep10Challenge.ChallengeTransaction challengeTransaction = readChallengeTransaction(transaction);
+        String clientAccountId = challengeTransaction.getClientAccountId();
+        AccountResponse accountResponse = server.accounts().account(clientAccountId);
+        if (accountResponse == null) {
+            throw new Exception("Stellar account not found");
+        }
+        Set<String> signers = new HashSet<>();
+        Set<AccountResponse.Signer> mSigners = new HashSet<>();
+        for (AccountResponse.Signer signer : accountResponse.getSigners()) {
+            signers.add(signer.getKey());
+            mSigners.add(signer);
+        }
+        try {
+            verifyChallengeTransactionSigners(transaction, signers);
+        } catch (Exception e) {
+            throw new Exception("Challenge: verifyChallengeTransactionSigners failed");
+        }
+
+        try {
+            verifyChallengeTransactionThreshold(transaction,1,mSigners);
+        } catch (Exception e) {
+            throw new Exception("Challenge: verifyChallengeTransactionThreshold failed");
+        }
+        String token;
+        try {
+            Algorithm algorithm = Algorithm.HMAC256("secret"); //todo - use seed from anchor?
+            token = JWT.create()
+                    .withIssuer("auth0")
+                    .sign(algorithm);
+        } catch (JWTCreationException exception){
+            throw new Exception("JWT token creation failed: " + exception.getMessage());
+        }
+        LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E Token created: ".concat(token));
+        return token;
     }
 
     /**
@@ -110,17 +152,17 @@ public class AnchorSep10Challenge {
      * It does not verify that the transaction has been signed by the client or
      * that any signatures other than the servers on the transaction are valid. Use
      * one of the following functions to completely verify the transaction:
-     * {@link AnchorSep10Challenge#verifyChallengeTransactionSigners(String, String, Network, Set)} or
-     * {@link AnchorSep10Challenge#verifyChallengeTransactionThreshold(String, String, Network, int, Set)}
+     * {@link AnchorSep10Challenge#verifyChallengeTransactionThreshold(String, int, Set)}
      *
      * @param challengeXdr    SEP-0010 transaction challenge transaction in base64.
-     * @param serverAccountId Account ID for server's account.
-     * @param network         The network to connect to for verifying and retrieving.
      * @return {@link ChallengeTransaction}, the decoded transaction envelope and client account ID contained within.
      * @throws InvalidSep10ChallengeException If the SEP-0010 validation fails, the exception will be thrown.
      * @throws IOException                    If read XDR string fails, the exception will be thrown.
      */
-    public  ChallengeTransaction readChallengeTransaction(String challengeXdr, String serverAccountId, Network network) throws InvalidSep10ChallengeException, IOException {
+    public  ChallengeTransaction readChallengeTransaction(String challengeXdr) throws Exception {
+        setServerAndNetwork();
+        Anchor anchor = firebaseService.getAnchorByName(anchorName);
+        String serverAccountId = anchor.getBaseAccount().getAccountId();
         // decode the received input as a base64-urlencoded XDR representation of Stellar transaction envelope
         Transaction transaction = Transaction.fromEnvelopeXdr(challengeXdr, network);
 
@@ -186,7 +228,9 @@ public class AnchorSep10Challenge {
         if (!verifyTransactionSignature(transaction, serverAccountId)) {
             throw new InvalidSep10ChallengeException(String.format("Transaction not signed by server: %s.", serverAccountId));
         }
-
+        ChallengeTransaction challengeTransaction = new ChallengeTransaction(transaction,clientAccountId);
+        LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C readChallengeTransaction completed. "
+                .concat(challengeTransaction.getClientAccountId()));
         return new ChallengeTransaction(transaction, clientAccountId);
     }
 
@@ -200,20 +244,19 @@ public class AnchorSep10Challenge {
      * signers that were found is returned, excluding the server account ID.
      *
      * @param challengeXdr    SEP-0010 transaction challenge transaction in base64.
-     * @param serverAccountId Account ID for server's account.
-     * @param network         The network to connect to for verifying and retrieving.
      * @param signers         The signers of client account.
      * @return a list of signers that were found is returned, excluding the server account ID.
      * @throws InvalidSep10ChallengeException If the SEP-0010 validation fails, the exception will be thrown.
      * @throws IOException                    If read XDR string fails, the exception will be thrown.
      */
-    public  Set<String> verifyChallengeTransactionSigners(String challengeXdr, String serverAccountId, Network network, Set<String> signers) throws InvalidSep10ChallengeException, IOException {
+    public  Set<String> verifyChallengeTransactionSigners(String challengeXdr, Set<String> signers) throws Exception {
         if (signers == null || signers.isEmpty()) {
             throw new InvalidSep10ChallengeException("No verifiable signers provided, at least one G... address must be provided.");
         }
-
+        Anchor anchor = firebaseService.getAnchorByName(anchorName);
+        String serverAccountId = anchor.getBaseAccount().getAccountId();
         // Read the transaction which validates its structure.
-        ChallengeTransaction parsedChallengeTransaction = readChallengeTransaction(challengeXdr, serverAccountId, network);
+        ChallengeTransaction parsedChallengeTransaction = readChallengeTransaction(challengeXdr);
         Transaction transaction = parsedChallengeTransaction.getTransaction();
 
         // Ensure the server account ID is an address and not a seed.
@@ -276,7 +319,8 @@ public class AnchorSep10Challenge {
         if (signersFound.size() != transaction.getSignatures().size() - 1) {
             throw new InvalidSep10ChallengeException("Transaction has unrecognized signatures.");
         }
-
+        LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C verifyChallengeTransactionSigners completed. Signers: "
+                .concat("" +signers.size()));
         return signersFound;
     }
 
@@ -289,25 +333,25 @@ public class AnchorSep10Challenge {
      * account.
      *
      * @param challengeXdr    SEP-0010 transaction challenge transaction in base64.
-     * @param serverAccountId Account ID for server's account.
-     * @param network         The network to connect to for verifying and retrieving.
      * @param threshold       The threshold on the client account.
      * @param signers         The signers of client account.
      * @return a list of signers that were found is returned, excluding the server account ID.
      * @throws InvalidSep10ChallengeException If the SEP-0010 validation fails, the exception will be thrown.
      * @throws IOException                    If read XDR string fails, the exception will be thrown.
      */
-    public  Set<String> verifyChallengeTransactionThreshold(String challengeXdr, String serverAccountId, Network network, int threshold, Set<Signer> signers) throws InvalidSep10ChallengeException, IOException {
+    public  Set<String> verifyChallengeTransactionThreshold(String challengeXdr,
+                                                            int threshold, Set<AccountResponse.Signer> signers) throws Exception {
+        setServerAndNetwork();
         if (signers == null || signers.isEmpty()) {
             throw new InvalidSep10ChallengeException("No verifiable signers provided, at least one G... address must be provided.");
         }
 
         Map<String, Integer> weightsForSigner = new HashMap<String, Integer>();
-        for (Signer signer : signers) {
+        for (AccountResponse.Signer signer : signers) {
             weightsForSigner.put(signer.getKey(), signer.getWeight());
         }
 
-        Set<String> signersFound = verifyChallengeTransactionSigners(challengeXdr, serverAccountId, network, weightsForSigner.keySet());
+        Set<String> signersFound = verifyChallengeTransactionSigners(challengeXdr,  weightsForSigner.keySet());
 
         int sum = 0;
         for (String signer : signersFound) {
@@ -320,7 +364,8 @@ public class AnchorSep10Challenge {
         if (sum < threshold) {
             throw new InvalidSep10ChallengeException(String.format("Signers with weight %d do not meet threshold %d.", sum, threshold));
         }
-
+        LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C verifyChallengeTransactionThreshold completed. Signers: "
+                .concat("" +signersFound.size()));
         return signersFound;
     }
 
@@ -352,13 +397,15 @@ public class AnchorSep10Challenge {
                 }
             }
         }
-
+        LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C verifyTransactionSignatures completed. Signers: "
+                .concat("" +signers.size()));
         return signersFound;
     }
 
     private  boolean verifyTransactionSignature(Transaction transaction, String accountId) throws InvalidSep10ChallengeException {
         return !verifyTransactionSignatures(transaction, Collections.singleton(accountId)).isEmpty();
     }
+
     private void setServerAndNetwork() {
         if (status == null) {
             LOGGER.info("\uD83D\uDE08 \uD83D\uDC7F Set status to dev because status is NULL");
@@ -379,7 +426,7 @@ public class AnchorSep10Challenge {
     }
     //static classes .....................
     /**
-     * Used to store the results produced by {@link AnchorSep10Challenge#readChallengeTransaction(String, String, Network)}.
+     * Used to store the results produced by {@link AnchorSep10Challenge#readChallengeTransaction(String)}.
      */
     public static class ChallengeTransaction {
         private final Transaction transaction;

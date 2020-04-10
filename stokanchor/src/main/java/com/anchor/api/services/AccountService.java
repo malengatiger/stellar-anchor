@@ -514,4 +514,8 @@ public class AccountService {
 
         }
     }
+    public Server getServer() {
+        setServerAndNetwork();
+        return server;
+    }
 }

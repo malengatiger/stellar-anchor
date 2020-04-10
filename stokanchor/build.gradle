@@ -44,6 +44,7 @@ dependencies {
 	implementation group: 'joda-time', name: 'joda-time', version: '2.10.5'
 	// https://mvnrepository.com/artifact/com.moandjiezana.toml/toml4j
 	implementation group: 'com.moandjiezana.toml', name: 'toml4j', version: '0.7.2'
+	implementation 'com.auth0:java-jwt:3.10.2'
 
 
 	// https://mvnrepository.com/artifact/javax.mail/mail

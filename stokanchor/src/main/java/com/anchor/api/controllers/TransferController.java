@@ -4,10 +4,15 @@ import com.anchor.api.WithdrawRequestParameters;
 import com.anchor.api.data.*;
 import com.anchor.api.data.account.Options;
 import com.anchor.api.data.transfer.sep10.AnchorSep10Challenge;
+import com.anchor.api.data.transfer.sep10.ChallengeResponse;
+import com.anchor.api.data.transfer.sep10.JWTToken;
 import com.anchor.api.data.transfer.sep27.InfoServerResponse;
 import com.anchor.api.services.AccountService;
 import com.anchor.api.services.FirebaseService;
 import com.anchor.api.data.info.Info;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTCreationException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +22,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.stellar.sdk.InvalidSep10ChallengeException;
+import org.stellar.sdk.Server;
+import org.stellar.sdk.Transaction;
+import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
+import org.stellar.sdk.xdr.DecoratedSignature;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 @CrossOrigin(maxAge = 3600)
@@ -180,10 +193,23 @@ public class TransferController {
         return null;
     }
 
-    @GetMapping("/auth")
-    public String auth(@RequestParam String clientAccountId) throws Exception {
+    @GetMapping(value = "/auth", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ChallengeResponse newChallenge(@RequestParam String account) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:auth ...");
-        return anchorSep10Challenge.newChallenge(clientAccountId);
+        return anchorSep10Challenge.newChallenge(account);
+    }
+    /*
+        🌼 🌼 Get JWT token from transaction xdr
+            Client submits a challenge transaction (that was previously returned by the challenge endpoint) as a HTTP POST request to WEB_AUTH_ENDPOINT using one of the following formats (both should be equally supported by the server):
+
+        🥏 🥏 check the content type is correct
+            Content-Type: application/x-www-form-urlencoded, body: transaction=<signed XDR (URL-encoded)>)
+            Content-Type: application/json, body: {"transaction": "<signed XDR>"}
+     */
+    @PostMapping(value = "/token", produces = MediaType.APPLICATION_JSON_VALUE)
+    public JWTToken getToken(@RequestParam String transaction) throws Exception {
+        String token = anchorSep10Challenge.getToken(transaction);
+        return new JWTToken(token);
     }
     /*
         🌼 One of id, stellar_transaction_id or external_transaction_id is required.
