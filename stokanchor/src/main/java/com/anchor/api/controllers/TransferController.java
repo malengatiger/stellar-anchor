@@ -3,10 +3,10 @@ package com.anchor.api.controllers;
 import com.anchor.api.WithdrawRequestParameters;
 import com.anchor.api.data.*;
 import com.anchor.api.data.account.Options;
+import com.anchor.api.data.transfer.sep10.AnchorSep10Challenge;
 import com.anchor.api.data.transfer.sep27.InfoServerResponse;
 import com.anchor.api.services.AccountService;
 import com.anchor.api.services.FirebaseService;
-import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.info.Info;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -49,6 +49,9 @@ public class TransferController {
 
     @Autowired
     private AccountService accountService;
+
+    @Autowired
+    private AnchorSep10Challenge anchorSep10Challenge;
 
     @Value("${anchorName}")
     private String anchorName;
@@ -175,6 +178,12 @@ public class TransferController {
                 " " + operation + " " + asset_code + " " + amount);
 
         return null;
+    }
+
+    @GetMapping("/auth")
+    public String auth(@RequestParam String clientAccountId) throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:auth ...");
+        return anchorSep10Challenge.newChallenge(clientAccountId);
     }
     /*
         🌼 One of id, stellar_transaction_id or external_transaction_id is required.

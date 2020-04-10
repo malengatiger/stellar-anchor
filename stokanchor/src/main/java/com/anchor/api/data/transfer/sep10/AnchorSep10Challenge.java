@@ -1,16 +1,21 @@
 package com.anchor.api.data.transfer.sep10;
 
 
+import com.anchor.api.data.anchor.Anchor;
+import com.anchor.api.data.info.Info;
 import com.anchor.api.services.AccountService;
+import com.anchor.api.services.FirebaseService;
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.BaseEncoding;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.*;
+import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.xdr.DecoratedSignature;
 import org.stellar.sdk.xdr.Signature;
 import org.stellar.sdk.xdr.SignatureHint;
@@ -21,9 +26,9 @@ import java.util.*;
 import java.util.logging.Logger;
 
 @Service
-public class Sep10Challenge {
-    public Sep10Challenge() {
-        LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 Sep10Challenge Service constructor: " +
+public class AnchorSep10Challenge {
+    public AnchorSep10Challenge() {
+        LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 AnchorSep10Challenge Service constructor: " +
                 "\uD83D\uDC99 handles Sep10 Web Authentication");
     }
 
@@ -37,35 +42,57 @@ public class Sep10Challenge {
     private Server server;
     private Network network;
 
+    @Value("anchorName")
+    private String anchorName;
+
+    @Autowired
+    private FirebaseService firebaseService;
+
+    public static final int TIME_BOUNDS_MIN = 60, TIME_BOUNDS_MAX = 180;
     /**
      * Returns a valid <a href="https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0010.md#response" target="_blank">SEP 10</a> challenge, for use in web authentication.
      *
-     * @param signer          The server's signing account.
-     * @param network         The Stellar network used by the server.
      * @param clientAccountId The stellar account belonging to the client.
-     * @param anchorName      The name of the anchor which will be included in the ManageData operation.
-     * @param timebounds      The lifetime of the challenge token.
      */
-    public  String newChallenge(
-            KeyPair signer,
-            Network network,
-            String clientAccountId,
-            String anchorName,
-            TimeBounds timebounds) {
+    public  String newChallenge(String clientAccountId) throws Exception {
 
-        this.network = network;
+        Anchor anchor = firebaseService.getAnchorByName(anchorName);
+        if (anchor == null) {
+            throw new Exception("Anchor is missing");
+        }
+        setServerAndNetwork();
+        KeyPair signer = KeyPair.fromSecretSeed(anchor.getBaseAccount().getSeed());
+        //todo - do the Crypto thing here ... encrypted seed from db is decrypted here ...
+        TimeBounds bounds = new TimeBounds(new Date().getTime(), new Date().getTime() + (1000 * 60 * 15));
+
         byte[] nonce = new byte[48];
         SecureRandom random = new SecureRandom();
         random.nextBytes(nonce);
         BaseEncoding base64Encoding = BaseEncoding.base64();
         byte[] encodedNonce = base64Encoding.encode(nonce).getBytes();
 
+        AccountResponse clientAccount = server.accounts().account(clientAccountId);
+        if (clientAccount == null) {
+            throw new Exception("Client Account missing");
+        }
+        LOGGER.info("\uD83C\uDF3C Client has an account on Stellar. We good! Starting ManageDataOperation in transaction ..." +
+                " \uD83C\uDF3A anchor: " + anchorName);
+
+        int maxSize = 50;
+        String key = "";
+        if(anchorName.length() > maxSize ){
+            key = anchorName.substring(0, maxSize);
+        } else {
+            key = anchorName;
+        }
+        key += " auth";
         Account sourceAccount = new Account(signer.getAccountId(), -1L);
-        ManageDataOperation operation = new ManageDataOperation.Builder(anchorName + " auth", encodedNonce)
+        ManageDataOperation operation = new ManageDataOperation.Builder(key, encodedNonce)
                 .setSourceAccount(clientAccountId)
                 .build();
+
         Transaction transaction = new Transaction.Builder(sourceAccount, network)
-                .addTimeBounds(timebounds)
+                .addTimeBounds(bounds)
                 .setOperationFee(100)
                 .addOperation(operation)
                 .build();
@@ -83,8 +110,8 @@ public class Sep10Challenge {
      * It does not verify that the transaction has been signed by the client or
      * that any signatures other than the servers on the transaction are valid. Use
      * one of the following functions to completely verify the transaction:
-     * {@link Sep10Challenge#verifyChallengeTransactionSigners(String, String, Network, Set)} or
-     * {@link Sep10Challenge#verifyChallengeTransactionThreshold(String, String, Network, int, Set)}
+     * {@link AnchorSep10Challenge#verifyChallengeTransactionSigners(String, String, Network, Set)} or
+     * {@link AnchorSep10Challenge#verifyChallengeTransactionThreshold(String, String, Network, int, Set)}
      *
      * @param challengeXdr    SEP-0010 transaction challenge transaction in base64.
      * @param serverAccountId Account ID for server's account.
@@ -332,10 +359,27 @@ public class Sep10Challenge {
     private  boolean verifyTransactionSignature(Transaction transaction, String accountId) throws InvalidSep10ChallengeException {
         return !verifyTransactionSignatures(transaction, Collections.singleton(accountId)).isEmpty();
     }
+    private void setServerAndNetwork() {
+        if (status == null) {
+            LOGGER.info("\uD83D\uDE08 \uD83D\uDC7F Set status to dev because status is NULL");
+            status = "dev";
+        }
+        isDevelopment = status.equalsIgnoreCase("dev");
+        if (isDevelopment) {
+            server = new Server(DEV_SERVER);
+            network = Network.TESTNET;
+            LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F DEVELOPMENT: ... Stellar TestNet Server and Network ... \uD83C\uDF4F \uD83C\uDF4F \n");
 
+        } else {
+            server = new Server(PROD_SERVER);
+            network = Network.PUBLIC;
+            LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F PRODUCTION: ... Stellar Public Server and Network... \uD83C\uDF4F \uD83C\uDF4F \n");
+
+        }
+    }
     //static classes .....................
     /**
-     * Used to store the results produced by {@link Sep10Challenge#readChallengeTransaction(String, String, Network)}.
+     * Used to store the results produced by {@link AnchorSep10Challenge#readChallengeTransaction(String, String, Network)}.
      */
     public static class ChallengeTransaction {
         private final Transaction transaction;

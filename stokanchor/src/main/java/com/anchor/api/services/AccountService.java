@@ -4,7 +4,7 @@ package com.anchor.api.services;
 import com.anchor.api.data.User;
 import com.anchor.api.data.account.Account;
 import com.anchor.api.data.account.AccountResponseBag;
-import com.anchor.api.data.transfer.sep10.Sep10Challenge;
+import com.anchor.api.data.transfer.sep10.AnchorSep10Challenge;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
@@ -485,7 +485,7 @@ public class AccountService {
         }
     }
     @Autowired
-    Sep10Challenge sep10Challenge;
+    AnchorSep10Challenge anchorSep10Challenge;
     public String handleChallenge(final String seed) throws Exception {
 
         setServerAndNetwork();
