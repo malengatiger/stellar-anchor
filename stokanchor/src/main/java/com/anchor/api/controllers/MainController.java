@@ -1,14 +1,18 @@
 package com.anchor.api.controllers;
 
+import com.anchor.api.data.anchor.Agent;
 import com.anchor.api.data.info.Info;
 import com.anchor.api.services.AccountService;
 import com.anchor.api.services.AnchorAccountService;
+import com.anchor.api.services.CryptoService;
 import com.anchor.api.services.FirebaseService;
 import com.anchor.api.util.Crypto;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.anchor.AnchorBag;
 import com.anchor.api.data.User;
 import com.anchor.api.util.Util;
+import com.google.cloud.kms.v1.CryptoKey;
+import com.google.cloud.kms.v1.KeyRing;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.moandjiezana.toml.Toml;
@@ -41,6 +45,10 @@ public class MainController {
 
     @Autowired
     private ApplicationContext context;
+    @Autowired
+    private AnchorAccountService anchorAccountService;
+    @Autowired
+    private AccountService accountService;
     @Value("${status}")
     private String status;
 
@@ -97,28 +105,40 @@ public class MainController {
     @GetMapping(value = "/getAccount", produces = MediaType.APPLICATION_JSON_VALUE)
     public AccountResponse getAccount(@RequestParam String seed) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:getAccount ...");
-        AccountService accountService = context.getBean(AccountService.class);
         AccountResponse response = accountService.getAccount(seed);
         LOGGER.info( "\uD83D\uDC99 \uD83D\uDC9C MainController getAccount returned"
                 + response.getAccountId() + " \uD83D\uDC99 \uD83D\uDC9C");
         return response;
     }
+
     @PostMapping(value = "/createAnchor", produces = MediaType.APPLICATION_JSON_VALUE)
     public Anchor createAnchor(@RequestBody AnchorBag anchorBag) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:createAnchor ...");
-        AnchorAccountService service = context.getBean(AnchorAccountService.class);
-        Anchor anchor = service.createAnchorAccounts(anchorBag.getAnchor(),
-                anchorBag.getPassword(),anchorBag.getAssetCode(),anchorBag.getAssetAmount());
-        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 Stellar returns Anchor: \uD83C\uDF4E "
+        if (anchorBag.getFundingSeed() == null) {
+            throw new Exception("Funding Account Seed missing");
+        }
+        Anchor anchor = anchorAccountService.createAnchorAccounts(anchorBag.getAnchor(),
+                anchorBag.getPassword(),anchorBag.getAssetCode(),anchorBag.getAssetAmount(), anchorBag.getFundingSeed(), anchorBag.getStartingBalance());
+        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 AnchorAccountService returns Anchor: \uD83C\uDF4E "
                 + anchor.getName() + "  \uD83C\uDF4E anchorId: " + anchor.getAnchorId()
         + "  \uD83C\uDF4E");
+        LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F \uD83C\uDF4F ANCHOR CREATED: ".concat(G.toJson(anchor)));
         return anchor;
     }
+    @PostMapping(value = "/createAgent", produces = MediaType.APPLICATION_JSON_VALUE)
+    public User createAgent(@RequestBody Agent user) throws Exception {
+//        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:createUser ...");
+//        User bag = accountService.createUser(user,"fundingSeed","startingBalance");
+//        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 Stellar returns User: \uD83C\uDF4E "
+//                + bag.getFullName() + " userId: " + bag.getUserId());
+        return null;
+    }
+
     @PostMapping(value = "/createUser", produces = MediaType.APPLICATION_JSON_VALUE)
     public User createUser(@RequestBody User user) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:createUser ...");
         AccountService service = context.getBean(AccountService.class);
-        User bag = service.createUser(user);
+        User bag = service.createUser(user,"fundingSeed","startingBalance");
         LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 Stellar returns User: \uD83C\uDF4E "
                 + bag.getFullName() + " userId: " + bag.getUserId());
         return bag;
@@ -134,18 +154,41 @@ public class MainController {
         return realUser;
     }
 
-    @GetMapping("/createCrypto")
-    public String createDefaultCrypto(@RequestParam boolean isDevelopment) throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StokkieAnchorApplication: createDefaultCrypto ... ... ...");
-        Crypto service = context.getBean(Crypto.class);
-        service.createDefaults();
-        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 createDefaultCrypto done!: \uD83C\uDF4E ");
-        return "We cooking with GAS!";
+    @Autowired
+    private CryptoService cryptoService;
+    @GetMapping("/createKeyRing")
+    public String createKeyRing(@RequestParam String keyRingId) throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication: createKeyRing ... ... ...");
+        KeyRing keyRing = cryptoService.createKeyRing(keyRingId);
+        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 createKeyRing done!: \uD83C\uDF4E "
+        .concat(keyRing.getName()));
+        return keyRing.getName();
+    }
+    @GetMapping("/createCryptoKey")
+    public String createCryptoKey(@RequestParam String keyRingId, String cryptoKeyId) throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication: createCryptoKey ... ... ...");
+        CryptoKey cryptoKey = cryptoService.createCryptoKey(keyRingId, cryptoKeyId);
+        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 createCryptoKey done!: \uD83C\uDF4E "
+                .concat(cryptoKey.getName()));
+        return cryptoKey.getName();
+    }
+    @GetMapping("/encrypt")
+    public String encrypt(@RequestParam String keyRingId, String cryptoKeyId, String stringToEncrypt) throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication: encrypt ... ... ...");
+        byte[] encrypted = cryptoService.encrypt(keyRingId, cryptoKeyId, stringToEncrypt);
+        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 encrypt done!: \uD83C\uDF4E "
+                .concat(encrypted.toString()));
+        return encrypted.toString();
     }
 
     @GetMapping("/createTestInfo")
     public Info createTestInfo() {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:createTestInfo ...");
         return Util.createTestInfo();
+    }
+
+    class AgentBag {
+        Agent agent;
+        String password;
     }
 }

@@ -41,30 +41,19 @@ public class AnchorAccountService {
     @Value("${fromMail}")
     private String fromMail;
 
-    @Value("${seed}")
-    private String seed;
-
-    @Value("${account}")
-    private String account;
-
-    @Value("${startingBalance}")
-    private String startingBalance;
-    @Value("${distributionStartingBalance}")
-    private String distributionStartingBalance;
-    @Value("${issuingStartingBalance}")
-    private String issuingStartingBalance;
     @Value("${limit}")
     private String limit;
+    @Autowired
+    private AccountService accountService;
 
     public AnchorAccountService() {
         LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService Constructor fired ...\uD83C\uDF40 " +
                 "manages the setup of Anchor base and issuing accounts \uD83C\uDF51 ");
     }
 
-    public Anchor createAnchorAccounts(Anchor newAnchor, String password, String assetCode, String assetAmount) throws Exception {
+    public Anchor createAnchorAccounts(Anchor newAnchor, String password, String assetCode, String assetAmount, String fundingSeed, String startingBalance) throws Exception {
         LOGGER.info("\n\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: creating Anchor Accounts .... \uD83C\uDF40 DEV STATUS: " + status + "\n\n");
-        List<AccountResponseBag> mList = new ArrayList<>();
-        AccountService service = context.getBean(AccountService.class);
+        accountService = context.getBean(AccountService.class);
         Anchor anchor = new Anchor();
 
         DateTime dateTime = new DateTime();
@@ -77,23 +66,23 @@ public class AnchorAccountService {
         User user = createAnchorUser(anchor, password);
         anchor.setUser(user);
 
-        AccountResponseBag baseAccount = service.createAndFundStellarAccount(seed,startingBalance);
-        AccountResponseBag distributionAccount = service.createAndFundStellarAccount(baseAccount.getSecretSeed(),distributionStartingBalance);
-        AccountResponseBag issuingAccount = service.createAndFundStellarAccount(baseAccount.getSecretSeed(),issuingStartingBalance);
+        AccountResponseBag baseAccount = accountService.createAndFundStellarAccount(fundingSeed,startingBalance);
+        AccountResponseBag distributionAccount = accountService.createAndFundStellarAccount(baseAccount.getSecretSeed(),startingBalance);
+        AccountResponseBag issuingAccount = accountService.createAndFundStellarAccount(baseAccount.getSecretSeed(),startingBalance);
 
         anchor.setBaseAccount(new Account(baseAccount));
         anchor.setIssuingAccount(new Account(issuingAccount));
         anchor.setDistributionAccount(new Account(distributionAccount));
 
         try {
-            SubmitTransactionResponse transactionResponse = service.issueAsset(
+            SubmitTransactionResponse transactionResponse = accountService.issueAsset(
                     issuingAccount.getAccountResponse().getAccountId(),
                     distributionAccount.getSecretSeed(),
                     limit, assetCode);
             LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: createAnchorAccounts " +
                     ".... \uD83C\uDF45 TrustLine GetTransactionsResponse Response isSuccess:  " + transactionResponse.isSuccess());
 
-            SubmitTransactionResponse response = service.createAsset(
+            SubmitTransactionResponse response = accountService.createAsset(
                     issuingAccount.getSecretSeed(),
                     distributionAccount.getAccountResponse().getAccountId(),
                     assetCode,assetAmount);
@@ -119,9 +108,9 @@ public class AnchorAccountService {
             LOGGER.severe("Email sending failed");
         }
         //todo - list accounts and check balances
-//        AccountResponse response1 = service.getAccount(baseAccount.getSecretSeed());
-//        AccountResponse response2 = service.getAccount(issuingAccount.getSecretSeed());
-//        AccountResponse response3 = service.getAccount(distributionAccount.getSecretSeed());
+//        AccountResponse response1 = accountService.getAccount(baseAccount.getSecretSeed());
+//        AccountResponse response2 = accountService.getAccount(issuingAccount.getSecretSeed());
+//        AccountResponse response3 = accountService.getAccount(distributionAccount.getSecretSeed());
 //        LOGGER.info("\n\n \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ..... CHECKING ACCOUNTS AFTER ALL THAT .... \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ");
 //        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 BASE ACCOUNT: " + G.toJson(response1));
 //        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ISSUING ACCOUNT: " + G.toJson(response2));

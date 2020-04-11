@@ -3,16 +3,13 @@ package com.anchor.api.controllers;
 import com.anchor.api.WithdrawRequestParameters;
 import com.anchor.api.data.*;
 import com.anchor.api.data.account.Options;
+import com.anchor.api.data.info.Info;
 import com.anchor.api.data.transfer.sep10.AnchorSep10Challenge;
 import com.anchor.api.data.transfer.sep10.ChallengeResponse;
 import com.anchor.api.data.transfer.sep10.JWTToken;
 import com.anchor.api.data.transfer.sep27.InfoServerResponse;
 import com.anchor.api.services.AccountService;
 import com.anchor.api.services.FirebaseService;
-import com.anchor.api.data.info.Info;
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTCreationException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,18 +19,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.stellar.sdk.InvalidSep10ChallengeException;
-import org.stellar.sdk.Server;
-import org.stellar.sdk.Transaction;
-import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
-import org.stellar.sdk.xdr.DecoratedSignature;
-
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
 
 @CrossOrigin(maxAge = 3600)
@@ -212,12 +200,12 @@ public class TransferController {
         return new JWTToken(token);
     }
     /*
-        🌼 One of id, stellar_transaction_id or external_transaction_id is required.
+        🌼 One of id, 🥏 stellar_transaction_id or 🥏 external_transaction_id is required.
 
         On success the endpoint should return 200 OK HTTP status code and a JSON object with the following fields:
 
         Name	    Type	Description
-        transaction	object	The transaction that was requested by the client.
+        transaction	GetTransactionsResponse	The transaction that was requested by the client.
 
         If the transaction cannot be found, the endpoint should return a 404 NOT FOUND result.
 

@@ -1,17 +1,35 @@
 package com.anchor.api.data.anchor;
 
 public class AnchorBag {
-    String assetCode, assetAmount, password;
+    String assetCode, assetAmount, password, fundingSeed, startingBalance;
     Anchor anchor;
 
-    public AnchorBag(String assetCode, String assetAmount, String password, Anchor anchor) {
+    public AnchorBag(String assetCode, String assetAmount, String password, String fundingSeed, String startingBalance, Anchor anchor) {
         this.assetCode = assetCode;
         this.assetAmount = assetAmount;
         this.password = password;
+        this.fundingSeed = fundingSeed;
+        this.startingBalance = startingBalance;
         this.anchor = anchor;
     }
 
     public AnchorBag() {
+    }
+
+    public String getStartingBalance() {
+        return startingBalance;
+    }
+
+    public void setStartingBalance(String startingBalance) {
+        this.startingBalance = startingBalance;
+    }
+
+    public String getFundingSeed() {
+        return fundingSeed;
+    }
+
+    public void setFundingSeed(String fundingSeed) {
+        this.fundingSeed = fundingSeed;
     }
 
     public String getAssetCode() {

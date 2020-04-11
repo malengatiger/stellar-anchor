@@ -72,23 +72,15 @@ public class AccountService {
     @Value("${status}")
     private String status;
 
-    @Value("${seed}")
-    private String seed;
 
     @Value("${defaultCurrencies}")
     private String defaultCurrencies;
 
-    @Value("${account}")
-    private String account;
 
     @Value("${domain}")
     private String domain;
 
-    @Value("${startingBalance}")
-    private String startingBalance;
 
-    @Value("${anchorName}")
-    private String anchorName;
 
     public User createUserWithExistingAccount(User user) throws Exception {
         if (user.getAnchorId() == null) {
@@ -109,11 +101,11 @@ public class AccountService {
         return user;
     }
 
-    public User createUser(User user) throws Exception {
+    public User createUser(User user, String fundingSeed, String startingBalance) throws Exception {
         if (user.getAnchorId() == null) {
             throw new Exception("Missing anchorId");
         }
-        AccountResponseBag bag = createAndFundStellarAccount(seed, startingBalance);
+        AccountResponseBag bag = createAndFundStellarAccount(fundingSeed, startingBalance);
         Account account = new Account(bag);
         user.addAccount(account);
         FirebaseService scaffold = context.getBean(FirebaseService.class);
@@ -128,44 +120,18 @@ public class AccountService {
         return user;
     }
 
-//    public AccountResponseBag createStellarAccount() throws Exception {
-//        LOGGER.info("\uD83D\uDC99 ... ... ... createStellarAccount starting .......");
-//
-//        AccountResponse accountResponse;
-//        try {
-//            setServerAndNetwork();
-//            KeyPair pair = KeyPair.random();
-//            String secret = new String(pair.getSecretSeed());
-//            LOGGER.info("\uD83D\uDC99 ... new secret seed generated: \uD83D\uDC99 : " + secret
-//            + " accountId: " + pair.getAccountId() + "\ngetting NEW account from server IS A PROBLEM ??? ...");
-//            if (isDevelopment) {
-//                talkToFriendBot(pair.getAccountId());
-//            }
-//            accountResponse = server.accounts().account(pair.getAccountId());
-//            LOGGER.info("\uD83D\uDC99  " +
-//                    "Stellar account has been created!: \uD83C\uDF4E \uD83C\uDF4E YEBOOOO!!!");
-//
-//            AccountResponseBag bag = new AccountResponseBag(accountResponse, secret);
-//            LOGGER.info(("\uD83C\uDF4E \uD83C\uDF4E RESPONSE from Stellar; " +
-//                    "\uD83D\uDC99 new Account: ").concat(bag.getAccountResponse().getAccountId()));
-//            return bag;
-//        } catch (Exception e) {
-//            LOGGER.warning(" \uD83D\uDD34 Failed to create account -  \uD83D\uDD34 message:"
-//            + e.getMessage());
-//            throw new Exception("\uD83D\uDD34 Unable to create Account", e);
-//        }
-//    }
-
     public void talkToFriendBot(String accountId) throws IOException {
         LOGGER.info("\uD83E\uDD6C ... Begging Ms. FriendBot for some \uD83C\uDF51 pussy \uD83C\uDF51 ... " +
                 " \uD83D\uDD34 I heard she gives out!!");
+        isDevelopment = status.equalsIgnoreCase("dev");
+        setServerAndNetwork();
         InputStream response;
         String friendBotUrl = String.format(FRIEND_BOT, accountId);
         response = new URL(friendBotUrl).openStream();
         String body = new Scanner(response, "UTF-8").useDelimiter("\\A").next();
         LOGGER.info("\uD83E\uDD6C " +
                 "FriendBot responded with largess: \uD83E\uDD6C 10,000 Lumens obtained. ... Yebo, Gogo!! \uD83E\uDD6C ");
-        setServerAndNetwork();
+
         if (isDevelopment) {
             LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 Booty from Ms. FriendBot: \uD83C\uDF51 " + body);
         }

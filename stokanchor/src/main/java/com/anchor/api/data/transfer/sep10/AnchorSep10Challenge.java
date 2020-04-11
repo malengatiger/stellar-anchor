@@ -2,18 +2,16 @@ package com.anchor.api.data.transfer.sep10;
 
 
 import com.anchor.api.data.anchor.Anchor;
-import com.anchor.api.data.info.Info;
 import com.anchor.api.services.AccountService;
 import com.anchor.api.services.FirebaseService;
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTCreationException;
+
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.BaseEncoding;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -61,7 +59,7 @@ public class AnchorSep10Challenge {
 
         Anchor anchor = firebaseService.getAnchorByName(anchorName);
         if (anchor == null) {
-            throw new Exception("Anchor is missing");
+            throw new Exception("\uD83C\uDF4E Anchor is missing \uD83C\uDF4E ");
         }
         setServerAndNetwork();
         KeyPair signer = KeyPair.fromSecretSeed(anchor.getBaseAccount().getSeed());
@@ -76,7 +74,7 @@ public class AnchorSep10Challenge {
 
         AccountResponse clientAccount = server.accounts().account(clientAccountId);
         if (clientAccount == null) {
-            throw new Exception("Client Account missing");
+            throw new Exception("\uD83C\uDF4E Client Account missing \uD83C\uDF4E ");
         }
         LOGGER.info("\uD83C\uDF3C Client has an account on Stellar. We good! Starting ManageDataOperation in transaction ..." +
                 " \uD83C\uDF3A anchor: " + anchorName);
@@ -133,11 +131,15 @@ public class AnchorSep10Challenge {
         }
         String token;
         try {
-            Algorithm algorithm = Algorithm.HMAC256("secret"); //todo - use seed from anchor?
-            token = JWT.create()
-                    .withIssuer("auth0")
-                    .sign(algorithm);
-        } catch (JWTCreationException exception){
+            token = JWTUtil.createJWT(UUID.randomUUID().toString(),"https://stokanchor.com",accountResponse.getAccountId(),(1000 * 60 * 15));
+            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C Token: ".concat(token));
+
+            //todo - check token claims ...
+            Claims claims = JWTUtil.decodeJWT(token);
+            LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E JWT issuer: " + claims.getIssuer() + " \uD83C\uDF4E " +
+                    " \uD83E\uDD4F subject: " + claims.getSubject() + " \uD83C\uDF3C iat: "
+                    + claims.getIssuedAt().toString() + " \uD83C\uDF4E exp: " + claims.getExpiration().toString());
+        } catch (Exception exception){
             throw new Exception("JWT token creation failed: " + exception.getMessage());
         }
         LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E Token created: ".concat(token));

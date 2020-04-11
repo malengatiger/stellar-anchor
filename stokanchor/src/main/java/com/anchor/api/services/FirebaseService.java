@@ -1,6 +1,7 @@
 package com.anchor.api.services;
 
 import com.anchor.api.data.account.AccountResponseWithDate;
+import com.anchor.api.data.anchor.Agent;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.info.Info;
 import com.google.api.core.ApiFuture;
@@ -106,6 +107,17 @@ public class FirebaseService {
         return mList;
     }
 
+    public String addAgent(Agent agent) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        Agent current = getAgentByNameAndAnchor(agent.getAnchorId(), agent.getFirstName(), agent.getLastName());
+        if (current == null) {
+            ApiFuture<DocumentReference> future = fs.collection("agents").add(agent);
+            LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Agent added at path: ".concat(future.get().getPath()));
+            return "\uD83C\uDF4F Agent added";
+        } else {
+            throw new Exception("Agent already exists for this Anchor");
+        }
+    }
     public String addAnchorInfo(Info info) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Info current = getAnchorInfo(info.getAnchorId());
@@ -165,7 +177,48 @@ public class FirebaseService {
 
         return info;
     }
+    public Agent getAgent(String agentId) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        Agent agent;
+        List<Agent> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection("agents")
+                .whereEqualTo("agentId",agentId).get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = gson.toJson(map);
+            Agent mInfo = gson.fromJson(object,Agent.class);
+            mList.add(mInfo);
+        }
+        if (mList.isEmpty()) {
+            return null;
+        } else {
+            agent = mList.get(0);
+        }
 
+        return agent;
+    }
+    public Agent getAgentByNameAndAnchor(String anchorId, String firstName, String lastName) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        Agent agent;
+        List<Agent> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection("agents")
+                .whereEqualTo("anchorId",anchorId)
+                .whereEqualTo("firstName",firstName)
+                .whereEqualTo("lastName", lastName).get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = gson.toJson(map);
+            Agent mInfo = gson.fromJson(object,Agent.class);
+            mList.add(mInfo);
+        }
+        if (mList.isEmpty()) {
+            return null;
+        } else {
+            agent = mList.get(0);
+        }
+
+        return agent;
+    }
     public String addAccountResponse(AccountResponse accountResponse) throws Exception {
         LOGGER.info("\uD83C\uDFBD Adding accountResponse to Firestore: ".concat(accountResponse.getAccountId()));
 //        Firestore fs = FirestoreClient.getFirestore();
