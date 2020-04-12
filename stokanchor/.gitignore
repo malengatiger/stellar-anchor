@@ -5,6 +5,10 @@ build/
 !**/src/main/**
 !**/src/test/**
 
+### dev files
+downloaded_seed*
+encrypted_seed*
+
 ### STS ###
 .apt_generated
 .classpath

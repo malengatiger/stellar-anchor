@@ -1,25 +1,44 @@
 package com.anchor.api.data.anchor;
 
+import com.anchor.api.data.kyc.OrganizationKYCFields;
+import com.anchor.api.data.kyc.PersonalKYCFields;
+
 public class Agent {
     String anchorId, agentId, anchorName;
-    String firstName, lastName, idNumber, email, cellphone;
     double latitude, longitude;
-    String dateRegistered, dateUpdated, account, encryptedSeed;
+    String dateRegistered, dateUpdated, externalAccountId, stellarAccountId, organizationId;
+    PersonalKYCFields personalKYCFields;
 
-    public String getAccount() {
-        return account;
+    public PersonalKYCFields getPersonalKYCFields() {
+        return personalKYCFields;
     }
 
-    public void setAccount(String account) {
-        this.account = account;
+    public void setPersonalKYCFields(PersonalKYCFields personalKYCFields) {
+        this.personalKYCFields = personalKYCFields;
     }
 
-    public String getEncryptedSeed() {
-        return encryptedSeed;
+    public String getOrganizationId() {
+        return organizationId;
     }
 
-    public void setEncryptedSeed(String encryptedSeed) {
-        this.encryptedSeed = encryptedSeed;
+    public void setOrganizationId(String organizationId) {
+        this.organizationId = organizationId;
+    }
+
+    public String getExternalAccountId() {
+        return externalAccountId;
+    }
+
+    public void setExternalAccountId(String externalAccountId) {
+        this.externalAccountId = externalAccountId;
+    }
+
+    public String getStellarAccountId() {
+        return stellarAccountId;
+    }
+
+    public void setStellarAccountId(String stellarAccountId) {
+        this.stellarAccountId = stellarAccountId;
     }
 
     public String getDateUpdated() {
@@ -54,45 +73,6 @@ public class Agent {
         this.anchorName = anchorName;
     }
 
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getIdNumber() {
-        return idNumber;
-    }
-
-    public void setIdNumber(String idNumber) {
-        this.idNumber = idNumber;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getCellphone() {
-        return cellphone;
-    }
-
-    public void setCellphone(String cellphone) {
-        this.cellphone = cellphone;
-    }
 
     public double getLatitude() {
         return latitude;

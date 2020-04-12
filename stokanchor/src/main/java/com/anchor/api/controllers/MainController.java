@@ -2,10 +2,7 @@ package com.anchor.api.controllers;
 
 import com.anchor.api.data.anchor.Agent;
 import com.anchor.api.data.info.Info;
-import com.anchor.api.services.AccountService;
-import com.anchor.api.services.AnchorAccountService;
-import com.anchor.api.services.CryptoService;
-import com.anchor.api.services.FirebaseService;
+import com.anchor.api.services.*;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.anchor.AnchorBag;
 import com.anchor.api.data.User;
@@ -46,6 +43,8 @@ public class MainController {
     private ApplicationContext context;
     @Autowired
     private AnchorAccountService anchorAccountService;
+    @Autowired
+    private AgentService agentService;
     @Autowired
     private AccountService accountService;
     @Value("${status}")
@@ -125,12 +124,12 @@ public class MainController {
         return anchor;
     }
     @PostMapping(value = "/createAgent", produces = MediaType.APPLICATION_JSON_VALUE)
-    public User createAgent(@RequestBody Agent user) throws Exception {
-//        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:createUser ...");
-//        User bag = accountService.createUser(user,"fundingSeed","startingBalance");
-//        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 Stellar returns User: \uD83C\uDF4E "
-//                + bag.getFullName() + " userId: " + bag.getUserId());
-        return null;
+    public Agent createAgent(@RequestBody Agent agent) throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:createAgent ...");
+        Agent mAgent = agentService.createAgent(agent);
+        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 Stellar returns Agent: \uD83C\uDF4E "
+                + mAgent.getAgentId() + " anchor: " + mAgent.getAnchorId());
+        return mAgent;
     }
 
     @PostMapping(value = "/createUser", produces = MediaType.APPLICATION_JSON_VALUE)

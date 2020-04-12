@@ -98,13 +98,6 @@ public class CryptoService {
             LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E \uD83C\uDF4E Encrypted bytes: ".concat(content));
             writeFile(accountId,response.getCiphertext().toByteArray());
             uploadSeedFile(accountId);
-            //todo - remove after test
-//            LOGGER.info(".................. download the file and check to see if decrypted seed is retrieved from file ..................");
-//            downloadSeedFile(accountId);
-//            byte[] mBytes = readFile(accountId);
-//            String seed = decrypt(mBytes);
-//            LOGGER.info(("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C byte[] Decrypted " +
-//                    "\uD83D\uDD35 seed: ").concat(seed).concat(" \uD83D\uDD35 "));
 
             return response.getCiphertext().toByteArray();
         }
@@ -132,28 +125,23 @@ public class CryptoService {
 
     public void writeFile(String accountId, byte[] encryptedSeed)
             throws IOException {
-        LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C Writing crypto key to file " +
-                ".... \uD83C\uDF3C ").concat(FILE_PATH.concat(accountId)));
+
         Path path = Paths.get(FILE_PATH.concat(accountId));
         Files.write(path, encryptedSeed);
-        LOGGER.info("\uD83C\uDF45 \uD83C\uDF45 File written with encryptedSeed: "
-                .concat(" path: ").concat(path.toString()));
+
     }
     public byte[] readFile(String accountId)
             throws IOException {
-        LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C .... Reading crypto key from file " +
-                ".... \uD83C\uDF3C ").concat(DOWNLOAD_PATH.concat(accountId)));
+
         Path path = Paths.get(DOWNLOAD_PATH.concat(accountId));
         byte[] read = Files.readAllBytes(path);
-        LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C " + read.length + " bytes read from file: " +
-                " \uD83D\uDD35 \uD83D\uDD35 read: \n".concat(Arrays.toString(read)));
+
         return read;
     }
 
     public void uploadSeedFile(String accountId) throws IOException {
         LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C .................... Uploading encrypted seed file to Cloud Storage " +
                 ".... \uD83C\uDF3C path: ").concat(FILE_PATH.concat(accountId)));
-
         Storage storage = StorageOptions.newBuilder().setProjectId(projectId)
                 .build().getService();
         BlobId blobId = BlobId.of(bucketName, objectName.concat("_").concat(accountId));
@@ -180,8 +168,6 @@ public class CryptoService {
                 "Downloaded Seed File from Cloud Storage: \uD83C\uDF4E "
                         + objectName.concat("_").concat(accountId)
                         + " from bucket name \uD83E\uDD66 "
-                        + bucketName
-                        + " to path: "
-                        + destFilePath));
+                        + bucketName));
     }
 }

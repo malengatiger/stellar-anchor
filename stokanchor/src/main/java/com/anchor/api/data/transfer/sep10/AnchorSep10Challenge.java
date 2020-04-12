@@ -123,11 +123,21 @@ public class AnchorSep10Challenge {
 
     public String getToken(String transaction) throws Exception {
         setServerAndNetwork();
-        AnchorSep10Challenge.ChallengeTransaction challengeTransaction = readChallengeTransaction(transaction);
+        AnchorSep10Challenge.ChallengeTransaction challengeTransaction;
+        try {
+            challengeTransaction = readChallengeTransaction(transaction);
+        } catch (Exception e) {
+            throw new Exception("getToken: readChallengeTransaction failed");
+        }
         String clientAccountId = challengeTransaction.getClientAccountId();
-        AccountResponse accountResponse = server.accounts().account(clientAccountId);
+        AccountResponse accountResponse = null;
+        try {
+            accountResponse = server.accounts().account(clientAccountId);
+        } catch (Exception e) {
+            LOGGER.severe("getToken: Stellar Client Account not found");
+        }
         if (accountResponse == null) {
-            throw new Exception("Stellar account not found");
+            throw new Exception("getToken: Stellar account not found");
         }
         Set<String> signers = new HashSet<>();
         Set<AccountResponse.Signer> mSigners = new HashSet<>();
@@ -138,13 +148,13 @@ public class AnchorSep10Challenge {
         try {
             verifyChallengeTransactionSigners(transaction, signers);
         } catch (Exception e) {
-            throw new Exception("Challenge: verifyChallengeTransactionSigners failed");
+            throw new Exception("getToken: verifyChallengeTransactionSigners failed");
         }
 
         try {
             verifyChallengeTransactionThreshold(transaction,1,mSigners);
         } catch (Exception e) {
-            throw new Exception("Challenge: verifyChallengeTransactionThreshold failed");
+            throw new Exception("getToken: verifyChallengeTransactionThreshold failed");
         }
         String token;
         try {
@@ -159,7 +169,8 @@ public class AnchorSep10Challenge {
         } catch (Exception exception){
             throw new Exception("JWT token creation failed: " + exception.getMessage());
         }
-        LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E Token created: ".concat(token));
+        //todo - stop printing token after test
+        LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E JWT Token created: ".concat(token));
         return token;
     }
 

@@ -109,7 +109,9 @@ public class FirebaseService {
 
     public String addAgent(Agent agent) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
-        Agent current = getAgentByNameAndAnchor(agent.getAnchorId(), agent.getFirstName(), agent.getLastName());
+        Agent current = getAgentByNameAndAnchor(agent.getAnchorId(),
+                agent.getPersonalKYCFields().getFirst_name(),
+                agent.getPersonalKYCFields().getLast_name());
         if (current == null) {
             ApiFuture<DocumentReference> future = fs.collection("agents").add(agent);
             LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Agent added at path: ".concat(future.get().getPath()));
@@ -203,8 +205,8 @@ public class FirebaseService {
         List<Agent> mList = new ArrayList<>();
         ApiFuture<QuerySnapshot> future = fs.collection("agents")
                 .whereEqualTo("anchorId",anchorId)
-                .whereEqualTo("firstName",firstName)
-                .whereEqualTo("lastName", lastName).get();
+                .whereEqualTo("personalKYCFields.first_name",firstName)
+                .whereEqualTo("personalKYCFields.last_name", lastName).get();
         for (QueryDocumentSnapshot document : future.get().getDocuments()) {
             Map<String, Object> map = document.getData();
             String object = gson.toJson(map);
