@@ -5,6 +5,7 @@ import com.anchor.api.data.anchor.Agent;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.anchor.Client;
 import com.anchor.api.data.info.Info;
+import com.anchor.api.util.Constants;
 import com.google.api.core.ApiFuture;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.*;
@@ -93,7 +94,7 @@ public class FirebaseService {
     public List<Anchor> getAnchors() throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         List<Anchor> mList = new ArrayList<>();
-        ApiFuture<QuerySnapshot> future = fs.collection("anchors").get();
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.ANCHORS).get();
         int cnt = 0;
         for (QueryDocumentSnapshot document : future.get().getDocuments()) {
             Map<String, Object> map = document.getData();
@@ -114,7 +115,7 @@ public class FirebaseService {
                 client.getPersonalKYCFields().getFirst_name(),
                 client.getPersonalKYCFields().getLast_name());
         if (current == null) {
-            ApiFuture<DocumentReference> future = fs.collection("clients").add(client);
+            ApiFuture<DocumentReference> future = fs.collection(Constants.CLIENTS).add(client);
             LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Client added at path: ".concat(future.get().getPath()));
             return "\uD83C\uDF4F Client added";
         } else {
@@ -127,7 +128,7 @@ public class FirebaseService {
                 agent.getPersonalKYCFields().getFirst_name(),
                 agent.getPersonalKYCFields().getLast_name());
         if (current == null) {
-            ApiFuture<DocumentReference> future = fs.collection("agents").add(agent);
+            ApiFuture<DocumentReference> future = fs.collection(Constants.AGENTS).add(agent);
             LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Agent added at path: ".concat(future.get().getPath()));
             return "\uD83C\uDF4F Agent added";
         } else {
@@ -138,17 +139,17 @@ public class FirebaseService {
         Firestore fs = FirestoreClient.getFirestore();
         Info current = getAnchorInfo(info.getAnchorId());
         if (current == null) {
-            ApiFuture<DocumentReference> future = fs.collection("infos").add(info);
+            ApiFuture<DocumentReference> future = fs.collection(Constants.INFOS).add(info);
             LOGGER.info("Info added at path: ".concat(future.get().getPath()));
             return "Info added";
         } else {
-            ApiFuture<QuerySnapshot> future = fs.collection("infos")
+            ApiFuture<QuerySnapshot> future = fs.collection(Constants.INFOS)
                     .whereEqualTo("anchorId",current.getAnchorId()).get();
             for (QueryDocumentSnapshot document : future.get().getDocuments()) {
                 ApiFuture<WriteResult> m = document.getReference().delete();
                 LOGGER.info("Info deleted, updateTime: ".concat(m.get().getUpdateTime().toString()));
             }
-            ApiFuture<DocumentReference> future2 = fs.collection("infos").add(info);
+            ApiFuture<DocumentReference> future2 = fs.collection(Constants.INFOS).add(info);
             LOGGER.info("Info added after delete, at path: ".concat(future2.get().getPath()));
             return "Info Updated";
         }
@@ -157,7 +158,7 @@ public class FirebaseService {
         Firestore fs = FirestoreClient.getFirestore();
         Info info;
         List<Info> mList = new ArrayList<>();
-        ApiFuture<QuerySnapshot> future = fs.collection("infos")
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.INFOS)
                 .whereEqualTo("anchorId",anchorId).get();
         for (QueryDocumentSnapshot document : future.get().getDocuments()) {
             Map<String, Object> map = document.getData();
@@ -177,7 +178,7 @@ public class FirebaseService {
         Firestore fs = FirestoreClient.getFirestore();
         Anchor info;
         List<Anchor> mList = new ArrayList<>();
-        ApiFuture<QuerySnapshot> future = fs.collection("anchors")
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.ANCHORS)
                 .whereEqualTo("name",name).get();
         for (QueryDocumentSnapshot document : future.get().getDocuments()) {
             Map<String, Object> map = document.getData();
@@ -197,7 +198,7 @@ public class FirebaseService {
         Firestore fs = FirestoreClient.getFirestore();
         Agent agent;
         List<Agent> mList = new ArrayList<>();
-        ApiFuture<QuerySnapshot> future = fs.collection("agents")
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.AGENTS)
                 .whereEqualTo("agentId",agentId).get();
         for (QueryDocumentSnapshot document : future.get().getDocuments()) {
             Map<String, Object> map = document.getData();
@@ -217,7 +218,7 @@ public class FirebaseService {
         Firestore fs = FirestoreClient.getFirestore();
         Agent agent;
         List<Agent> mList = new ArrayList<>();
-        ApiFuture<QuerySnapshot> future = fs.collection("agents")
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.AGENTS)
                 .whereEqualTo("anchorId",anchorId)
                 .whereEqualTo("personalKYCFields.first_name",firstName)
                 .whereEqualTo("personalKYCFields.last_name", lastName).get();
@@ -239,7 +240,7 @@ public class FirebaseService {
         Firestore fs = FirestoreClient.getFirestore();
         Client agent;
         List<Client> mList = new ArrayList<>();
-        ApiFuture<QuerySnapshot> future = fs.collection("clients")
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.CLIENTS)
                 .whereEqualTo("anchorId",anchorId)
                 .whereEqualTo("personalKYCFields.first_name",firstName)
                 .whereEqualTo("personalKYCFields.last_name", lastName).get();

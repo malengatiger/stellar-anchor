@@ -1,15 +1,8 @@
 package com.anchor.api.services;
 
 
-import com.anchor.api.data.User;
-import com.anchor.api.data.account.Account;
 import com.anchor.api.data.account.AccountResponseBag;
 import com.anchor.api.data.transfer.sep10.AnchorSep10Challenge;
-import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.Firestore;
-import com.google.firebase.auth.UserRecord;
-import com.google.firebase.cloud.FirestoreClient;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,44 +74,44 @@ public class AccountService {
     private String domain;
 
 
-
-    public User createUserWithExistingAccount(User user) throws Exception {
-        if (user.getAnchorId() == null) {
-            throw new Exception("Missing anchorId");
-        }
-        if (user.getAccounts() == null || user.getAccounts().isEmpty()) {
-            throw new Exception("Account is missing");
-        }
-        FirebaseService scaffold = context.getBean(FirebaseService.class);
-        UserRecord record = scaffold.createUser(user.getFullName(), user.getEmail(), "temp#33pass");
-        user.setUserId(record.getUid());
-
-        Firestore fs = FirestoreClient.getFirestore();
-        ApiFuture<DocumentReference> future = fs.collection("users").add(user);
-        LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C User created and added to Firestore at path: \uD83E\uDD6C " + future.get().getPath());
-        LOGGER.info(G.toJson(user));
-
-        return user;
-    }
-
-    public User createUser(User user, String fundingSeed, String startingBalance) throws Exception {
-        if (user.getAnchorId() == null) {
-            throw new Exception("Missing anchorId");
-        }
-        AccountResponseBag bag = createAndFundStellarAccount(fundingSeed, startingBalance);
-        Account account = new Account();
-        user.addAccount(account);
-        FirebaseService scaffold = context.getBean(FirebaseService.class);
-        UserRecord record = scaffold.createUser(user.getFullName(), user.getEmail(), "temp#33pass");
-        user.setUserId(record.getUid());
-
-        Firestore fs = FirestoreClient.getFirestore();
-        ApiFuture<DocumentReference> future = fs.collection("users").add(user);
-        LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C User created and added to Firestore at path: \uD83E\uDD6C " + future.get().getPath());
-        LOGGER.info(G.toJson(user));
-
-        return user;
-    }
+//
+//    public AnchorUser createUserWithExistingAccount(AnchorUser user) throws Exception {
+//        if (user.getAnchorId() == null) {
+//            throw new Exception("Missing anchorId");
+//        }
+//        if (user.getAccounts() == null || user.getAccounts().isEmpty()) {
+//            throw new Exception("Account is missing");
+//        }
+//        FirebaseService scaffold = context.getBean(FirebaseService.class);
+//        UserRecord record = scaffold.createUser(user.getFullName(), user.getEmail(), "temp#33pass");
+//        user.setUserId(record.getUid());
+//
+//        Firestore fs = FirestoreClient.getFirestore();
+//        ApiFuture<DocumentReference> future = fs.collection("users").add(user);
+//        LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C AnchorUser created and added to Firestore at path: \uD83E\uDD6C " + future.get().getPath());
+//        LOGGER.info(G.toJson(user));
+//
+//        return user;
+//    }
+//
+//    public AnchorUser createUser(AnchorUser user, String fundingSeed, String startingBalance) throws Exception {
+//        if (user.getAnchorId() == null) {
+//            throw new Exception("Missing anchorId");
+//        }
+//        AccountResponseBag bag = createAndFundStellarAccount(fundingSeed, startingBalance);
+//        Account account = new Account();
+//        user.addAccount(account);
+//        FirebaseService scaffold = context.getBean(FirebaseService.class);
+//        UserRecord record = scaffold.createUser(user.getFullName(), user.getEmail(), "temp#33pass");
+//        user.setUserId(record.getUid());
+//
+//        Firestore fs = FirestoreClient.getFirestore();
+//        ApiFuture<DocumentReference> future = fs.collection("users").add(user);
+//        LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C AnchorUser created and added to Firestore at path: \uD83E\uDD6C " + future.get().getPath());
+//        LOGGER.info(G.toJson(user));
+//
+//        return user;
+//    }
 
     public void talkToFriendBot(String accountId) throws IOException {
         LOGGER.info("\uD83E\uDD6C ... Begging Ms. FriendBot for some \uD83C\uDF51 pussy \uD83C\uDF51 ... " +

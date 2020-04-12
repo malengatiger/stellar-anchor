@@ -6,10 +6,7 @@ import com.anchor.api.data.info.Info;
 import com.anchor.api.services.*;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.anchor.AnchorBag;
-import com.anchor.api.data.User;
 import com.anchor.api.util.Util;
-import com.google.cloud.kms.v1.CryptoKey;
-import com.google.cloud.kms.v1.KeyRing;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.moandjiezana.toml.Toml;
@@ -148,28 +145,9 @@ public class MainController {
         return mClient;
     }
 
-    @PostMapping(value = "/createUser", produces = MediaType.APPLICATION_JSON_VALUE)
-    public User createUser(@RequestBody User user) throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:createUser ...");
-        AccountService service = context.getBean(AccountService.class);
-        User bag = service.createUser(user,"fundingSeed","startingBalance");
-        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 Stellar returns User: \uD83C\uDF4E "
-                + bag.getFullName() + " userId: " + bag.getUserId());
-        return bag;
-    }
-
-    @PostMapping(value = "/createUserWithExistingAccount", produces = MediaType.APPLICATION_JSON_VALUE)
-    public User createUserWithExistingAccount(@RequestBody User user) throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:createUserWithExistingAccount ...");
-        AccountService service = context.getBean(AccountService.class);
-        User realUser = service.createUserWithExistingAccount(user);
-        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 Stellar returns User: \uD83C\uDF4E "
-                + realUser.getFullName() + " userId: " + realUser.getUserId());
-        return realUser;
-    }
-
     @Autowired
     private CryptoService cryptoService;
+
     @GetMapping("/createKeyRing")
     public String createKeyRing(@RequestParam String keyRingId) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication: createKeyRing ... ... ...");
@@ -186,15 +164,6 @@ public class MainController {
                 .concat(cryptoKey));
         return cryptoKey;
     }
-
-//    @GetMapping("/encrypt")
-//    public byte[] encrypt(@RequestParam String stringToEncrypt) throws Exception {
-//        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication: encrypt ... ... ...");
-//        byte[] encrypted = cryptoService.encrypt(stringToEncrypt);
-//        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ..... encryption of seed done!: \uD83C\uDF4E \n"
-//                .concat(String.valueOf(encrypted)));
-//        return encrypted;
-//    }
 
     @GetMapping("/createTestInfo")
     public Info createTestInfo() {

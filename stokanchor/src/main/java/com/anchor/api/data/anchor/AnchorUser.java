@@ -1,29 +1,14 @@
-package com.anchor.api.data;
+package com.anchor.api.data.anchor;
 
 import com.anchor.api.data.account.Account;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class User {
+public class AnchorUser {
     String firstName, middleName, lastName, email, cellphone, anchorId, userId, IdNumber;
     boolean active;
-    List<Account> accounts;
     String date;
-
-    public List<Account> getAccounts() {
-        return accounts;
-    }
-
-    public void setAccounts(List<Account> accounts) {
-        this.accounts = accounts;
-    }
-    public void addAccount(Account account) {
-        if (accounts == null) {
-            accounts = new ArrayList<>();
-        }
-        accounts.add(account);
-    }
 
     public String getDate() {
         return date;

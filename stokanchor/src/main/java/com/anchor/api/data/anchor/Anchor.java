@@ -1,34 +1,12 @@
 package com.anchor.api.data.anchor;
 
 import com.anchor.api.data.account.Account;
-import com.anchor.api.data.User;
-
-import java.util.List;
 
 public class Anchor {
     String anchorId, name, cellphone, email;
-    List<AnchorCredential> anchorCredentials;
     Account baseAccount, issuingAccount, distributionAccount;
-    User user;
+    AnchorUser anchorUser;
     String date;
-
-    public Anchor(String anchorId, String name, String cellphone,
-                  String email, List<AnchorCredential> anchorCredentials,
-                  Account baseAccount, Account issuingAccount,
-                  Account distributionAccount, User user) {
-        this.anchorId = anchorId;
-        this.name = name;
-        this.cellphone = cellphone;
-        this.email = email;
-        this.anchorCredentials = anchorCredentials;
-        this.baseAccount = baseAccount;
-        this.issuingAccount = issuingAccount;
-        this.distributionAccount = distributionAccount;
-        this.user = user;
-    }
-
-    public Anchor() {
-    }
 
     public String getDate() {
         return date;
@@ -38,12 +16,12 @@ public class Anchor {
         this.date = date;
     }
 
-    public User getUser() {
-        return user;
+    public AnchorUser getAnchorUser() {
+        return anchorUser;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setAnchorUser(AnchorUser anchorUser) {
+        this.anchorUser = anchorUser;
     }
 
     public Account getBaseAccount() {
@@ -102,11 +80,5 @@ public class Anchor {
         this.email = email;
     }
 
-    public List<AnchorCredential> getAnchorCredentials() {
-        return anchorCredentials;
-    }
 
-    public void setAnchorCredentials(List<AnchorCredential> anchorCredentials) {
-        this.anchorCredentials = anchorCredentials;
-    }
 }

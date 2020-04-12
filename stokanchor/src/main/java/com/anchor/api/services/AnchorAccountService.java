@@ -3,7 +3,7 @@ package com.anchor.api.services;
 import com.anchor.api.data.account.Account;
 import com.anchor.api.data.account.AccountResponseBag;
 import com.anchor.api.data.anchor.Anchor;
-import com.anchor.api.data.User;
+import com.anchor.api.data.anchor.AnchorUser;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
@@ -20,8 +20,6 @@ import org.springframework.stereotype.Service;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -43,6 +41,9 @@ public class AnchorAccountService {
 
     @Value("${limit}")
     private String limit;
+
+    @Value("${anchorStartingBalance}")
+    private String anchorStartingBalance;
     @Autowired
     private AccountService accountService;
 
@@ -70,15 +71,15 @@ public class AnchorAccountService {
         anchor.setCellphone(newAnchor.getCellphone());
         anchor.setAnchorId(UUID.randomUUID().toString());
 
-        User user = createAnchorUser(anchor, password);
-        anchor.setUser(user);
+        AnchorUser anchorUser = createAnchorUser(anchor, password);
+        anchor.setAnchorUser(anchorUser);
 
         AccountResponseBag baseAccount = accountService.createAndFundStellarAccount(
                 fundingSeed,startingBalance);
         AccountResponseBag distributionAccount = accountService.createAndFundStellarAccount(
-                baseAccount.getSecretSeed(),"5");
+                baseAccount.getSecretSeed(),anchorStartingBalance);
         AccountResponseBag issuingAccount = accountService.createAndFundStellarAccount(
-                baseAccount.getSecretSeed(),"5");
+                baseAccount.getSecretSeed(),anchorStartingBalance);
 
         Account base = new Account();
         base.setAccountId(baseAccount.getAccountResponse().getAccountId());
@@ -171,28 +172,28 @@ public class AnchorAccountService {
         }
     }
 
-    private User createAnchorUser(Anchor anchor, String password) throws Exception {
+    private AnchorUser createAnchorUser(Anchor anchor, String password) throws Exception {
 
         FirebaseService scaffold = context.getBean(FirebaseService.class);
 
         UserRecord userRecord = scaffold.createUser(anchor.getName(),anchor.getEmail(),password);
-        User user = new User();
-        user.setFirstName(anchor.getName());
-        user.setEmail(anchor.getEmail());
-        user.setCellphone(anchor.getCellphone());
-        user.setUserId(userRecord.getUid());
-        user.setAnchorId(anchor.getAnchorId());
+        AnchorUser anchorUser = new AnchorUser();
+        anchorUser.setFirstName(anchor.getName());
+        anchorUser.setEmail(anchor.getEmail());
+        anchorUser.setCellphone(anchor.getCellphone());
+        anchorUser.setUserId(userRecord.getUid());
+        anchorUser.setAnchorId(anchor.getAnchorId());
         DateTime dateTime = new DateTime();
-        user.setDate(dateTime.toDateTimeISO().toString());
-        user.setActive(true);
-        LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 about to write Anchor USER to Firestore: ".concat(user.getFirstName()));
+        anchorUser.setDate(dateTime.toDateTimeISO().toString());
+        anchorUser.setActive(true);
+        LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 about to write Anchor USER to Firestore: ".concat(anchorUser.getFirstName()));
         Firestore fs = FirestoreClient.getFirestore();
-        ApiFuture<DocumentReference> future = fs.collection("users").add(anchor);
-        LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C Anchor User created and added to Firestore at path:" +
+        ApiFuture<DocumentReference> future = fs.collection("anchorUsers").add(anchorUser);
+        LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C Anchor AnchorUser created and added to Firestore at path:" +
                 " \uD83E\uDD6C " + future.get().getPath());
-        LOGGER.info(G.toJson(user));
+        LOGGER.info(G.toJson(anchorUser));
 
-        return user;
+        return anchorUser;
     }
 
 

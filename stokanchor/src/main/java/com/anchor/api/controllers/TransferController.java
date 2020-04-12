@@ -75,8 +75,8 @@ public class TransferController {
     asset_code=USD&email_address=myaccount@gmail.com&account=GACW7NONV43MZIFHCOKCQJAKSJSISSICFVUJ2C6EZIW5773OU3HD64VI
 
     🔵 🔵 Is this right??
-    User deposits cash at a teller; someone/some system at the BANK needs to call this endpoint ....
-    User gives cash to an Agent; agent's app must call this endpoint
+    AnchorUser deposits cash at a teller; someone/some system at the BANK needs to call this endpoint ....
+    AnchorUser gives cash to an Agent; agent's app must call this endpoint
 
     the end-result: 🔵 user has new balance for this asset code
      */
@@ -95,8 +95,8 @@ public class TransferController {
     It also lets the anchor specify the url for the interactive webapp to continue with the anchor's side of the withdraw.
 
     💛 💛  Is this right??
-    User gets cash at a teller; someone/some system at the BANK needs to call this endpoint ....
-    User gives cash to an Agent; agent's app must call this endpoint
+    AnchorUser gets cash at a teller; someone/some system at the BANK needs to call this endpoint ....
+    AnchorUser gives cash to an Agent; agent's app must call this endpoint
 
     the end-result: 🔵 user has new balance for this asset code
 
