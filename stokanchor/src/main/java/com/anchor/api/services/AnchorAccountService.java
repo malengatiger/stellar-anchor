@@ -84,7 +84,7 @@ public class AnchorAccountService {
         base.setAccountId(baseAccount.getAccountResponse().getAccountId());
         base.setDate(new DateTime().toMutableDateTimeISO().toString());
 
-        encryptAndUploadSeedFile(baseAccount.getSecretSeed());
+
 
         Account issuing = new Account();
         issuing.setAccountId(issuingAccount.getAccountResponse().getAccountId());
@@ -97,6 +97,15 @@ public class AnchorAccountService {
         anchor.setBaseAccount(base);
         anchor.setIssuingAccount(issuing);
         anchor.setDistributionAccount(distribution);
+
+        encryptAndUploadSeedFile(baseAccount.getAccountResponse().getAccountId(),
+                baseAccount.getSecretSeed());
+
+        encryptAndUploadSeedFile(issuingAccount.getAccountResponse().getAccountId(),
+                issuingAccount.getSecretSeed());
+
+        encryptAndUploadSeedFile(distributionAccount.getAccountResponse().getAccountId(),
+                distributionAccount.getSecretSeed());
 
         try {
             SubmitTransactionResponse transactionResponse = accountService.issueAsset(
@@ -142,7 +151,7 @@ public class AnchorAccountService {
         return anchor;
     }
 
-    private void encryptAndUploadSeedFile(String seed) throws IOException {
+    private void encryptAndUploadSeedFile(String accountId, String seed) throws IOException {
         //todo - have to check if keyRing etc. exists .....
         LOGGER.info("................ ♦️ ♦️ encryptAndUploadSeedFile ♦️ ♦️ ................");
         try {
@@ -156,7 +165,7 @@ public class AnchorAccountService {
             LOGGER.severe(" cryptoService.createCryptoKey Failed: " + e.getMessage());
         }
         try {
-            cryptoService.encrypt(seed);
+            cryptoService.encrypt(accountId, seed);
         } catch (Exception e) {
             LOGGER.severe("cryptoService.encrypt Failed: " + e.getMessage());
         }

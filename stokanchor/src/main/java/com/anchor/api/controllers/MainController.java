@@ -172,14 +172,14 @@ public class MainController {
         return cryptoKey;
     }
 
-    @GetMapping("/encrypt")
-    public byte[] encrypt(@RequestParam String stringToEncrypt) throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication: encrypt ... ... ...");
-        byte[] encrypted = cryptoService.encrypt(stringToEncrypt);
-        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ..... encryption of seed done!: \uD83C\uDF4E \n"
-                .concat(String.valueOf(encrypted)));
-        return encrypted;
-    }
+//    @GetMapping("/encrypt")
+//    public byte[] encrypt(@RequestParam String stringToEncrypt) throws Exception {
+//        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication: encrypt ... ... ...");
+//        byte[] encrypted = cryptoService.encrypt(stringToEncrypt);
+//        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ..... encryption of seed done!: \uD83C\uDF4E \n"
+//                .concat(String.valueOf(encrypted)));
+//        return encrypted;
+//    }
 
     @GetMapping("/createTestInfo")
     public Info createTestInfo() {

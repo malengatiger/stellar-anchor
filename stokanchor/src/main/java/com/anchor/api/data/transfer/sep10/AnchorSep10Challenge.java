@@ -65,8 +65,8 @@ public class AnchorSep10Challenge {
         }
         LOGGER.info("... \uD83E\uDD66 \uD83E\uDD66 Anchor found on Firestore: "
                 .concat(anchorName));
-        cryptoService.downloadSeedFile();
-        byte[] mBytes = cryptoService.readFile();
+        cryptoService.downloadSeedFile(anchor.getBaseAccount().getAccountId());
+        byte[] mBytes = cryptoService.readFile(anchor.getBaseAccount().getAccountId());
         String seed = cryptoService.decrypt(mBytes);
         LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C Decrypted seed: "
                 .concat(seed).concat(" \uD83E\uDD6C \uD83E\uDD6C"));
@@ -116,6 +116,8 @@ public class AnchorSep10Challenge {
         transaction.sign(signer);
 
         ChallengeResponse challengeResponse = new ChallengeResponse(transaction.toEnvelopeXdrBase64(),network.getNetworkPassphrase());
+        LOGGER.info("Challenge Transaction created, \uD83C\uDF4E signed by anchor base account and converted to " +
+                "\uD83C\uDF4E XDR \uD83C\uDF4E ... we done good, Boss!");
         return challengeResponse;
     }
 

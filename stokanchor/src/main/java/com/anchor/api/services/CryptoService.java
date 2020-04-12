@@ -85,7 +85,7 @@ public class CryptoService {
     }
 
     /** Encrypts the given plaintext using the specified crypto key. */
-    public byte[] encrypt(String stringToEncrypt)
+    public byte[] encrypt(String accountId, String stringToEncrypt)
             throws IOException {
         LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E Encrypt starting ...... \uD83C\uDF4E ".concat(stringToEncrypt));
         byte[] stringToEncryptBytes = stringToEncrypt.getBytes();
@@ -96,16 +96,15 @@ public class CryptoService {
             String content = Arrays.toString(response.getCiphertext().toByteArray());
             LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E \uD83C\uDF4E Encrypted string: ".concat(response.getCiphertext().toByteArray().toString()));
             LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E \uD83C\uDF4E Encrypted bytes: ".concat(content));
-            writeFile(response.getCiphertext().toByteArray());
-            uploadSeedFile();
-
+            writeFile(accountId,response.getCiphertext().toByteArray());
+            uploadSeedFile(accountId);
             //todo - remove after test
-            LOGGER.info(".................. download the file and check to see if decrypted seed is retrieved from file ..................");
-            downloadSeedFile();
-            byte[] mBytes = readFile();
-            String seed = decrypt(mBytes);
-            LOGGER.info(("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C byte[] Decrypted " +
-                    "\uD83D\uDD35 seed: ").concat(seed).concat(" \uD83D\uDD35 "));
+//            LOGGER.info(".................. download the file and check to see if decrypted seed is retrieved from file ..................");
+//            downloadSeedFile(accountId);
+//            byte[] mBytes = readFile(accountId);
+//            String seed = decrypt(mBytes);
+//            LOGGER.info(("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C byte[] Decrypted " +
+//                    "\uD83D\uDD35 seed: ").concat(seed).concat(" \uD83D\uDD35 "));
 
             return response.getCiphertext().toByteArray();
         }
@@ -131,54 +130,55 @@ public class CryptoService {
     public static final String FILE_PATH = "encrypted_seed";
 
 
-    public void writeFile(byte[] encryptedSeed)
+    public void writeFile(String accountId, byte[] encryptedSeed)
             throws IOException {
         LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C Writing crypto key to file " +
-                ".... \uD83C\uDF3C ").concat(FILE_PATH));
-        Path path = Paths.get(FILE_PATH);
+                ".... \uD83C\uDF3C ").concat(FILE_PATH.concat(accountId)));
+        Path path = Paths.get(FILE_PATH.concat(accountId));
         Files.write(path, encryptedSeed);
         LOGGER.info("\uD83C\uDF45 \uD83C\uDF45 File written with encryptedSeed: "
                 .concat(" path: ").concat(path.toString()));
     }
-    public byte[] readFile()
+    public byte[] readFile(String accountId)
             throws IOException {
         LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C .... Reading crypto key from file " +
-                ".... \uD83C\uDF3C ").concat(DOWNLOAD_PATH));
-        Path path = Paths.get(DOWNLOAD_PATH);
+                ".... \uD83C\uDF3C ").concat(DOWNLOAD_PATH.concat(accountId)));
+        Path path = Paths.get(DOWNLOAD_PATH.concat(accountId));
         byte[] read = Files.readAllBytes(path);
         LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C " + read.length + " bytes read from file: " +
                 " \uD83D\uDD35 \uD83D\uDD35 read: \n".concat(Arrays.toString(read)));
         return read;
     }
 
-    public  void uploadSeedFile() throws IOException {
-        LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C .................... Uploading crypto key to Cloud Storage " +
-                ".... \uD83C\uDF3C path: ").concat(FILE_PATH));
+    public void uploadSeedFile(String accountId) throws IOException {
+        LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C .................... Uploading encrypted seed file to Cloud Storage " +
+                ".... \uD83C\uDF3C path: ").concat(FILE_PATH.concat(accountId)));
 
         Storage storage = StorageOptions.newBuilder().setProjectId(projectId)
                 .build().getService();
-        BlobId blobId = BlobId.of(bucketName, objectName);
+        BlobId blobId = BlobId.of(bucketName, objectName.concat("_").concat(accountId));
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
 
-        storage.create(blobInfo, Files.readAllBytes(Paths.get(FILE_PATH)));
+        storage.create(blobInfo, Files.readAllBytes(Paths.get(FILE_PATH.concat(accountId))));
         LOGGER.info(
                 "... \uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 Yebo!! \uD83C\uDF4E " +
-                        "File " + FILE_PATH + " uploaded to \uD83C\uDF3C " +
+                        "File " + FILE_PATH.concat(accountId) + " uploaded to \uD83C\uDF3C " +
                         "bucket " + bucketName + " \uD83C\uDF3C as " + objectName);
     }
     public static final String DOWNLOAD_PATH = "downloaded_seed";
-    public void downloadSeedFile() {
-        LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C Uploading crypto key file to Cloud Storage " +
-                ".... \uD83C\uDF3C to path: ").concat(DOWNLOAD_PATH));
-        Path destFilePath = Paths.get(DOWNLOAD_PATH);
+
+    public void downloadSeedFile(String accountId) {
+        LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C Downloading encrypted seed file from Cloud Storage " +
+                ".... \uD83C\uDF3C to path: ").concat(DOWNLOAD_PATH.concat(accountId)));
+        Path destFilePath = Paths.get(DOWNLOAD_PATH.concat(accountId));
         Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
 
-        Blob blob = storage.get(BlobId.of(bucketName, objectName));
+        Blob blob = storage.get(BlobId.of(bucketName, objectName.concat("_").concat(accountId)));
         blob.downloadTo(destFilePath);
 
         LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C " +
-                "Downloaded Seed File: \uD83C\uDF4E "
-                        + objectName
+                "Downloaded Seed File from Cloud Storage: \uD83C\uDF4E "
+                        + objectName.concat("_").concat(accountId)
                         + " from bucket name \uD83E\uDD66 "
                         + bucketName
                         + " to path: "
