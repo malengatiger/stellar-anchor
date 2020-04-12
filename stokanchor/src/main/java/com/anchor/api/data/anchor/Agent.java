@@ -13,6 +13,12 @@ public class Agent {
         return personalKYCFields;
     }
 
+    public String getFullName() {
+        if (personalKYCFields != null) {
+            return personalKYCFields.getFirst_name() + " " + personalKYCFields.getLast_name();
+        }
+        return null;
+    }
     public void setPersonalKYCFields(PersonalKYCFields personalKYCFields) {
         this.personalKYCFields = personalKYCFields;
     }
