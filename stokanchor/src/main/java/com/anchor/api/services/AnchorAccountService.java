@@ -83,20 +83,17 @@ public class AnchorAccountService {
         Account base = new Account();
         base.setAccountId(baseAccount.getAccountResponse().getAccountId());
         base.setDate(new DateTime().toMutableDateTimeISO().toString());
-        byte[] bytes = cryptoService.encrypt(baseAccount.getSecretSeed());
-        setBytes(base, bytes);
+
+        encryptAndUploadSeedFile(baseAccount.getSecretSeed());
 
         Account issuing = new Account();
         issuing.setAccountId(issuingAccount.getAccountResponse().getAccountId());
         issuing.setDate(new DateTime().toMutableDateTimeISO().toString());
-        byte[] bytes2 = cryptoService.encrypt(issuingAccount.getSecretSeed());
-        setBytes(issuing,bytes2);
 
         Account distribution = new Account();
         distribution.setAccountId(distributionAccount.getAccountResponse().getAccountId());
         distribution.setDate(new DateTime().toMutableDateTimeISO().toString());
-        byte[] bytes3 = cryptoService.encrypt(distributionAccount.getSecretSeed());
-        setBytes(distribution,bytes3);
+
         anchor.setBaseAccount(base);
         anchor.setIssuingAccount(issuing);
         anchor.setDistributionAccount(distribution);
@@ -145,12 +142,24 @@ public class AnchorAccountService {
         return anchor;
     }
 
-    private void setBytes(Account base, byte[] bytes) {
-        List<Object> mBytes = new ArrayList<>();
-        for (byte aByte : bytes) {
-            mBytes.add(aByte);
+    private void encryptAndUploadSeedFile(String seed) throws IOException {
+        //todo - have to check if keyRing etc. exists .....
+        LOGGER.info("................ ♦️ ♦️ encryptAndUploadSeedFile ♦️ ♦️ ................");
+        try {
+            cryptoService.createKeyRing();
+        } catch (Exception e) {
+            LOGGER.severe("cryptoService.createKeyRing Failed: " + e.getMessage());
         }
-        base.setEncryptedSeed(mBytes);
+        try {
+            cryptoService.createCryptoKey();
+        } catch (Exception e) {
+            LOGGER.severe(" cryptoService.createCryptoKey Failed: " + e.getMessage());
+        }
+        try {
+            cryptoService.encrypt(seed);
+        } catch (Exception e) {
+            LOGGER.severe("cryptoService.encrypt Failed: " + e.getMessage());
+        }
     }
 
     private User createAnchorUser(Anchor anchor, String password) throws Exception {

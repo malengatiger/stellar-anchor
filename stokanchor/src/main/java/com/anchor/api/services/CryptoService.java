@@ -101,7 +101,7 @@ public class CryptoService {
 
             //todo - remove after test
             LOGGER.info(".................. download the file and check to see if decrypted seed is retrieved from file ..................");
-            downloadObject();
+            downloadSeedFile();
             byte[] mBytes = readFile();
             String seed = decrypt(mBytes);
             LOGGER.info(("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C byte[] Decrypted " +
@@ -114,7 +114,7 @@ public class CryptoService {
     /** Decrypts the provided ciphertext with the specified crypto key. */
     public String decrypt(byte[] encryptedStringBytes )
             throws IOException {
-        LOGGER.info("\uD83D\uDD11 \uD83D\uDD11 decrypting ... : \uD83C\uDF4E ".concat(encryptedStringBytes.toString()));
+        LOGGER.info("\uD83D\uDD11 \uD83D\uDD11 .............. decrypting byte[] ............ \uD83C\uDF4E ");
         try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {
             String resourceName = CryptoKeyPathName.format(projectId, locationId, keyRingId, cryptoKeyId);
             DecryptResponse response = client.decrypt(resourceName, ByteString.copyFrom(encryptedStringBytes));
@@ -167,8 +167,8 @@ public class CryptoService {
                         "bucket " + bucketName + " \uD83C\uDF3C as " + objectName);
     }
     public static final String DOWNLOAD_PATH = "downloaded_seed";
-    public void downloadObject() {
-        LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C Uploading crypto key to Cloud Storage " +
+    public void downloadSeedFile() {
+        LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C Uploading crypto key file to Cloud Storage " +
                 ".... \uD83C\uDF3C to path: ").concat(DOWNLOAD_PATH));
         Path destFilePath = Paths.get(DOWNLOAD_PATH);
         Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
@@ -177,11 +177,11 @@ public class CryptoService {
         blob.downloadTo(destFilePath);
 
         LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C " +
-                "Downloaded object "
+                "Downloaded Seed File: \uD83C\uDF4E "
                         + objectName
-                        + " from bucket name "
+                        + " from bucket name \uD83E\uDD66 "
                         + bucketName
-                        + " to "
+                        + " to path: "
                         + destFilePath));
     }
 }

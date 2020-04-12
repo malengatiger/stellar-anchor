@@ -2,7 +2,6 @@ package com.anchor.api.data.transfer.sep10;
 
 
 import com.anchor.api.data.anchor.Anchor;
-import com.anchor.api.services.AccountService;
 import com.anchor.api.services.CryptoService;
 import com.anchor.api.services.FirebaseService;
 
@@ -34,7 +33,7 @@ public class AnchorSep10Challenge {
                 "\uD83D\uDC99 handles Sep10 Web Authentication");
     }
 
-    public static final Logger LOGGER = Logger.getLogger(AccountService.class.getSimpleName());
+    public static final Logger LOGGER = Logger.getLogger(AnchorSep10Challenge.class.getSimpleName());
     private static final Gson G = new GsonBuilder().setPrettyPrinting().create();
     private static final String DEV_SERVER = "https://horizon-testnet.stellar.org";
     private static final String PROD_SERVER = "https://horizon.stellar.org'";
@@ -44,7 +43,7 @@ public class AnchorSep10Challenge {
     private Server server;
     private Network network;
 
-    @Value("anchorName")
+    @Value("${anchorName}")
     private String anchorName;
 
     @Autowired
@@ -52,25 +51,22 @@ public class AnchorSep10Challenge {
     @Autowired
     private CryptoService cryptoService;
 
-
     /**
      * Returns a valid <a href="https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0010.md#response" target="_blank">SEP 10</a> challenge, for use in web authentication.
      *
      * @param clientAccountId The stellar account belonging to the client.
      */
     public  ChallengeResponse newChallenge(String clientAccountId) throws Exception {
-
         Anchor anchor = firebaseService.getAnchorByName(anchorName);
         if (anchor == null) {
-            throw new Exception("\uD83C\uDF4E Anchor is missing \uD83C\uDF4E ");
+            LOGGER.severe("Anchor ".concat(anchorName).concat(" is missing"));
+            throw new Exception("\uD83C\uDF4E Anchor is missing \uD83C\uDF4E "
+            .concat(anchorName));
         }
-        List<Object> bytes = anchor.getBaseAccount().getEncryptedSeed();
-        byte[] mBytes = new byte[bytes.size()];
-        int index = 0;
-        for (Object aByte : bytes) {
-            mBytes[index] = (byte) aByte;
-            index++;
-        }
+        LOGGER.info("... \uD83E\uDD66 \uD83E\uDD66 Anchor found on Firestore: "
+                .concat(anchorName));
+        cryptoService.downloadSeedFile();
+        byte[] mBytes = cryptoService.readFile();
         String seed = cryptoService.decrypt(mBytes);
         LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C Decrypted seed: "
                 .concat(seed).concat(" \uD83E\uDD6C \uD83E\uDD6C"));
@@ -86,7 +82,12 @@ public class AnchorSep10Challenge {
         BaseEncoding base64Encoding = BaseEncoding.base64();
         byte[] encodedNonce = base64Encoding.encode(nonce).getBytes();
 
-        AccountResponse clientAccount = server.accounts().account(clientAccountId);
+        AccountResponse clientAccount = null;
+        try {
+            clientAccount = server.accounts().account(clientAccountId);
+        } catch (Exception e) {
+            LOGGER.severe("Client Account not found on Stellar");
+        }
         if (clientAccount == null) {
             throw new Exception("\uD83C\uDF4E Client Account missing \uD83C\uDF4E ");
         }
