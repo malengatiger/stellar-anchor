@@ -46,13 +46,20 @@ public class AnchorAccountService {
     @Autowired
     private AccountService accountService;
 
+    @Autowired
+    private CryptoService cryptoService;
+
     public AnchorAccountService() {
         LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService Constructor fired ...\uD83C\uDF40 " +
                 "manages the setup of Anchor base and issuing accounts \uD83C\uDF51 ");
     }
 
-    public Anchor createAnchorAccounts(Anchor newAnchor, String password, String assetCode, String assetAmount, String fundingSeed, String startingBalance) throws Exception {
-        LOGGER.info("\n\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: creating Anchor Accounts .... \uD83C\uDF40 DEV STATUS: " + status + "\n\n");
+    public Anchor createAnchorAccounts(Anchor newAnchor, String password, String assetCode,
+                                       String assetAmount, String fundingSeed, String startingBalance)
+            throws Exception {
+        LOGGER.info("\n\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: creating Anchor Accounts " +
+                ".... \uD83C\uDF40 DEV STATUS: " + status + " \uD83C\uDF51 " +
+                "startingBalance: " + startingBalance + " \uD83C\uDF51 seed: " + fundingSeed);
         accountService = context.getBean(AccountService.class);
         Anchor anchor = new Anchor();
 
@@ -66,13 +73,33 @@ public class AnchorAccountService {
         User user = createAnchorUser(anchor, password);
         anchor.setUser(user);
 
-        AccountResponseBag baseAccount = accountService.createAndFundStellarAccount(fundingSeed,startingBalance);
-        AccountResponseBag distributionAccount = accountService.createAndFundStellarAccount(baseAccount.getSecretSeed(),startingBalance);
-        AccountResponseBag issuingAccount = accountService.createAndFundStellarAccount(baseAccount.getSecretSeed(),startingBalance);
+        AccountResponseBag baseAccount = accountService.createAndFundStellarAccount(
+                fundingSeed,startingBalance);
+        AccountResponseBag distributionAccount = accountService.createAndFundStellarAccount(
+                baseAccount.getSecretSeed(),"5");
+        AccountResponseBag issuingAccount = accountService.createAndFundStellarAccount(
+                baseAccount.getSecretSeed(),"5");
 
-        anchor.setBaseAccount(new Account(baseAccount));
-        anchor.setIssuingAccount(new Account(issuingAccount));
-        anchor.setDistributionAccount(new Account(distributionAccount));
+        Account base = new Account();
+        base.setAccountId(baseAccount.getAccountResponse().getAccountId());
+        base.setDate(new DateTime().toMutableDateTimeISO().toString());
+        byte[] bytes = cryptoService.encrypt(baseAccount.getSecretSeed());
+        setBytes(base, bytes);
+
+        Account issuing = new Account();
+        issuing.setAccountId(issuingAccount.getAccountResponse().getAccountId());
+        issuing.setDate(new DateTime().toMutableDateTimeISO().toString());
+        byte[] bytes2 = cryptoService.encrypt(issuingAccount.getSecretSeed());
+        setBytes(issuing,bytes2);
+
+        Account distribution = new Account();
+        distribution.setAccountId(distributionAccount.getAccountResponse().getAccountId());
+        distribution.setDate(new DateTime().toMutableDateTimeISO().toString());
+        byte[] bytes3 = cryptoService.encrypt(distributionAccount.getSecretSeed());
+        setBytes(distribution,bytes3);
+        anchor.setBaseAccount(base);
+        anchor.setIssuingAccount(issuing);
+        anchor.setDistributionAccount(distribution);
 
         try {
             SubmitTransactionResponse transactionResponse = accountService.issueAsset(
@@ -116,6 +143,14 @@ public class AnchorAccountService {
 //        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ISSUING ACCOUNT: " + G.toJson(response2));
 //        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 DISTRIBUTION ACCOUNT: " + G.toJson(response3));
         return anchor;
+    }
+
+    private void setBytes(Account base, byte[] bytes) {
+        List<Object> mBytes = new ArrayList<>();
+        for (byte aByte : bytes) {
+            mBytes.add(aByte);
+        }
+        base.setEncryptedSeed(mBytes);
     }
 
     private User createAnchorUser(Anchor anchor, String password) throws Exception {

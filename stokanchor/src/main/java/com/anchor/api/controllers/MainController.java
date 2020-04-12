@@ -6,7 +6,6 @@ import com.anchor.api.services.AccountService;
 import com.anchor.api.services.AnchorAccountService;
 import com.anchor.api.services.CryptoService;
 import com.anchor.api.services.FirebaseService;
-import com.anchor.api.util.Crypto;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.anchor.AnchorBag;
 import com.anchor.api.data.User;
@@ -159,23 +158,23 @@ public class MainController {
     @GetMapping("/createKeyRing")
     public String createKeyRing(@RequestParam String keyRingId) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication: createKeyRing ... ... ...");
-        KeyRing keyRing = cryptoService.createKeyRing(keyRingId);
+        String keyRing = cryptoService.createKeyRing();
         LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 createKeyRing done!: \uD83C\uDF4E "
-        .concat(keyRing.getName()));
-        return keyRing.getName();
+        .concat(keyRing));
+        return keyRing;
     }
     @GetMapping("/createCryptoKey")
-    public String createCryptoKey(@RequestParam String keyRingId, String cryptoKeyId) throws Exception {
+    public String createCryptoKey() throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication: createCryptoKey ... ... ...");
-        CryptoKey cryptoKey = cryptoService.createCryptoKey(keyRingId, cryptoKeyId);
+        String cryptoKey = cryptoService.createCryptoKey();
         LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 createCryptoKey done!: \uD83C\uDF4E "
-                .concat(cryptoKey.getName()));
-        return cryptoKey.getName();
+                .concat(cryptoKey));
+        return cryptoKey;
     }
     @GetMapping("/encrypt")
-    public String encrypt(@RequestParam String keyRingId, String cryptoKeyId, String stringToEncrypt) throws Exception {
+    public String encrypt(@RequestParam String stringToEncrypt) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication: encrypt ... ... ...");
-        byte[] encrypted = cryptoService.encrypt(keyRingId, cryptoKeyId, stringToEncrypt);
+        byte[] encrypted = cryptoService.encrypt(stringToEncrypt);
         LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 encrypt done!: \uD83C\uDF4E "
                 .concat(encrypted.toString()));
         return encrypted.toString();

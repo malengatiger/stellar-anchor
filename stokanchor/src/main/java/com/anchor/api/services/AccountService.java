@@ -106,7 +106,7 @@ public class AccountService {
             throw new Exception("Missing anchorId");
         }
         AccountResponseBag bag = createAndFundStellarAccount(fundingSeed, startingBalance);
-        Account account = new Account(bag);
+        Account account = new Account();
         user.addAccount(account);
         FirebaseService scaffold = context.getBean(FirebaseService.class);
         UserRecord record = scaffold.createUser(user.getFullName(), user.getEmail(), "temp#33pass");

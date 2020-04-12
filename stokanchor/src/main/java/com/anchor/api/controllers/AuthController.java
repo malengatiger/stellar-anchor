@@ -1,14 +1,6 @@
 package com.anchor.api.controllers;
 
-import com.anchor.api.data.User;
-import com.anchor.api.data.anchor.Anchor;
-import com.anchor.api.data.anchor.AnchorBag;
-import com.anchor.api.data.info.Info;
 import com.anchor.api.services.AccountService;
-import com.anchor.api.services.AnchorAccountService;
-import com.anchor.api.services.FirebaseService;
-import com.anchor.api.util.Crypto;
-import com.anchor.api.util.Util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,14 +9,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.stellar.sdk.responses.AccountResponse;
-import shadow.org.apache.commons.io.IOUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
 import java.util.logging.Logger;
 
 @CrossOrigin(maxAge = 3600)

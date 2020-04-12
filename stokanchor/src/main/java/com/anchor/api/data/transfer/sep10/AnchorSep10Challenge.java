@@ -3,6 +3,7 @@ package com.anchor.api.data.transfer.sep10;
 
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.services.AccountService;
+import com.anchor.api.services.CryptoService;
 import com.anchor.api.services.FirebaseService;
 
 import com.google.common.base.Objects;
@@ -48,6 +49,8 @@ public class AnchorSep10Challenge {
 
     @Autowired
     private FirebaseService firebaseService;
+    @Autowired
+    private CryptoService cryptoService;
 
 
     /**
@@ -61,8 +64,19 @@ public class AnchorSep10Challenge {
         if (anchor == null) {
             throw new Exception("\uD83C\uDF4E Anchor is missing \uD83C\uDF4E ");
         }
+        List<Object> bytes = anchor.getBaseAccount().getEncryptedSeed();
+        byte[] mBytes = new byte[bytes.size()];
+        int index = 0;
+        for (Object aByte : bytes) {
+            mBytes[index] = (byte) aByte;
+            index++;
+        }
+        String seed = cryptoService.decrypt(mBytes);
+        LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C Decrypted seed: "
+                .concat(seed).concat(" \uD83E\uDD6C \uD83E\uDD6C"));
         setServerAndNetwork();
-        KeyPair signer = KeyPair.fromSecretSeed(anchor.getBaseAccount().getSeed());
+        //todo - decrypt first
+        KeyPair signer = KeyPair.fromSecretSeed(seed);
         //todo - do the Crypto thing here ... encrypted seed from db is decrypted here ...
         TimeBounds bounds = new TimeBounds(new Date().getTime(), new Date().getTime() + (1000 * 60 * 15));
 
