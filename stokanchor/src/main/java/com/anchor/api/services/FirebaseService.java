@@ -3,6 +3,7 @@ package com.anchor.api.services;
 import com.anchor.api.data.account.AccountResponseWithDate;
 import com.anchor.api.data.anchor.Agent;
 import com.anchor.api.data.anchor.Anchor;
+import com.anchor.api.data.anchor.Client;
 import com.anchor.api.data.info.Info;
 import com.google.api.core.ApiFuture;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -107,6 +108,19 @@ public class FirebaseService {
         return mList;
     }
 
+    public String addClient(Client client) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        Client current = getClientByNameAndAnchor(client.getAnchorId(),
+                client.getPersonalKYCFields().getFirst_name(),
+                client.getPersonalKYCFields().getLast_name());
+        if (current == null) {
+            ApiFuture<DocumentReference> future = fs.collection("clients").add(client);
+            LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Client added at path: ".concat(future.get().getPath()));
+            return "\uD83C\uDF4F Client added";
+        } else {
+            throw new Exception("Client already exists for this Anchor");
+        }
+    }
     public String addAgent(Agent agent) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Agent current = getAgentByNameAndAnchor(agent.getAnchorId(),
@@ -211,6 +225,28 @@ public class FirebaseService {
             Map<String, Object> map = document.getData();
             String object = gson.toJson(map);
             Agent mInfo = gson.fromJson(object,Agent.class);
+            mList.add(mInfo);
+        }
+        if (mList.isEmpty()) {
+            return null;
+        } else {
+            agent = mList.get(0);
+        }
+
+        return agent;
+    }
+    public Client getClientByNameAndAnchor(String anchorId, String firstName, String lastName) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        Client agent;
+        List<Client> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection("clients")
+                .whereEqualTo("anchorId",anchorId)
+                .whereEqualTo("personalKYCFields.first_name",firstName)
+                .whereEqualTo("personalKYCFields.last_name", lastName).get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = gson.toJson(map);
+            Client mInfo = gson.fromJson(object,Client.class);
             mList.add(mInfo);
         }
         if (mList.isEmpty()) {

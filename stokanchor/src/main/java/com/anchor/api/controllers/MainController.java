@@ -1,6 +1,7 @@
 package com.anchor.api.controllers;
 
 import com.anchor.api.data.anchor.Agent;
+import com.anchor.api.data.anchor.Client;
 import com.anchor.api.data.info.Info;
 import com.anchor.api.services.*;
 import com.anchor.api.data.anchor.Anchor;
@@ -22,10 +23,7 @@ import shadow.org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.logging.Logger;
 
 @CrossOrigin(maxAge = 3600)
@@ -62,13 +60,16 @@ public class MainController {
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(Objects.requireNonNull(classLoader.getResource("_well-known/stellar.toml")).getFile());
         if (file.exists()) {
-            LOGGER.info(" \uD83C\uDF45 File has been found \uD83C\uDF45 " + file.getAbsolutePath());
+            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C ... stellar.toml File has been found \uD83C\uDF45 " + file.getAbsolutePath());
             Toml toml = new Toml().read(file);
-            List<Object> currencies = toml.getList("CURRENCIES");
+            List<HashMap> currencies = toml.getList("CURRENCIES");
+            for (HashMap currency : currencies) {
+                LOGGER.info("\uD83C\uDF3C stellar.toml: \uD83C\uDF3C Currency: ".concat((currency.get("code").toString())));
+            }
 
             return IOUtils.toByteArray(new FileInputStream(file));
         } else {
-            LOGGER.info(" \uD83C\uDF45 File NOT found. this is where .toml needs to go;  \uD83C\uDF45 ");
+            LOGGER.info(" \uD83C\uDF45 stellar.toml : File NOT found. this is where .toml needs to go;  \uD83C\uDF45 ");
             throw new Exception("stellar.toml not found");
         }
     }
@@ -78,10 +79,15 @@ public class MainController {
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(Objects.requireNonNull(classLoader.getResource("_well-known/stellar.toml")).getFile());
         if (file.exists()) {
-            LOGGER.info(" \uD83C\uDF45 File has been found \uD83C\uDF45 " + file.getAbsolutePath());
+            LOGGER.info(" \uD83C\uDF45 ... stellar.tomlFile has been found \uD83C\uDF45 " + file.getAbsolutePath());
+            Toml toml = new Toml().read(file);
+            List<HashMap> currencies = toml.getList("CURRENCIES");
+            for (HashMap currency : currencies) {
+                LOGGER.info("\uD83C\uDF3C stellar.toml: \uD83C\uDF3C Currency: ".concat((currency.get("code").toString())));
+            }
             return IOUtils.toByteArray(new FileInputStream(file));
         } else {
-            LOGGER.info(" \uD83C\uDF45 File NOT found. this is where .toml needs to go;  \uD83C\uDF45 ");
+            LOGGER.info(" \uD83C\uDF45 stellar.toml : File NOT found. this is where .toml needs to go;  \uD83C\uDF45 ");
             throw new Exception("stellar.toml not found");
         }
     }
@@ -123,6 +129,7 @@ public class MainController {
         LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F \uD83C\uDF4F ANCHOR CREATED: ".concat(G.toJson(anchor)));
         return anchor;
     }
+
     @PostMapping(value = "/createAgent", produces = MediaType.APPLICATION_JSON_VALUE)
     public Agent createAgent(@RequestBody Agent agent) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:createAgent ...");
@@ -130,6 +137,15 @@ public class MainController {
         LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 Stellar returns Agent: \uD83C\uDF4E "
                 + mAgent.getAgentId() + " anchor: " + mAgent.getAnchorId());
         return mAgent;
+    }
+
+    @PostMapping(value = "/createClient", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Client createClient(@RequestBody Client client) throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:createClient...");
+        Client mClient = agentService.createClient(client);
+        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 Stellar returns Client: \uD83C\uDF4E "
+                + mClient.getClientId() + " anchor: " + mClient.getAnchorId());
+        return mClient;
     }
 
     @PostMapping(value = "/createUser", produces = MediaType.APPLICATION_JSON_VALUE)

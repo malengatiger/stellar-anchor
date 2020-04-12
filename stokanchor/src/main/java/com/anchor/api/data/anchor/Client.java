@@ -1,26 +1,18 @@
 package com.anchor.api.data.anchor;
 
-import com.anchor.api.data.kyc.OrganizationKYCFields;
 import com.anchor.api.data.kyc.PersonalKYCFields;
 
-public class Agent {
-    String anchorId, agentId, anchorName;
+/**
+ * Client is created by Agent and will accept loans
+ */
+public class Client {
+    String anchorId, agentId, anchorName, clientId, agentName;
     double latitude, longitude;
     String dateRegistered, dateUpdated, externalAccountId, stellarAccountId, organizationId, password, secretSeed;
     PersonalKYCFields personalKYCFields;
 
     public PersonalKYCFields getPersonalKYCFields() {
         return personalKYCFields;
-    }
-
-    public String getFullName() {
-        if (personalKYCFields != null) {
-            return personalKYCFields.getFirst_name() + " " + personalKYCFields.getLast_name();
-        }
-        return null;
-    }
-    public void setPersonalKYCFields(PersonalKYCFields personalKYCFields) {
-        this.personalKYCFields = personalKYCFields;
     }
 
     public String getSecretSeed() {
@@ -31,12 +23,38 @@ public class Agent {
         this.secretSeed = secretSeed;
     }
 
+    public String getClientId() {
+        return clientId;
+    }
+
     public String getPassword() {
         return password;
     }
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+
+    public String getAgentName() {
+        return agentName;
+    }
+
+    public void setAgentName(String agentName) {
+        this.agentName = agentName;
+    }
+
+    public String getFullName() {
+        if (personalKYCFields != null) {
+            return personalKYCFields.getFirst_name() + " " + personalKYCFields.getLast_name();
+        }
+        return null;
+    }
+    public void setPersonalKYCFields(PersonalKYCFields personalKYCFields) {
+        this.personalKYCFields = personalKYCFields;
     }
 
     public String getOrganizationId() {
