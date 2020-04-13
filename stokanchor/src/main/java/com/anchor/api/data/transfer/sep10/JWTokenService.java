@@ -55,10 +55,11 @@ public class JWTokenService {
             builder.setExpiration(exp);
         }
 
-        LOGGER.info(em +" Builds the JWT and serializes it to a compact, URL-safe string");
+        LOGGER.info(em +" Building the JWT and serializing it to a compact, URL-safe string");
         String token = builder.compact();
-        LOGGER.info(em +" token generated: ".concat(em).concat(token));
-        return builder.compact();
+        String em2 = Emoji.LEAF + Emoji.LEAF + Emoji.LEAF;
+        LOGGER.info(em + em2 + "JWTokenService: Token generated: ".concat(em).concat(token));
+        return token;
     }
 
     public  Claims decodeJWT(String jwt) {

@@ -130,10 +130,10 @@ public class AnchorSep10Challenge {
         LOGGER.info("Challenge Transaction created, "+em2+" signed by anchor base account and converted to "
                 +em2+"XDR "+em2+"... we done good, Boss!");
 
-        //todo - REMOVE after test
+        //todo - REMOVE after test - get JWT token from XDR transaction string
         String token = getToken(challengeResponse.transaction);
-        LOGGER.info(Emoji.PANDA + Emoji.PANDA + "Token acquisition complete, token: ".concat(token).concat(" ")
-        .concat(Emoji.PANDA).concat(Emoji.PANDA));
+        LOGGER.info(Emoji.PANDA + Emoji.PANDA + "Tested Token acquisition complete, token: ".concat(token).concat(" ")
+        .concat(Emoji.PANDA).concat(Emoji.PANDA).concat(" This message will be removed when we are done"));
         return challengeResponse;
     }
 
@@ -151,7 +151,7 @@ public class AnchorSep10Challenge {
             throw new Exception(Emoji.ERROR + "getToken: readChallengeTransaction failed");
         }
         String clientAccountId = challengeTransaction.getClientAccountId();
-        LOGGER.info(Emoji.ICE_CREAM + Emoji.ICE_CREAM + "clientAccountId: ".concat(clientAccountId));
+        LOGGER.info(Emoji.ICE_CREAM + Emoji.ICE_CREAM + "clientAccountId from challenge transaction: ".concat(clientAccountId));
         AccountResponse accountResponse = null;
         try {
             accountResponse = server.accounts().account(clientAccountId);
@@ -193,12 +193,11 @@ public class AnchorSep10Challenge {
         try {
             token = tokenService.createJWToken(UUID.randomUUID().toString(),
                     jwtIssuer, accountResponse.getAccountId(),EXPIRE_AFTER_N_MINUTES);
-            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C JWT Token: ".concat(token));
 
             //todo - check token claims ...
             Claims claims = tokenService.decodeJWT(token);
             LOGGER.info(Emoji.FLOWER_YELLOW + Emoji.FLOWER_YELLOW +
-                    "JWT issuer: " + claims.getIssuer() + " \uD83C\uDF4E " +
+                    "Claims: JWT issuer: " + claims.getIssuer() + " \uD83C\uDF4E " +
                     Emoji.RED_APPLE + "subject: " + claims.getSubject() + " \uD83C\uDF3C iat: "
                     + claims.getIssuedAt().toString() + " \uD83C\uDF4E exp: " + claims.getExpiration().toString());
         } catch (Exception exception){
@@ -206,9 +205,7 @@ public class AnchorSep10Challenge {
             exception.printStackTrace();
             throw new Exception("JWT token creation failed: " + exception.getMessage());
         }
-        //todo - stop printing token after test
-        String em = Emoji.LEAF + Emoji.LEAF + Emoji.LEAF;
-        LOGGER.info(em + "JWT Token created: ".concat(token).concat(" ").concat(em));
+
         return token;
     }
 
