@@ -49,11 +49,10 @@ dependencies {
 	// https://mvnrepository.com/artifact/com.google.firebase/firebase-storage
 	implementation 'com.google.cloud:google-cloud-storage:1.106.0'
 
-
-
-
 	// https://mvnrepository.com/artifact/javax.mail/mail
 	implementation group: 'javax.mail', name: 'mail', version: '1.5.0-b01'
+	// https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
+	implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.4.0-b180830.0359'
 
 	// https://mvnrepository.com/artifact/org.springframework/spring-context-support
 	implementation group: 'org.springframework', name: 'spring-context-support', version: '5.2.5.RELEASE'

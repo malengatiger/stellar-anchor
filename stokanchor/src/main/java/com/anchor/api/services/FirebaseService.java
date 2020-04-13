@@ -5,6 +5,7 @@ import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.anchor.Client;
 import com.anchor.api.data.info.Info;
 import com.anchor.api.util.Constants;
+import com.anchor.api.util.Emoji;
 import com.google.api.core.ApiFuture;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.*;
@@ -39,14 +40,16 @@ public class FirebaseService {
 
     @Value("${status}")
     private String status;
-
+//💙 💙
     public FirebaseService() {
-        LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 FirebaseService Constructor: \uD83D\uDC99 .......");
+        LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE
+                + "FirebaseService Constructor: " + Emoji.HEART_GREEN);
     }
 
     public void initializeFirebase() throws Exception {
-        LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 Starting Firebase initialization " +
-                ".... \uD83D\uDC99 DEV STATUS: \uD83C\uDF51 " + status + " \uD83C\uDF51");
+        LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE +"Starting Firebase initialization " +
+                ".... \uD83D\uDC99 DEV STATUS: " + Emoji.HEART_PURPLE
+                + status + " " + Emoji.HEART_BLUE + Emoji.HEART_BLUE );
 
         FirebaseApp app;
         try {
@@ -60,31 +63,31 @@ public class FirebaseService {
             LOGGER.severe("Unable to initialize Firebase");
             throw new Exception("Unable to initialize Firebase", e);
         }
-        LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 Firebase has been set up and initialized. " +
-                "\uD83D\uDC99 URL: " + app.getOptions().getDatabaseUrl() + " \uD83D\uDC99");
-        LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 Firebase has been set up and initialized. " +
-                "\uD83E\uDD66 Name: " + app.getName() + " \uD83E\uDD66 \uD83D\uDC99 \uD83D\uDC99");
+        LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE +"Firebase has been set up and initialized. " +
+                "\uD83D\uDC99 URL: " + app.getOptions().getDatabaseUrl() + Emoji.HAPPY);
+        LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE +"Firebase has been set up and initialized. " +
+                "\uD83E\uDD66 Name: " + app.getName() + Emoji.HEART_ORANGE + Emoji.HEART_GREEN );
 
         Firestore fs = FirestoreClient.getFirestore();
         int cnt = 0;
         for (CollectionReference listCollection : fs.listCollections()) {
             cnt++;
-            LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 Collection: #" +cnt + " \uD83D\uDC99 " + listCollection.getId());
+            LOGGER.info(Emoji.RAIN_DROPS + Emoji.RAIN_DROPS + "Collection: #" +cnt + " \uD83D\uDC99 " + listCollection.getId());
         }
         List<Anchor> list = getAnchors();
-        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 " +
+        LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE +
                 "Firebase Initialization complete; ... anchors found: " + list.size());
     }
 
     public UserRecord createUser(String name, String email, String password) throws FirebaseAuthException {
-        LOGGER.info("createUser: \uD83C\uDF51 \uD83C\uDF51 name: " + name + " email: " + email + " password: " + password);
+        LOGGER.info(Emoji.LEMON + Emoji.LEMON + "createUser: name: " + name + " email: " + email + " password: " + password);
         FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
         UserRecord.CreateRequest createRequest = new UserRecord.CreateRequest();
         createRequest.setEmail(email);
         createRequest.setDisplayName(name);
         createRequest.setPassword(password);
         UserRecord userRecord = firebaseAuth.createUser(createRequest);
-        LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 Firebase user record created: ".concat(userRecord.getUid()));
+        LOGGER.info(Emoji.HEART_ORANGE + Emoji.HEART_ORANGE +"Firebase user record created: ".concat(userRecord.getUid()));
         return userRecord;
 
     }

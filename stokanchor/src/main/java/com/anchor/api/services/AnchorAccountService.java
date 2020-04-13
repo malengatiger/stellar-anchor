@@ -4,6 +4,7 @@ import com.anchor.api.data.account.Account;
 import com.anchor.api.data.account.AccountResponseBag;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.anchor.AnchorUser;
+import com.anchor.api.util.Emoji;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
@@ -49,16 +50,16 @@ public class AnchorAccountService {
 
     @Autowired
     private CryptoService cryptoService;
-
+//🍀 🍀
     public AnchorAccountService() {
-        LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService Constructor fired ...\uD83C\uDF40 " +
-                "manages the setup of Anchor base and issuing accounts \uD83C\uDF51 ");
+        LOGGER.info(Emoji.DRUM + Emoji.DRUM + "AnchorAccountService Constructor fired ..." +
+                Emoji.HEART_ORANGE + "manages the setup of Anchor base and issuing accounts");
     }
 
     public Anchor createAnchorAccounts(Anchor newAnchor, String password, String assetCode,
                                        String assetAmount, String fundingSeed, String startingBalance)
             throws Exception {
-        LOGGER.info("\n\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: creating Anchor Accounts " +
+        LOGGER.info(Emoji.FERN + Emoji.FERN + "AnchorAccountService: creating Anchor Accounts " +
                 ".... \uD83C\uDF40 DEV STATUS: " + status + " \uD83C\uDF51 " +
                 "startingBalance: " + startingBalance + " \uD83C\uDF51 seed: " + fundingSeed);
         accountService = context.getBean(AccountService.class);
@@ -113,8 +114,8 @@ public class AnchorAccountService {
                     issuingAccount.getAccountResponse().getAccountId(),
                     distributionAccount.getSecretSeed(),
                     limit, assetCode);
-            LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: createAnchorAccounts " +
-                    ".... \uD83C\uDF45 TrustLine GetTransactionsResponse Response isSuccess:  " + transactionResponse.isSuccess());
+            LOGGER.info(Emoji.FLOWER_RED + Emoji.FLOWER_RED + "AnchorAccountService: createAnchorAccounts " +
+                    ".... "+Emoji.HAPPY+" TrustLine GetTransactionsResponse Response isSuccess:  " + transactionResponse.isSuccess());
 
             SubmitTransactionResponse response = accountService.createAsset(
                     issuingAccount.getSecretSeed(),
@@ -125,18 +126,21 @@ public class AnchorAccountService {
 
         } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.severe("GetTransactionsResponse for Asset Issue/Payment failed \uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45");
+            LOGGER.severe("GetTransactionsResponse for Asset Issue/Payment failed" + Emoji.ERROR);
         }
-        LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C Anchor created and will be added to Firestore: " +
+        //🥬 🌼
+        LOGGER.info(Emoji.LEAF + Emoji.LEAF + Emoji.LEAF +
+                "Anchor created and will be added to Firestore: " +
                 " " + anchor.getName());
         Firestore fs = FirestoreClient.getFirestore();
         ApiFuture<DocumentReference> future = fs.collection("anchors").add(anchor);
-        LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C Anchor added to Firestore at path: \uD83E\uDD6C " + future.get().getPath());
+        LOGGER.info(Emoji.LEAF + Emoji.LEAF + Emoji.LEAF + "Anchor added to Firestore at path: " +
+                "\uD83E\uDD6C " + future.get().getPath());
         LOGGER.info(G.toJson(anchor));
         //todo - send email to confirm the anchor with link ...
         try {
             sendEmail(anchor);
-            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C Email has been sent ... ");
+            LOGGER.info(Emoji.FLOWER_YELLOW + Emoji.FLOWER_YELLOW + "Email has been sent ... ");
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.severe("Email sending failed");

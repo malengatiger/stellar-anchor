@@ -4,6 +4,7 @@ import com.anchor.api.data.account.AccountResponseBag;
 import com.anchor.api.data.anchor.Agent;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.anchor.Client;
+import com.anchor.api.util.Emoji;
 import com.google.firebase.auth.UserRecord;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -16,12 +17,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.UUID;
-
+import com.anchor.api.util.Emoji;
 @Service
 public class AgentService {
     public AgentService() {
-        LOGGER.info("\uD83E\uDD4F \uD83E\uDD4F AgentService - not quite the Secret Service \uD83E\uDD4F \uD83E\uDD4F ");
+        LOGGER.info(Emoji.DRUM + Emoji.DRUM + "AgentService - not quite the Secret Service" + Emoji.DRUM + Emoji.DRUM);
     }
 
     public static final Logger LOGGER = LoggerFactory.getLogger(AgentService.class);
@@ -52,7 +52,7 @@ public class AgentService {
 
     public com.anchor.api.data.anchor.Client createClient(com.anchor.api.data.anchor.Client client) throws Exception {
 
-        LOGGER.info("\uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45 " +
+        LOGGER.info(Emoji.LEMON + Emoji.LEMON +
                         "....... creating Client ....... ");
         Anchor anchor = firebaseService.getAnchorByName(anchorName);
         if (anchor == null) {
@@ -64,9 +64,9 @@ public class AgentService {
                 client.getPersonalKYCFields().getLastName());
 
         if (mClient != null) {
-            LOGGER.info("\uD83D\uDE21 \uD83D\uDE21 Client already exists for this Anchor: ".concat(anchorName)
-            .concat(" \uD83D\uDE21 \uD83D\uDE21 "));
-            throw new Exception("\uD83D\uDE21 Client \uD83D\uDE21 already exists for this \uD83D\uDE21 Anchor");
+            LOGGER.info(Emoji.ERROR + "Client already exists for this Anchor: ".concat(anchorName)
+            .concat(Emoji.ERROR));
+            throw new Exception(Emoji.ERROR + "Client already exists for this Anchor");
         }
         //create firebase auth user
         UserRecord record = firebaseService.createUser(client.getFullName(),
@@ -80,7 +80,7 @@ public class AgentService {
         String seed = cryptoService.decrypt(bytes);
 
         AccountResponseBag bag = accountService.createAndFundStellarAccount(seed,clientStartingBalance);
-        LOGGER.info("\uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45 " +
+        LOGGER.info(Emoji.HEART_PURPLE + Emoji.HEART_PURPLE +
                 "Client Stellar account has been created and funded with ... "
                         .concat(clientStartingBalance).concat(" XLM"));
         //handle seed encryption
@@ -93,7 +93,7 @@ public class AgentService {
         firebaseService.addClient(client);
         sendEmail(client);
         client.setPassword(savePassword);
-        LOGGER.info(("\uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45 " +
+        LOGGER.info((Emoji.BLUE_DOT + Emoji.BLUE_DOT +
                 "Client has been added to Firestore ").concat(G.toJson(client)));
         client.setSecretSeed(bag.getSecretSeed());
         return client;
@@ -101,7 +101,7 @@ public class AgentService {
 
     public Agent createAgent(Agent agent) throws Exception {
         //todo - create Stellar account; add to Firestore;
-        LOGGER.info("\uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45 " +
+        LOGGER.info(Emoji.YELLOW_STAR + Emoji.YELLOW_STAR + Emoji.YELLOW_STAR +
                 "....... creating Agent ....... ");
         Anchor anchor = firebaseService.getAnchorByName(anchorName);
         if (anchor == null) {
@@ -112,9 +112,9 @@ public class AgentService {
                 agent.getPersonalKYCFields().getFirstName(),
                 agent.getPersonalKYCFields().getLastName());
         if (mAgent != null) {
-            LOGGER.info("\uD83D\uDE21 \uD83D\uDE21 Agent already exists for this Anchor: ".concat(anchorName)
-                    .concat(" \uD83D\uDE21 \uD83D\uDE21 "));
-            throw new Exception("\uD83D\uDE21 Agent \uD83D\uDE21 already exists for this \uD83D\uDE21 Anchor");
+            LOGGER.info(Emoji.ERROR.concat(anchorName)
+                    .concat(" ").concat(Emoji.ERROR));
+            throw new Exception(Emoji.ERROR + "Agent already exists for this Anchor");
         }
         //create firebase auth user
         UserRecord record = firebaseService.createUser(agent.getFullName(),
@@ -125,9 +125,9 @@ public class AgentService {
         cryptoService.downloadSeedFile(anchor.getBaseAccount().getAccountId());
         byte[] bytes = cryptoService.readFile(anchor.getBaseAccount().getAccountId());
         String seed = cryptoService.decrypt(bytes);
-
+//  🍅
         AccountResponseBag bag = accountService.createAndFundStellarAccount(seed,agentStartingBalance);
-        LOGGER.info("\uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45 " +
+        LOGGER.info(Emoji.RED_APPLE + Emoji.RED_APPLE +
                 "Agent Stellar account has been created and funded with ... "
                         .concat(agentStartingBalance).concat(" XLM"));
         cryptoService.encrypt(bag.getAccountResponse().getAccountId(),bag.getSecretSeed());
@@ -137,7 +137,7 @@ public class AgentService {
         agent.setPassword(null);
         firebaseService.addAgent(agent);
         sendEmail(agent);
-        LOGGER.info(("\uD83C\uDF45 \uD83C\uDF45 \uD83C\uDF45 " +
+        LOGGER.info((Emoji.LEAF + Emoji.LEAF +
                 "Agent has been added to Firestore ").concat(G.toJson(agent)));
         agent.setPassword(savePassword);
         agent.setSecretSeed(bag.getSecretSeed());
@@ -146,7 +146,7 @@ public class AgentService {
 
     private void sendEmail(Agent agent) throws IOException {
 
-        LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C Sending registration email to user: "
+        LOGGER.info(Emoji.PLANE + Emoji.PLANE + "Sending registration email to user: "
                 + agent.getPersonalKYCFields().getEmailAddress());
 
         //todo - finish registration email composition, links and all, html etc.
@@ -157,15 +157,15 @@ public class AgentService {
         sb.append("\nRegards,\n");
         sb.append("Anchor Network Team");
 
-        LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C SendGrid: send mail from: " + fromMail);
+        LOGGER.info(Emoji.RAIN_DROPS + Emoji.RAIN_DROP + "SendGrid: send mail from: " + fromMail);
 
         Email from = new Email(fromMail);
         String subject = "Welcome to Anchor registration";
         Email to = new Email(agent.getPersonalKYCFields().getEmailAddress());
         Content content = new Content("text/plain", sb.toString());
         Mail mail = new Mail(from, subject, to, content);
-
-        LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C SendGrid apiKey: " + sendgridAPIKey);
+// 🌼
+        LOGGER.info(Emoji.FLOWER_YELLOW + Emoji.FLOWER_YELLOW + "SendGrid apiKey: " + sendgridAPIKey);
         SendGrid sg = new SendGrid(sendgridAPIKey);
         Request request = new Request();
         try {
@@ -173,9 +173,11 @@ public class AgentService {
             request.setEndpoint("mail/send");
             request.setBody(mail.build());
             Response response = sg.api(request);
-            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C Registration email sent to Anchor user: \uD83E\uDD66  " + agent.getFullName() +
-                    " \uD83E\uDD66 status code: " + response.getStatusCode());
-            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C SendGrid: " +
+            LOGGER.info(Emoji.BLUE_DISC + Emoji.BLUE_DISC +
+                    "Registration email sent to Anchor user: "
+                    + Emoji.BLUE_THINGY + agent.getFullName() + Emoji.PANDA +
+                    " status code: " + response.getStatusCode());
+            LOGGER.info(Emoji.FLOWER_YELLOW + Emoji.FLOWER_YELLOW + "SendGrid: " +
                     " response headers: " + response.getHeaders());
 
         } catch (IOException ex) {

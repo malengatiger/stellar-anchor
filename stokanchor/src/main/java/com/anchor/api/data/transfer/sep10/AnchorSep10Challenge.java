@@ -51,6 +51,13 @@ public class AnchorSep10Challenge {
     @Autowired
     private CryptoService cryptoService;
 
+    @Autowired
+    private JWTokenService tokenService;
+
+    public static final String em1 = "\uD83E\uDD66 \uD83E\uDD66 ",
+    em2 = "\uD83C\uDF3C ", error = "\uD83D\uDE08 ";
+    public static final int EXPIRE_AFTER_N_MINUTES = 1000 * 60 * 15;
+
     /**
      * Returns a valid <a href="https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0010.md#response" target="_blank">SEP 10</a> challenge, for use in web authentication.
      *
@@ -60,21 +67,19 @@ public class AnchorSep10Challenge {
         Anchor anchor = firebaseService.getAnchorByName(anchorName);
         if (anchor == null) {
             LOGGER.severe("Anchor ".concat(anchorName).concat(" is missing"));
-            throw new Exception("\uD83C\uDF4E Anchor is missing \uD83C\uDF4E "
+            throw new Exception(error + " Anchor is missing " + error
             .concat(anchorName));
         }
-        LOGGER.info("... \uD83E\uDD66 \uD83E\uDD66 Anchor found on Firestore: "
+        LOGGER.info(em1 + "Anchor found on Firestore: "
                 .concat(anchorName));
         cryptoService.downloadSeedFile(anchor.getBaseAccount().getAccountId());
         byte[] mBytes = cryptoService.readFile(anchor.getBaseAccount().getAccountId());
         String seed = cryptoService.decrypt(mBytes);
-        LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C Decrypted seed: "
-                .concat(seed).concat(" \uD83E\uDD6C \uD83E\uDD6C"));
+        LOGGER.info(em1 + " " + em1 +"Decrypted seed: "
+                .concat(seed).concat(" ").concat(em1));
         setServerAndNetwork();
-        //todo - decrypt first
         KeyPair signer = KeyPair.fromSecretSeed(seed);
-        //todo - do the Crypto thing here ... encrypted seed from db is decrypted here ...
-        TimeBounds bounds = new TimeBounds(new Date().getTime(), new Date().getTime() + (1000 * 60 * 15));
+        TimeBounds bounds = new TimeBounds(new Date().getTime(), new Date().getTime() + EXPIRE_AFTER_N_MINUTES);
 
         byte[] nonce = new byte[48];
         SecureRandom random = new SecureRandom();
@@ -89,10 +94,10 @@ public class AnchorSep10Challenge {
             LOGGER.severe("Client Account not found on Stellar");
         }
         if (clientAccount == null) {
-            throw new Exception("\uD83C\uDF4E Client Account missing \uD83C\uDF4E ");
+            throw new Exception(error + "Client Account missing ".concat(error));
         }
-        LOGGER.info("\uD83C\uDF3C Client has an account on Stellar. We good! Starting ManageDataOperation in transaction ..." +
-                " \uD83C\uDF3A anchor: " + anchorName);
+        LOGGER.info(em2 +" Client has an account on Stellar. We good! Starting ManageDataOperation in transaction ..."
+                +em2+" anchor: " + anchorName);
 
         int maxSize = 50;
         String key = "";
@@ -116,8 +121,8 @@ public class AnchorSep10Challenge {
         transaction.sign(signer);
 
         ChallengeResponse challengeResponse = new ChallengeResponse(transaction.toEnvelopeXdrBase64(),network.getNetworkPassphrase());
-        LOGGER.info("Challenge Transaction created, \uD83C\uDF4E signed by anchor base account and converted to " +
-                "\uD83C\uDF4E XDR \uD83C\uDF4E ... we done good, Boss!");
+        LOGGER.info("Challenge Transaction created, "+em2+" signed by anchor base account and converted to "
+                +em2+"XDR "+em2+"... we done good, Boss!");
         return challengeResponse;
     }
 
@@ -158,11 +163,12 @@ public class AnchorSep10Challenge {
         }
         String token;
         try {
-            token = JWTUtil.createJWT(UUID.randomUUID().toString(),"https://stokanchor.com",accountResponse.getAccountId(),(1000 * 60 * 15));
-            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C Token: ".concat(token));
+            token = tokenService.createJWToken(UUID.randomUUID().toString(),
+                    "https://stokanchor.com", accountResponse.getAccountId(),(1000 * 60 * 5));
+            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C JWT Token: ".concat(token));
 
             //todo - check token claims ...
-            Claims claims = JWTUtil.decodeJWT(token);
+            Claims claims = tokenService.decodeJWT(token);
             LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E JWT issuer: " + claims.getIssuer() + " \uD83C\uDF4E " +
                     " \uD83E\uDD4F subject: " + claims.getSubject() + " \uD83C\uDF3C iat: "
                     + claims.getIssuedAt().toString() + " \uD83C\uDF4E exp: " + claims.getExpiration().toString());
