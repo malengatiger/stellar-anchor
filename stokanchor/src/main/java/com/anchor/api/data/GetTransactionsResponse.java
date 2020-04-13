@@ -1,4 +1,8 @@
 package com.anchor.api.data;
+
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 /*
     GET TRANSFER_SERVER/transactions
     On success the endpoint should return 200 OK HTTP status code and a JSON object with the following fields:
@@ -85,105 +89,71 @@ package com.anchor.api.data;
             }
  */
 public class GetTransactionsResponse {
-    String id,
-            kind, status,
-            more_info_url,
-            amount_in, amount_out,
-            amount_fee, started_at,
-            completed_at, stellar_transaction_id,
-            external_extra, external_extra_text,
-            external_transaction_id, message;
+    private String id;
+    @SerializedName("more_info_url")
+    @Expose
+    private String moreInfoUrl;
+    @SerializedName("amount_in")
+    @Expose
+    private String amountIn;
+
+    @SerializedName("amount_out")
+    @Expose
+    private String amountOut;
+
+    @SerializedName("amount_fee")
+    @Expose
+    private String amountFee;
+
+    @SerializedName("started_at")
+    @Expose
+    private String startedAt;
+
+    @SerializedName("completed_at")
+    @Expose
+    private String completedAt;
+
+    @SerializedName("stellar_transaction_id")
+    @Expose
+    private String stellarTransactionId;
+
+    @SerializedName("external_extra")
+    @Expose
+    private String externalExtra;
+
+    @SerializedName("external_extra_text")
+    @Expose
+    private String externalExtraText;
+
+    @SerializedName("external_transaction_id")
+    @Expose
+    private String externalTransactionId;
+    private String message;
     boolean refunded;
-    int status_eta;
+    @SerializedName("status_eta")
+    @Expose
+    int statusETA;
     //fields for deposit
-    String deposit_memo, deposit_memo_type, from, to;
+    @SerializedName("deposit_memo")
+    @Expose
+    private String depositMemo;
+    @SerializedName("deposit_memo_type")
+    @Expose
+    private String depositMemoType;
+    private String from, to;
+
     //fields for withdrawal
-    String withdraw_anchor_account, withdraw_memo_type, withdraw_memo;
+    @SerializedName("withdraw_anchor_account")
+    @Expose
+    private String withdrawAnchorAccount;
 
-    public GetTransactionsResponse() {
-    }
+    @SerializedName("withdraw_memo_type")
+    @Expose
+    private String withdrawMemoType;
 
-    public GetTransactionsResponse(String id, String kind, String status, String more_info_url,
-                                   String amount_in, String amount_out, String amount_fee,
-                                   String started_at, String completed_at,
-                                   String stellar_transaction_id, String external_extra,
-                                   String external_extra_text, String external_transaction_id,
-                                   String message, boolean refunded,
-                                   int status_eta, String deposit_memo, String deposit_memo_type,
-                                   String from, String to, String withdraw_anchor_account,
-                                   String withdraw_memo_type, String withdraw_memo) {
-        this.id = id;
-        this.kind = kind;
-        this.status = status;
-        this.more_info_url = more_info_url;
-        this.amount_in = amount_in;
-        this.amount_out = amount_out;
-        this.amount_fee = amount_fee;
-        this.started_at = started_at;
-        this.completed_at = completed_at;
-        this.stellar_transaction_id = stellar_transaction_id;
-        this.external_extra = external_extra;
-        this.external_extra_text = external_extra_text;
-        this.external_transaction_id = external_transaction_id;
-        this.message = message;
-        this.refunded = refunded;
-        this.status_eta = status_eta;
-        this.deposit_memo = deposit_memo;
-        this.deposit_memo_type = deposit_memo_type;
-        this.from = from;
-        this.to = to;
-        this.withdraw_anchor_account = withdraw_anchor_account;
-        this.withdraw_memo_type = withdraw_memo_type;
-        this.withdraw_memo = withdraw_memo;
-    }
-
-    public String getDeposit_memo() {
-        return deposit_memo;
-    }
-
-    public void setDeposit_memo(String deposit_memo) {
-        this.deposit_memo = deposit_memo;
-    }
-
-    public String getDeposit_memo_type() {
-        return deposit_memo_type;
-    }
-
-    public void setDeposit_memo_type(String deposit_memo_type) {
-        this.deposit_memo_type = deposit_memo_type;
-    }
-
-    public String getFrom() {
-        return from;
-    }
-
-    public void setFrom(String from) {
-        this.from = from;
-    }
-
-    public String getTo() {
-        return to;
-    }
-
-    public void setTo(String to) {
-        this.to = to;
-    }
-
-    public String getWithdraw_anchor_account() {
-        return withdraw_anchor_account;
-    }
-
-    public void setWithdraw_anchor_account(String withdraw_anchor_account) {
-        this.withdraw_anchor_account = withdraw_anchor_account;
-    }
-
-    public String getWithdraw_memo_type() {
-        return withdraw_memo_type;
-    }
-
-    public void setWithdraw_memo_type(String withdraw_memo_type) {
-        this.withdraw_memo_type = withdraw_memo_type;
-    }
+    @SerializedName("withdraw_memo")
+    @Expose
+    private String withdrawMemo;
 
     public String getId() {
         return id;
@@ -193,108 +163,84 @@ public class GetTransactionsResponse {
         this.id = id;
     }
 
-    public String getKind() {
-        return kind;
+    public String getMoreInfoUrl() {
+        return moreInfoUrl;
     }
 
-    public void setKind(String kind) {
-        this.kind = kind;
+    public void setMoreInfoUrl(String moreInfoUrl) {
+        this.moreInfoUrl = moreInfoUrl;
     }
 
-    public String getStatus() {
-        return status;
+    public String getAmountIn() {
+        return amountIn;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setAmountIn(String amountIn) {
+        this.amountIn = amountIn;
     }
 
-    public String getMore_info_url() {
-        return more_info_url;
+    public String getAmountOut() {
+        return amountOut;
     }
 
-    public void setMore_info_url(String more_info_url) {
-        this.more_info_url = more_info_url;
+    public void setAmountOut(String amountOut) {
+        this.amountOut = amountOut;
     }
 
-    public String getAmount_in() {
-        return amount_in;
+    public String getAmountFee() {
+        return amountFee;
     }
 
-    public void setAmount_in(String amount_in) {
-        this.amount_in = amount_in;
+    public void setAmountFee(String amountFee) {
+        this.amountFee = amountFee;
     }
 
-    public String getAmount_out() {
-        return amount_out;
+    public String getStartedAt() {
+        return startedAt;
     }
 
-    public void setAmount_out(String amount_out) {
-        this.amount_out = amount_out;
+    public void setStartedAt(String startedAt) {
+        this.startedAt = startedAt;
     }
 
-    public String getAmount_fee() {
-        return amount_fee;
+    public String getCompletedAt() {
+        return completedAt;
     }
 
-    public void setAmount_fee(String amount_fee) {
-        this.amount_fee = amount_fee;
+    public void setCompletedAt(String completedAt) {
+        this.completedAt = completedAt;
     }
 
-    public String getStarted_at() {
-        return started_at;
+    public String getStellarTransactionId() {
+        return stellarTransactionId;
     }
 
-    public void setStarted_at(String started_at) {
-        this.started_at = started_at;
+    public void setStellarTransactionId(String stellarTransactionId) {
+        this.stellarTransactionId = stellarTransactionId;
     }
 
-    public String getCompleted_at() {
-        return completed_at;
+    public String getExternalExtra() {
+        return externalExtra;
     }
 
-    public void setCompleted_at(String completed_at) {
-        this.completed_at = completed_at;
+    public void setExternalExtra(String externalExtra) {
+        this.externalExtra = externalExtra;
     }
 
-    public String getStellar_transaction_id() {
-        return stellar_transaction_id;
+    public String getExternalExtraText() {
+        return externalExtraText;
     }
 
-    public void setStellar_transaction_id(String stellar_transaction_id) {
-        this.stellar_transaction_id = stellar_transaction_id;
+    public void setExternalExtraText(String externalExtraText) {
+        this.externalExtraText = externalExtraText;
     }
 
-    public String getExternal_transaction_id() {
-        return external_transaction_id;
+    public String getExternalTransactionId() {
+        return externalTransactionId;
     }
 
-    public void setExternal_transaction_id(String external_transaction_id) {
-        this.external_transaction_id = external_transaction_id;
-    }
-
-    public String getExternal_extra() {
-        return external_extra;
-    }
-
-    public void setExternal_extra(String external_extra) {
-        this.external_extra = external_extra;
-    }
-
-    public String getExternal_extra_text() {
-        return external_extra_text;
-    }
-
-    public void setExternal_extra_text(String external_extra_text) {
-        this.external_extra_text = external_extra_text;
-    }
-
-    public String getWithdraw_memo() {
-        return withdraw_memo;
-    }
-
-    public void setWithdraw_memo(String withdraw_memo) {
-        this.withdraw_memo = withdraw_memo;
+    public void setExternalTransactionId(String externalTransactionId) {
+        this.externalTransactionId = externalTransactionId;
     }
 
     public String getMessage() {
@@ -313,11 +259,67 @@ public class GetTransactionsResponse {
         this.refunded = refunded;
     }
 
-    public int getStatus_eta() {
-        return status_eta;
+    public int getStatusETA() {
+        return statusETA;
     }
 
-    public void setStatus_eta(int status_eta) {
-        this.status_eta = status_eta;
+    public void setStatusETA(int statusETA) {
+        this.statusETA = statusETA;
+    }
+
+    public String getDepositMemo() {
+        return depositMemo;
+    }
+
+    public void setDepositMemo(String depositMemo) {
+        this.depositMemo = depositMemo;
+    }
+
+    public String getDepositMemoType() {
+        return depositMemoType;
+    }
+
+    public void setDepositMemoType(String depositMemoType) {
+        this.depositMemoType = depositMemoType;
+    }
+
+    public String getFrom() {
+        return from;
+    }
+
+    public void setFrom(String from) {
+        this.from = from;
+    }
+
+    public String getTo() {
+        return to;
+    }
+
+    public void setTo(String to) {
+        this.to = to;
+    }
+
+    public String getWithdrawAnchorAccount() {
+        return withdrawAnchorAccount;
+    }
+
+    public void setWithdrawAnchorAccount(String withdrawAnchorAccount) {
+        this.withdrawAnchorAccount = withdrawAnchorAccount;
+    }
+
+    public String getWithdrawMemoType() {
+        return withdrawMemoType;
+    }
+
+    public void setWithdrawMemoType(String withdrawMemoType) {
+        this.withdrawMemoType = withdrawMemoType;
+    }
+
+    public String getWithdrawMemo() {
+        return withdrawMemo;
+    }
+
+    public void setWithdrawMemo(String withdrawMemo) {
+        this.withdrawMemo = withdrawMemo;
     }
 }

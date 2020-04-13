@@ -1,10 +1,12 @@
 package com.anchor.api.data.transfer.sep26;
 
 import com.anchor.api.data.transfer.sep26.ExtraInfoItem;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-/**
+/*
     👽 👽 👽 👽 SEP 0026 🛎
     POST TRANSFER_SERVER_SEP0024/transactions/withdraw/interactive
     Content-Type: multipart/form-data
@@ -37,27 +39,24 @@ import java.util.List;
     extra_info	    array	(optional) JSON array with additional information about the withdrawal process. Each element in the array is formatted as follows {key: KEY, value: VALUE}. Wallets are encouraged to present extra_info in a tabular manner and enable easy copy to clipboard for each line value.
  */
 public class WithdrawOKResponse {
-    private String id, account_id, memo_type, memo;
+    private String id;
+    @SerializedName("account_id")
+    @Expose
+    private String accountId;
+    @SerializedName("memo_type")
+    @Expose
+    private String memoType;
+
+    private String memo;
     private int eta;
-    private float min_amount, max_amount, fee;
+    @SerializedName("min_amount")
+    @Expose
+    private float minAmount;
+    @SerializedName("max_amount")
+    @Expose
+    private float maxAmount;
+    private float fee;
     private List<ExtraInfoItem> extra_info;
-
-    public WithdrawOKResponse(String id, String account_id, String memo_type, String memo, int eta,
-                              float min_amount, float max_amount, float fee,
-                              List<ExtraInfoItem> extra_info) {
-        this.id = id;
-        this.account_id = account_id;
-        this.memo_type = memo_type;
-        this.memo = memo;
-        this.eta = eta;
-        this.min_amount = min_amount;
-        this.max_amount = max_amount;
-        this.fee = fee;
-        this.extra_info = extra_info;
-    }
-
-    public WithdrawOKResponse() {
-    }
 
     public String getId() {
         return id;
@@ -67,20 +66,20 @@ public class WithdrawOKResponse {
         this.id = id;
     }
 
-    public String getAccount_id() {
-        return account_id;
+    public String getAccountId() {
+        return accountId;
     }
 
-    public void setAccount_id(String account_id) {
-        this.account_id = account_id;
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
     }
 
-    public String getMemo_type() {
-        return memo_type;
+    public String getMemoType() {
+        return memoType;
     }
 
-    public void setMemo_type(String memo_type) {
-        this.memo_type = memo_type;
+    public void setMemoType(String memoType) {
+        this.memoType = memoType;
     }
 
     public String getMemo() {
@@ -99,20 +98,20 @@ public class WithdrawOKResponse {
         this.eta = eta;
     }
 
-    public float getMin_amount() {
-        return min_amount;
+    public float getMinAmount() {
+        return minAmount;
     }
 
-    public void setMin_amount(float min_amount) {
-        this.min_amount = min_amount;
+    public void setMinAmount(float minAmount) {
+        this.minAmount = minAmount;
     }
 
-    public float getMax_amount() {
-        return max_amount;
+    public float getMaxAmount() {
+        return maxAmount;
     }
 
-    public void setMax_amount(float max_amount) {
-        this.max_amount = max_amount;
+    public void setMaxAmount(float maxAmount) {
+        this.maxAmount = maxAmount;
     }
 
     public float getFee() {
@@ -122,7 +121,6 @@ public class WithdrawOKResponse {
     public void setFee(float fee) {
         this.fee = fee;
     }
-
 
     public List<ExtraInfoItem> getExtra_info() {
         return extra_info;

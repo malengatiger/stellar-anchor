@@ -1,6 +1,8 @@
 package com.anchor.api.data.transfer.sep26;
 
 import com.anchor.api.data.transfer.sep26.ExtraInfoItem;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
@@ -73,21 +75,17 @@ import java.util.List;
 public class DepositOKResponse {
     String how;
     int eta;
-    float min_amount, max_amount, fee;
+
+    @SerializedName("min_amount")
+    @Expose
+    private float minAmount;
+
+    @SerializedName("max_amount")
+    @Expose
+    private float maxAmount;
+    private float fee;
+
     List<ExtraInfoItem> extra_info;
-
-    public DepositOKResponse() {
-    }
-
-    public DepositOKResponse(String how, int eta, float min_amount, float max_amount,
-                             float fee, List<ExtraInfoItem> extra_info) {
-        this.how = how;
-        this.eta = eta;
-        this.min_amount = min_amount;
-        this.max_amount = max_amount;
-        this.fee = fee;
-        this.extra_info = extra_info;
-    }
 
     public String getHow() {
         return how;
@@ -97,7 +95,6 @@ public class DepositOKResponse {
         this.how = how;
     }
 
-
     public int getEta() {
         return eta;
     }
@@ -106,20 +103,20 @@ public class DepositOKResponse {
         this.eta = eta;
     }
 
-    public float getMin_amount() {
-        return min_amount;
+    public float getMinAmount() {
+        return minAmount;
     }
 
-    public void setMin_amount(float min_amount) {
-        this.min_amount = min_amount;
+    public void setMinAmount(float minAmount) {
+        this.minAmount = minAmount;
     }
 
-    public float getMax_amount() {
-        return max_amount;
+    public float getMaxAmount() {
+        return maxAmount;
     }
 
-    public void setMax_amount(float max_amount) {
-        this.max_amount = max_amount;
+    public void setMaxAmount(float maxAmount) {
+        this.maxAmount = maxAmount;
     }
 
     public float getFee() {

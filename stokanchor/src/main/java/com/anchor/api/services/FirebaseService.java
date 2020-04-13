@@ -1,6 +1,5 @@
 package com.anchor.api.services;
 
-import com.anchor.api.data.account.AccountResponseWithDate;
 import com.anchor.api.data.anchor.Agent;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.anchor.Client;

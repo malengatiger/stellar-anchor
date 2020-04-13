@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-/**
+/*
     🥦 🥦 🥦 SEP 0026 🥦 🥦 🥦 Simple Summary
     This SEP defines the standard way for wallets to interact with anchors on behalf of users.
     This improves user experience by allowing wallets and other clients to interact with anchors directly without the user needing to

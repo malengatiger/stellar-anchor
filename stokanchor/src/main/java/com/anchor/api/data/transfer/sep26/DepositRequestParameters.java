@@ -2,8 +2,10 @@ package com.anchor.api.data.transfer.sep26;
 
 import com.anchor.api.data.kyc.OrganizationKYCFields;
 import com.anchor.api.data.kyc.PersonalKYCFields;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
-/**
+/*
     🍏 🛎 🛎 🛎 SEP 0026 🛎 Deposit Request Parameters
     🛎 POST TRANSFER_SERVER/deposit
     Content-Type: multipart/form-data
@@ -28,56 +30,78 @@ import com.anchor.api.data.kyc.PersonalKYCFields;
 
  */
 public class DepositRequestParameters {
-    private String asset_code,
-            asset_issuer,
-            account,
-            memo_type,
-            memo,
-            email_address,
-            type,
-            wallet_name,
-            wallet_url, lang;
+    @SerializedName("asset_code")
+    @Expose
+    private String assetCode;
+    @SerializedName("asset_issuer")
+    @Expose
+    private String assetIssuer;
+    private String account;
+    @SerializedName("memo_type")
+    @Expose
+    private String memoType;
+    private String memo;
+    @SerializedName("email_address")
+    @Expose
+    private String emailAddress;
+    private String type;
+    @SerializedName("wallet_name")
+    @Expose
+    private String walletName;
+    @SerializedName("wallet_url")
+    @Expose
+    private String walletUrl;
+    private String lang;
 
     private PersonalKYCFields personalKYCFields;
     private OrganizationKYCFields organizationKYCFields;
 
-    public DepositRequestParameters() {
+    public String getAssetCode() {
+        return assetCode;
     }
 
-    public DepositRequestParameters(String asset_code, String asset_issuer,
-                                    String account, String memo_type, String memo,
-                                    String email_address, String type,
-                                    String wallet_name, String wallet_url,
-                                    String lang, PersonalKYCFields personalKYCFields,
-                                    OrganizationKYCFields organizationKYCFields) {
-        this.asset_code = asset_code;
-        this.asset_issuer = asset_issuer;
+    public void setAssetCode(String assetCode) {
+        this.assetCode = assetCode;
+    }
+
+    public String getAssetIssuer() {
+        return assetIssuer;
+    }
+
+    public void setAssetIssuer(String assetIssuer) {
+        this.assetIssuer = assetIssuer;
+    }
+
+    public String getAccount() {
+        return account;
+    }
+
+    public void setAccount(String account) {
         this.account = account;
-        this.memo_type = memo_type;
+    }
+
+    public String getMemoType() {
+        return memoType;
+    }
+
+    public void setMemoType(String memoType) {
+        this.memoType = memoType;
+    }
+
+    public String getMemo() {
+        return memo;
+    }
+
+    public void setMemo(String memo) {
         this.memo = memo;
-        this.email_address = email_address;
-        this.type = type;
-        this.wallet_name = wallet_name;
-        this.wallet_url = wallet_url;
-        this.lang = lang;
-        this.personalKYCFields = personalKYCFields;
-        this.organizationKYCFields = organizationKYCFields;
     }
 
-    public String getAsset_issuer() {
-        return asset_issuer;
+    public String getEmailAddress() {
+        return emailAddress;
     }
 
-    public void setAsset_issuer(String asset_issuer) {
-        this.asset_issuer = asset_issuer;
-    }
-
-    public String getEmail_address() {
-        return email_address;
-    }
-
-    public void setEmail_address(String email_address) {
-        this.email_address = email_address;
+    public void setEmailAddress(String emailAddress) {
+        this.emailAddress = emailAddress;
     }
 
     public String getType() {
@@ -86,6 +110,30 @@ public class DepositRequestParameters {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getWalletName() {
+        return walletName;
+    }
+
+    public void setWalletName(String walletName) {
+        this.walletName = walletName;
+    }
+
+    public String getWalletUrl() {
+        return walletUrl;
+    }
+
+    public void setWalletUrl(String walletUrl) {
+        this.walletUrl = walletUrl;
+    }
+
+    public String getLang() {
+        return lang;
+    }
+
+    public void setLang(String lang) {
+        this.lang = lang;
     }
 
     public PersonalKYCFields getPersonalKYCFields() {
@@ -102,61 +150,5 @@ public class DepositRequestParameters {
 
     public void setOrganizationKYCFields(OrganizationKYCFields organizationKYCFields) {
         this.organizationKYCFields = organizationKYCFields;
-    }
-
-    public String getAsset_code() {
-        return asset_code;
-    }
-
-    public void setAsset_code(String asset_code) {
-        this.asset_code = asset_code;
-    }
-
-    public String getAccount() {
-        return account;
-    }
-
-    public void setAccount(String account) {
-        this.account = account;
-    }
-
-    public String getMemo_type() {
-        return memo_type;
-    }
-
-    public void setMemo_type(String memo_type) {
-        this.memo_type = memo_type;
-    }
-
-    public String getMemo() {
-        return memo;
-    }
-
-    public void setMemo(String memo) {
-        this.memo = memo;
-    }
-
-    public String getWallet_name() {
-        return wallet_name;
-    }
-
-    public void setWallet_name(String wallet_name) {
-        this.wallet_name = wallet_name;
-    }
-
-    public String getWallet_url() {
-        return wallet_url;
-    }
-
-    public void setWallet_url(String wallet_url) {
-        this.wallet_url = wallet_url;
-    }
-
-    public String getLang() {
-        return lang;
-    }
-
-    public void setLang(String lang) {
-        this.lang = lang;
     }
 }

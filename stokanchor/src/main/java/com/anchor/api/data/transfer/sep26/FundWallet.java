@@ -31,4 +31,36 @@ public class FundWallet {
     @SerializedName("funding_protocols")
     @Expose
     private List<Sep26> fundingProtocols;
+
+    public float getAmountNative() {
+        return amountNative;
+    }
+
+    public void setAmountNative(float amountNative) {
+        this.amountNative = amountNative;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public String getFees() {
+        return fees;
+    }
+
+    public void setFees(String fees) {
+        this.fees = fees;
+    }
+
+    public List<Sep26> getFundingProtocols() {
+        return fundingProtocols;
+    }
+
+    public void setFundingProtocols(List<Sep26> fundingProtocols) {
+        this.fundingProtocols = fundingProtocols;
+    }
 }
