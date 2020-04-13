@@ -1,12 +1,15 @@
 package com.anchor.api.controllers;
 
-import com.anchor.api.WithdrawRequestParameters;
+import com.anchor.api.data.transfer.sep26.DepositRequestParameters;
+import com.anchor.api.data.transfer.sep26.WithdrawRequestParameters;
 import com.anchor.api.data.*;
 import com.anchor.api.data.account.Options;
 import com.anchor.api.data.info.Info;
 import com.anchor.api.data.transfer.sep10.AnchorSep10Challenge;
 import com.anchor.api.data.transfer.sep10.ChallengeResponse;
 import com.anchor.api.data.transfer.sep10.JWTToken;
+import com.anchor.api.data.transfer.sep26.DepositOKResponse;
+import com.anchor.api.data.transfer.sep26.WithdrawOKResponse;
 import com.anchor.api.data.transfer.sep27.InfoServerResponse;
 import com.anchor.api.services.AccountService;
 import com.anchor.api.services.FirebaseService;
@@ -125,11 +128,11 @@ public class TransferController {
     }
     @PostMapping("/setAnchorInfo")
     public String setAnchorInfo(@RequestBody Info info) throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:withdraw ...");
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:setAnchorInfo ...");
         return firebaseService.addAnchorInfo(info);
     }
 
-    @GetMapping("/server_info")
+    @GetMapping(value = "/info_server", produces = MediaType.APPLICATION_JSON_VALUE)
     public InfoServerResponse getServerInfo(@RequestParam String assetCode,
                                             @RequestParam String assetIssuer,
                                             @RequestParam String lang) throws Exception {

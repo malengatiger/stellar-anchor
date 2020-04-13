@@ -3,18 +3,19 @@ package com.anchor.api.data.transfer.sep27;
 import com.anchor.api.data.transfer.sep26.TransferProtocols;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-/*
-    🍎 🍎 🍎 🍎 Root level response fields.
-    🍎 Values set here override equivalent values defined in 🍎 stellar.toml.
+/**
+    🍎 🍎 🍎 🍎 SEP0027 😡 Root level response fields.
+    🍎 😡 😡 😡 Values set here (where is here? 💧 in database?) override equivalent values defined in 🍎 stellar.toml.
 
     Field	Requirements	    Description
-    name	                    string (<= 20 char)	A short name for the token
+    name	                    string  (<= 20 char)	A short name for the token
     description	                string	Description of token and what it represents
     conditions	                string	Conditions on token
-    logo	                    url	URL to a PNG image on a transparent background representing token
+    logo	                    url	    URL to a PNG image on a transparent background representing token
     redemption_instructions	    string	If anchored token, these are instructions to redeem the underlying asset from tokens.
-    Organization response fields.
-    Optional, but anchors are recommended to provide more information regarding the organization
+
+    💧 💧 Organization response fields. 😡 😡 Optional
+    Anchors are recommended to provide more information regarding the organization
     anchoring an asset.
 
     🥏 🥏 Org

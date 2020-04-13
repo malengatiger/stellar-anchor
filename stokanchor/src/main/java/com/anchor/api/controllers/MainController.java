@@ -51,7 +51,7 @@ public class MainController {
         return "\uD83D\uDC99 \uD83D\uDC9C AnchorApplication up and running ... "
                 + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
     }
-    @GetMapping(value = "/.well-known/stellar.toml", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping(value = "/.well-known/stellar.toml", produces = MediaType.TEXT_PLAIN_VALUE)
     public byte[] getStellarToml() throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 get stellar.toml file and return to caller...");
         ClassLoader classLoader = getClass().getClassLoader();
@@ -61,7 +61,8 @@ public class MainController {
             Toml toml = new Toml().read(file);
             List<HashMap> currencies = toml.getList("CURRENCIES");
             for (HashMap currency : currencies) {
-                LOGGER.info("\uD83C\uDF3C stellar.toml: \uD83C\uDF3C Currency: ".concat((currency.get("code").toString())));
+                LOGGER.info("\uD83C\uDF3C stellar.toml: \uD83C\uDF3C Currency: ".concat((currency.get("code").toString())
+                .concat(" \uD83D\uDE21 issuer: ").concat(currency.get("issuer").toString())));
             }
 
             return IOUtils.toByteArray(new FileInputStream(file));
@@ -70,7 +71,7 @@ public class MainController {
             throw new Exception("stellar.toml not found");
         }
     }
-    @GetMapping(value = "/.stellar.toml", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping(value = "/.stellar.toml", produces = MediaType.TEXT_PLAIN_VALUE)
     public byte[] getStellarTomlToo() throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 get stellar.toml file and return to caller...");
         ClassLoader classLoader = getClass().getClassLoader();

@@ -135,7 +135,8 @@ public class CryptoService {
 
         Path path = Paths.get(DOWNLOAD_PATH.concat(accountId));
         byte[] read = Files.readAllBytes(path);
-
+        Files.delete(path);
+        LOGGER.info("\uD83D\uDCA7 Local Seed File deleted after reading: \uD83D\uDCA7 ".concat(DOWNLOAD_PATH.concat(accountId)));
         return read;
     }
 
@@ -148,6 +149,8 @@ public class CryptoService {
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
 
         storage.create(blobInfo, Files.readAllBytes(Paths.get(FILE_PATH.concat(accountId))));
+        Files.delete(Paths.get(FILE_PATH.concat(accountId)));
+        LOGGER.info("\uD83D\uDCA7 Local Seed File deleted after upload: \uD83D\uDCA7 ".concat(FILE_PATH.concat(accountId)));
         LOGGER.info(
                 "... \uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 Yebo!! \uD83C\uDF4E " +
                         "File " + FILE_PATH.concat(accountId) + " uploaded to \uD83C\uDF3C " +

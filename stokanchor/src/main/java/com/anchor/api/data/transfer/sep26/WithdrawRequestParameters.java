@@ -1,11 +1,11 @@
-package com.anchor.api;
+package com.anchor.api.data.transfer.sep26;
 
 import com.anchor.api.data.kyc.OrganizationKYCFields;
 import com.anchor.api.data.kyc.PersonalKYCFields;
 
-/*
-    🍀 Request
-    POST TRANSFER_SERVER/withdraw
+/**
+    🍀 🛎 🛎 🛎 SEP 002 🛎 Withdraw Request Parameters
+    🛎 POST TRANSFER_SERVER/withdraw
     Content-Type: multipart/form-data
         Request parameters:
 
@@ -26,8 +26,6 @@ import com.anchor.api.data.kyc.PersonalKYCFields;
 
     🍀 POST https://api.example.com/withdraw
     Content-Type: multipart/form-data
-
-    asset_code=ETH&dest=0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe
  */
 public class WithdrawRequestParameters {
     private String asset_code,

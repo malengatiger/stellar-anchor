@@ -1,10 +1,10 @@
-package com.anchor.api.data;
+package com.anchor.api.data.transfer.sep26;
 
 import com.anchor.api.data.transfer.sep26.ExtraInfoItem;
 
 import java.util.List;
 
-/*
+/**
     🍎 🍎  Success: no additional information needed
     Response code: 200 OK
 

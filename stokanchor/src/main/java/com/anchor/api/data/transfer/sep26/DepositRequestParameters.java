@@ -1,14 +1,14 @@
-package com.anchor.api.data;
+package com.anchor.api.data.transfer.sep26;
 
 import com.anchor.api.data.kyc.OrganizationKYCFields;
 import com.anchor.api.data.kyc.PersonalKYCFields;
 
-/*
-    🍏 Request
-    POST TRANSFER_SERVER/deposit
+/**
+    🍏 🛎 🛎 🛎 SEP 0026 🛎 Deposit Request Parameters
+    🛎 POST TRANSFER_SERVER/deposit
     Content-Type: multipart/form-data
-    Request Parameters:
-    🍏 🍏 🍏
+
+    🍏 🍏 🍏 Request Parameters:
     Name	        Type	Description
     asset_code	    string	The code of the asset the user wants to deposit with the anchor. E.g. BTC, ETH, USD, INR, etc. This should be the same asset code specified in the stellar.toml file.
     asset_issuer	string	The issuer of the asset the user wants to deposit with the anchor.
@@ -26,7 +26,6 @@ import com.anchor.api.data.kyc.PersonalKYCFields;
     🍏 POST https://api.example.com/deposit
     Content-Type: multipart/form-data
 
-    asset_code=ETH&account=GACW7NONV43MZIFHCOKCQJAKSJSISSICFVUJ2C6EZIW5773OU3HD64VI
  */
 public class DepositRequestParameters {
     private String asset_code,

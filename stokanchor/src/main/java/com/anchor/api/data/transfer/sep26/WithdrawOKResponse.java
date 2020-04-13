@@ -1,11 +1,11 @@
-package com.anchor.api.data;
+package com.anchor.api.data.transfer.sep26;
 
 import com.anchor.api.data.transfer.sep26.ExtraInfoItem;
 
 import java.util.List;
 
-/*
-    👽 👽 👽 👽
+/**
+    👽 👽 👽 👽 SEP 0026 🛎
     POST TRANSFER_SERVER_SEP0024/transactions/withdraw/interactive
     Content-Type: multipart/form-data
 
