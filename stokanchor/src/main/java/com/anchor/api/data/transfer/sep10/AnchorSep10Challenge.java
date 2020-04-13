@@ -5,6 +5,7 @@ import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.services.CryptoService;
 import com.anchor.api.services.FirebaseService;
 
+import com.anchor.api.util.Emoji;
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -33,7 +34,7 @@ public class AnchorSep10Challenge {
                 "\uD83D\uDC99 handles Sep10 Web Authentication");
     }
 
-    public static final Logger LOGGER = Logger.getLogger(AnchorSep10Challenge.class.getSimpleName());
+    private static final Logger LOGGER = Logger.getLogger(AnchorSep10Challenge.class.getSimpleName());
     private static final Gson G = new GsonBuilder().setPrettyPrinting().create();
     private static final String DEV_SERVER = "https://horizon-testnet.stellar.org";
     private static final String PROD_SERVER = "https://horizon.stellar.org'";
@@ -46,6 +47,9 @@ public class AnchorSep10Challenge {
     @Value("${anchorName}")
     private String anchorName;
 
+    @Value("${jwtIssuer}")
+    private String jwtIssuer;
+
     @Autowired
     private FirebaseService firebaseService;
     @Autowired
@@ -54,9 +58,9 @@ public class AnchorSep10Challenge {
     @Autowired
     private JWTokenService tokenService;
 
-    public static final String em1 = "\uD83E\uDD66 \uD83E\uDD66 ",
+    private static final String em1 = "\uD83E\uDD66 \uD83E\uDD66 ",
     em2 = "\uD83C\uDF3C ", error = "\uD83D\uDE08 ";
-    public static final int EXPIRE_AFTER_N_MINUTES = 1000 * 60 * 15;
+    private static final int EXPIRE_AFTER_N_MINUTES = 1000 * 60 * 15;
 
     /**
      * Returns a valid <a href="https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0010.md#response" target="_blank">SEP 10</a> challenge, for use in web authentication.
@@ -120,29 +124,45 @@ public class AnchorSep10Challenge {
 
         transaction.sign(signer);
 
-        ChallengeResponse challengeResponse = new ChallengeResponse(transaction.toEnvelopeXdrBase64(),network.getNetworkPassphrase());
+        ChallengeResponse challengeResponse = new ChallengeResponse(
+                transaction.toEnvelopeXdrBase64(),
+                network.getNetworkPassphrase());
         LOGGER.info("Challenge Transaction created, "+em2+" signed by anchor base account and converted to "
                 +em2+"XDR "+em2+"... we done good, Boss!");
+
+        //todo - REMOVE after test
+        String token = getToken(challengeResponse.transaction);
+        LOGGER.info(Emoji.PANDA + Emoji.PANDA + "Token acquisition complete, token: ".concat(token).concat(" ")
+        .concat(Emoji.PANDA).concat(Emoji.PANDA));
         return challengeResponse;
     }
 
     public String getToken(String transaction) throws Exception {
+        LOGGER.info(Emoji.ICE_CREAM + Emoji.ICE_CREAM +
+                " ... Getting JWT token from XDR transaction string ....".concat(Emoji.DIAMOND));
+
         setServerAndNetwork();
         AnchorSep10Challenge.ChallengeTransaction challengeTransaction;
         try {
             challengeTransaction = readChallengeTransaction(transaction);
         } catch (Exception e) {
-            throw new Exception("getToken: readChallengeTransaction failed");
+            LOGGER.info(Emoji.ERROR + "Failed to read ChallengeTransaction ".concat(Emoji.ERROR));
+            e.printStackTrace();
+            throw new Exception(Emoji.ERROR + "getToken: readChallengeTransaction failed");
         }
         String clientAccountId = challengeTransaction.getClientAccountId();
+        LOGGER.info(Emoji.ICE_CREAM + Emoji.ICE_CREAM + "clientAccountId: ".concat(clientAccountId));
         AccountResponse accountResponse = null;
         try {
             accountResponse = server.accounts().account(clientAccountId);
+            LOGGER.info(Emoji.PEACH + "Stellar return client accountResponse: ".concat(Emoji.PEACH).concat(Emoji.PEACH));
         } catch (Exception e) {
-            LOGGER.severe("getToken: Stellar Client Account not found");
+            LOGGER.info(Emoji.ERROR + "Failed to get Stellar accountResponse ".concat(Emoji.ERROR));
+            e.printStackTrace();
+            LOGGER.severe(Emoji.ERROR + "getToken: Stellar Client Account not found");
         }
         if (accountResponse == null) {
-            throw new Exception("getToken: Stellar account not found");
+            throw new Exception(Emoji.ERROR + "getToken: Stellar account not found");
         }
         Set<String> signers = new HashSet<>();
         Set<AccountResponse.Signer> mSigners = new HashSet<>();
@@ -150,33 +170,45 @@ public class AnchorSep10Challenge {
             signers.add(signer.getKey());
             mSigners.add(signer);
         }
+        LOGGER.info(Emoji.BLUE_DOT + "Signers acquired - start verification ...".concat(Emoji.BLUE_BIRD + Emoji.BLUE_BIRD));
         try {
+            LOGGER.info(Emoji.PIG + Emoji.PIG + "verifyChallengeTransactionSigners .... "
+            + Emoji.PANDA);
             verifyChallengeTransactionSigners(transaction, signers);
         } catch (Exception e) {
-            throw new Exception("getToken: verifyChallengeTransactionSigners failed");
+            LOGGER.info(Emoji.ERROR + "Failed to verify ChallengeTransactionSigners ".concat(Emoji.ERROR));
+            e.printStackTrace();
+            throw new Exception(Emoji.ERROR + "getToken: verifyChallengeTransactionSigners failed");
         }
 
         try {
-            verifyChallengeTransactionThreshold(transaction,1,mSigners);
+            verifyChallengeTransactionThreshold(transaction,0, mSigners);
         } catch (Exception e) {
-            throw new Exception("getToken: verifyChallengeTransactionThreshold failed");
+            LOGGER.info(Emoji.ERROR + "Failed to verifyChallengeTransactionThreshold ".concat(Emoji.ERROR));
+            e.printStackTrace();
+            throw new Exception(Emoji.ERROR + "getToken: verifyChallengeTransactionThreshold failed");
         }
         String token;
+        //🌼
         try {
             token = tokenService.createJWToken(UUID.randomUUID().toString(),
-                    "https://stokanchor.com", accountResponse.getAccountId(),(1000 * 60 * 5));
+                    jwtIssuer, accountResponse.getAccountId(),EXPIRE_AFTER_N_MINUTES);
             LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C JWT Token: ".concat(token));
 
             //todo - check token claims ...
             Claims claims = tokenService.decodeJWT(token);
-            LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E JWT issuer: " + claims.getIssuer() + " \uD83C\uDF4E " +
-                    " \uD83E\uDD4F subject: " + claims.getSubject() + " \uD83C\uDF3C iat: "
+            LOGGER.info(Emoji.FLOWER_YELLOW + Emoji.FLOWER_YELLOW +
+                    "JWT issuer: " + claims.getIssuer() + " \uD83C\uDF4E " +
+                    Emoji.RED_APPLE + "subject: " + claims.getSubject() + " \uD83C\uDF3C iat: "
                     + claims.getIssuedAt().toString() + " \uD83C\uDF4E exp: " + claims.getExpiration().toString());
         } catch (Exception exception){
+            LOGGER.info(Emoji.ERROR + "Failed to create TOKEN ".concat(Emoji.ERROR));
+            exception.printStackTrace();
             throw new Exception("JWT token creation failed: " + exception.getMessage());
         }
         //todo - stop printing token after test
-        LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E JWT Token created: ".concat(token));
+        String em = Emoji.LEAF + Emoji.LEAF + Emoji.LEAF;
+        LOGGER.info(em + "JWT Token created: ".concat(token).concat(" ").concat(em));
         return token;
     }
 
@@ -195,13 +227,14 @@ public class AnchorSep10Challenge {
      * @throws InvalidSep10ChallengeException If the SEP-0010 validation fails, the exception will be thrown.
      * @throws IOException                    If read XDR string fails, the exception will be thrown.
      */
-    public  ChallengeTransaction readChallengeTransaction(String challengeXdr) throws Exception {
+    private ChallengeTransaction readChallengeTransaction(String challengeXdr) throws Exception {
         setServerAndNetwork();
         Anchor anchor = firebaseService.getAnchorByName(anchorName);
+        LOGGER.info(Emoji.FIRE + " Anchor is ".concat(anchor.getName().concat(" ")).concat(Emoji.FIRE));
         String serverAccountId = anchor.getBaseAccount().getAccountId();
         // decode the received input as a base64-urlencoded XDR representation of Stellar transaction envelope
         Transaction transaction = Transaction.fromEnvelopeXdr(challengeXdr, network);
-
+        LOGGER.info(Emoji.HAPPY + Emoji.HAPPY + "We have a decoded Transaction, Yay! ".concat(Emoji.FIRE));
         // verify that transaction source account is equal to the server's signing key
         if (!serverAccountId.equals(transaction.getSourceAccount())) {
             throw new InvalidSep10ChallengeException("Transaction source account is not equal to server's account.");
@@ -214,18 +247,20 @@ public class AnchorSep10Challenge {
 
         // verify that transaction has time bounds set, and that current time is between the minimum and maximum bounds.
         if (transaction.getTimeBounds() == null) {
-            throw new InvalidSep10ChallengeException("Transaction requires timebounds.");
+            throw new InvalidSep10ChallengeException("Transaction requires timeBounds.");
         }
 
         long maxTime = transaction.getTimeBounds().getMaxTime();
         long minTime = transaction.getTimeBounds().getMinTime();
+        LOGGER.info(Emoji.FIRE + "Checking timeBounds, minTime: " + minTime + " maxTime: " + maxTime + " ".concat(Emoji.FIRE));
         if (maxTime == 0L) {
-            throw new InvalidSep10ChallengeException("Transaction requires non-infinite timebounds.");
+            throw new InvalidSep10ChallengeException("Transaction requires non-infinite timeBounds.");
         }
 
-        long currentTime = System.currentTimeMillis() / 1000L;
+        long currentTime = System.currentTimeMillis();
+        LOGGER.info(Emoji.FIRE + "Checking timeBounds, currentTime: " + currentTime + " ".concat(Emoji.FIRE));
         if (currentTime < minTime || currentTime > maxTime) {
-            throw new InvalidSep10ChallengeException("Transaction is not within range of the specified timebounds.");
+            throw new InvalidSep10ChallengeException("Transaction is not within range of the specified timeBounds.");
         }
 
         // verify that transaction contains a single Manage Data operation and its source account is not null
@@ -285,22 +320,22 @@ public class AnchorSep10Challenge {
      * @throws InvalidSep10ChallengeException If the SEP-0010 validation fails, the exception will be thrown.
      * @throws IOException                    If read XDR string fails, the exception will be thrown.
      */
-    public  Set<String> verifyChallengeTransactionSigners(String challengeXdr, Set<String> signers) throws Exception {
+    private Set<String> verifyChallengeTransactionSigners(String challengeXdr, Set<String> signers) throws Exception {
         if (signers == null || signers.isEmpty()) {
             throw new InvalidSep10ChallengeException("No verifiable signers provided, at least one G... address must be provided.");
         }
+        LOGGER.info(Emoji.FIRE + ".... verify ChallengeTransactionSigners ...".concat(Emoji.FIRE));
         Anchor anchor = firebaseService.getAnchorByName(anchorName);
         String serverAccountId = anchor.getBaseAccount().getAccountId();
         // Read the transaction which validates its structure.
         ChallengeTransaction parsedChallengeTransaction = readChallengeTransaction(challengeXdr);
         Transaction transaction = parsedChallengeTransaction.getTransaction();
-
         // Ensure the server account ID is an address and not a seed.
         KeyPair serverKeyPair = KeyPair.fromAccountId(serverAccountId);
 
         // Deduplicate the client signers and ensure the server is not included
         // anywhere we check or output the list of signers.
-        Set<String> clientSigners = new HashSet<String>();
+        Set<String> clientSigners = new HashSet<>();
         for (String signer : signers) {
             // Ignore non-G... account/address signers.
             StrKey.VersionByte versionByte;
@@ -334,7 +369,7 @@ public class AnchorSep10Challenge {
         // hit. We do this in one hit here even though the server signature was
         // checked in the readChallengeTx to ensure that every signature and signer
         // are consumed only once on the transaction.
-        Set<String> allSigners = new HashSet<String>(clientSigners);
+        Set<String> allSigners = new HashSet<>(clientSigners);
         allSigners.add(serverKeyPair.getAccountId());
         Set<String> signersFound = verifyTransactionSignatures(transaction, allSigners);
 
@@ -345,17 +380,19 @@ public class AnchorSep10Challenge {
         if (!serverSignerFound) {
             throw new InvalidSep10ChallengeException(String.format("Transaction not signed by server: %s.", serverAccountId));
         }
-
+        LOGGER.info(Emoji.LEMON + Emoji.LEMON + "Transaction signed by server ... cool! ".concat(Emoji.FIRE));
+        //todo - un-comment code to check for client signature ....
         // Confirm we matched signatures to the client signers.
-        if (signersFound.isEmpty()) {
-            throw new InvalidSep10ChallengeException("Transaction not signed by any client signer.");
-        }
-
-        // Confirm all signatures were consumed by a signer.
-        if (signersFound.size() != transaction.getSignatures().size() - 1) {
-            throw new InvalidSep10ChallengeException("Transaction has unrecognized signatures.");
-        }
-        LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C verifyChallengeTransactionSigners completed. Signers: "
+//        if (signersFound.isEmpty()) {
+//            throw new InvalidSep10ChallengeException(Emoji.ERROR + "Transaction not signed by any client signer.");
+//        }
+//
+//        // Confirm all signatures were consumed by a signer.
+//        if (signersFound.size() != transaction.getSignatures().size() - 1) {
+//            throw new InvalidSep10ChallengeException("Transaction has unrecognized signatures.");
+//        }
+        String em = Emoji.LEAF + Emoji.LEAF + Emoji.LEAF + Emoji.LEAF;
+                LOGGER.info(em + " verifyChallengeTransactionSigners completed. Signers: "
                 .concat("" +signers.size()));
         return signersFound;
     }
@@ -375,14 +412,16 @@ public class AnchorSep10Challenge {
      * @throws InvalidSep10ChallengeException If the SEP-0010 validation fails, the exception will be thrown.
      * @throws IOException                    If read XDR string fails, the exception will be thrown.
      */
-    public  Set<String> verifyChallengeTransactionThreshold(String challengeXdr,
+    private Set<String> verifyChallengeTransactionThreshold(String challengeXdr,
                                                             int threshold, Set<AccountResponse.Signer> signers) throws Exception {
         setServerAndNetwork();
+        LOGGER.info(Emoji.PANDA + Emoji.PANDA +
+                "verifyChallengeTransactionThreshold ".concat(Emoji.PANDA));
         if (signers == null || signers.isEmpty()) {
             throw new InvalidSep10ChallengeException("No verifiable signers provided, at least one G... address must be provided.");
         }
 
-        Map<String, Integer> weightsForSigner = new HashMap<String, Integer>();
+        Map<String, Integer> weightsForSigner = new HashMap<>();
         for (AccountResponse.Signer signer : signers) {
             weightsForSigner.put(signer.getKey(), signer.getWeight());
         }

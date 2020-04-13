@@ -29,7 +29,7 @@ public class JWTokenService {
 
     public static final Logger LOGGER = Logger.getLogger(JWTokenService.class.getSimpleName());
     public static final String em = "\uD83D\uDD11 \uD83D\uDD11 ";
-    //Sample method to construct a JWT
+
     public  String createJWToken(String id, String issuer, String subject, long ttlMillis) {
 
         LOGGER.info(em +" The JWT signature algorithm we will be using to sign the token");

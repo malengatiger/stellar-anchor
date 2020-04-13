@@ -172,8 +172,4 @@ public class MainController {
         return Util.createTestInfo();
     }
 
-    class AgentBag {
-        Agent agent;
-        String password;
-    }
 }
