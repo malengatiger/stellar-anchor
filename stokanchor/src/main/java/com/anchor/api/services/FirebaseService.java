@@ -112,8 +112,8 @@ public class FirebaseService {
     public String addClient(Client client) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Client current = getClientByNameAndAnchor(client.getAnchorId(),
-                client.getPersonalKYCFields().getFirst_name(),
-                client.getPersonalKYCFields().getLast_name());
+                client.getPersonalKYCFields().getFirstName(),
+                client.getPersonalKYCFields().getLastName());
         if (current == null) {
             ApiFuture<DocumentReference> future = fs.collection(Constants.CLIENTS).add(client);
             LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Client added at path: ".concat(future.get().getPath()));
@@ -125,8 +125,8 @@ public class FirebaseService {
     public String addAgent(Agent agent) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Agent current = getAgentByNameAndAnchor(agent.getAnchorId(),
-                agent.getPersonalKYCFields().getFirst_name(),
-                agent.getPersonalKYCFields().getLast_name());
+                agent.getPersonalKYCFields().getFirstName(),
+                agent.getPersonalKYCFields().getLastName());
         if (current == null) {
             ApiFuture<DocumentReference> future = fs.collection(Constants.AGENTS).add(agent);
             LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Agent added at path: ".concat(future.get().getPath()));

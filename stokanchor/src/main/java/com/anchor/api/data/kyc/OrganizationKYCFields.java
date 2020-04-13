@@ -1,6 +1,9 @@
 package com.anchor.api.data.kyc;
 
-/**
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
+/*
     🛎 🛎 🛎 🛎 🛎 SEP 0009 🛎 Organization KYC fields
     😡 😡 Name	                            Type	Description
     organization.name	                    string	Full organiation name as on the incorporation papers
@@ -34,10 +37,46 @@ package com.anchor.api.data.kyc;
     If address parsing is necessary, parsing will be easier since the country, city, and postal code are already separate fields.
  */
 public class OrganizationKYCFields {
-    String name, VAT_number, registration_number, registered_address, shareholder_name, address,
-            address_country_code, city, state_or_province, email, website, phone, director_name, postal_code;
-    int number_of_shareholders;
-    byte[] photo_incorporation_doc, photo_proof_address;
+    String name;
+    @SerializedName("VAT_number")
+    @Expose
+    String  VATNumber;
+    @SerializedName("registration_number")
+    @Expose
+    String  registrationNumber;
+    @SerializedName("registered_address")
+    @Expose
+    String  registeredAddress;
+    @SerializedName("shareholder_name")
+    @Expose
+    String  shareholderName;
+    String  address;
+    @SerializedName("address_country_code")
+    @Expose
+    String  addressCountryCode;
+    String  city;
+    @SerializedName("state_or_province")
+    @Expose
+    String  stateOrProvince;
+    String  email;
+    String  website;
+    String  phone;
+    String  director_name;
+    @SerializedName("postal_code")
+    @Expose
+    String  postalCode;
+
+    @SerializedName("number_of_shareholders")
+    @Expose
+    int numberOfShareholders;
+
+    @SerializedName("photo_incorporation_doc")
+    @Expose
+    byte[] photoIncorporationDocument;
+
+    @SerializedName("photo_proof_address")
+    @Expose
+    byte[] photoProofOfAddress;
 
     public String getName() {
         return name;
@@ -47,36 +86,36 @@ public class OrganizationKYCFields {
         this.name = name;
     }
 
-    public String getVAT_number() {
-        return VAT_number;
+    public String getVATNumber() {
+        return VATNumber;
     }
 
-    public void setVAT_number(String VAT_number) {
-        this.VAT_number = VAT_number;
+    public void setVATNumber(String VATNumber) {
+        this.VATNumber = VATNumber;
     }
 
-    public String getRegistration_number() {
-        return registration_number;
+    public String getRegistrationNumber() {
+        return registrationNumber;
     }
 
-    public void setRegistration_number(String registration_number) {
-        this.registration_number = registration_number;
+    public void setRegistrationNumber(String registrationNumber) {
+        this.registrationNumber = registrationNumber;
     }
 
-    public String getRegistered_address() {
-        return registered_address;
+    public String getRegisteredAddress() {
+        return registeredAddress;
     }
 
-    public void setRegistered_address(String registered_address) {
-        this.registered_address = registered_address;
+    public void setRegisteredAddress(String registeredAddress) {
+        this.registeredAddress = registeredAddress;
     }
 
-    public String getShareholder_name() {
-        return shareholder_name;
+    public String getShareholderName() {
+        return shareholderName;
     }
 
-    public void setShareholder_name(String shareholder_name) {
-        this.shareholder_name = shareholder_name;
+    public void setShareholderName(String shareholderName) {
+        this.shareholderName = shareholderName;
     }
 
     public String getAddress() {
@@ -87,12 +126,12 @@ public class OrganizationKYCFields {
         this.address = address;
     }
 
-    public String getAddress_country_code() {
-        return address_country_code;
+    public String getAddressCountryCode() {
+        return addressCountryCode;
     }
 
-    public void setAddress_country_code(String address_country_code) {
-        this.address_country_code = address_country_code;
+    public void setAddressCountryCode(String addressCountryCode) {
+        this.addressCountryCode = addressCountryCode;
     }
 
     public String getCity() {
@@ -103,12 +142,12 @@ public class OrganizationKYCFields {
         this.city = city;
     }
 
-    public String getState_or_province() {
-        return state_or_province;
+    public String getStateOrProvince() {
+        return stateOrProvince;
     }
 
-    public void setState_or_province(String state_or_province) {
-        this.state_or_province = state_or_province;
+    public void setStateOrProvince(String stateOrProvince) {
+        this.stateOrProvince = stateOrProvince;
     }
 
     public String getEmail() {
@@ -143,35 +182,35 @@ public class OrganizationKYCFields {
         this.director_name = director_name;
     }
 
-    public String getPostal_code() {
-        return postal_code;
+    public String getPostalCode() {
+        return postalCode;
     }
 
-    public void setPostal_code(String postal_code) {
-        this.postal_code = postal_code;
+    public void setPostalCode(String postalCode) {
+        this.postalCode = postalCode;
     }
 
-    public int getNumber_of_shareholders() {
-        return number_of_shareholders;
+    public int getNumberOfShareholders() {
+        return numberOfShareholders;
     }
 
-    public void setNumber_of_shareholders(int number_of_shareholders) {
-        this.number_of_shareholders = number_of_shareholders;
+    public void setNumberOfShareholders(int numberOfShareholders) {
+        this.numberOfShareholders = numberOfShareholders;
     }
 
-    public byte[] getPhoto_incorporation_doc() {
-        return photo_incorporation_doc;
+    public byte[] getPhotoIncorporationDocument() {
+        return photoIncorporationDocument;
     }
 
-    public void setPhoto_incorporation_doc(byte[] photo_incorporation_doc) {
-        this.photo_incorporation_doc = photo_incorporation_doc;
+    public void setPhotoIncorporationDocument(byte[] photoIncorporationDocument) {
+        this.photoIncorporationDocument = photoIncorporationDocument;
     }
 
-    public byte[] getPhoto_proof_address() {
-        return photo_proof_address;
+    public byte[] getPhotoProofOfAddress() {
+        return photoProofOfAddress;
     }
 
-    public void setPhoto_proof_address(byte[] photo_proof_address) {
-        this.photo_proof_address = photo_proof_address;
+    public void setPhotoProofOfAddress(byte[] photoProofOfAddress) {
+        this.photoProofOfAddress = photoProofOfAddress;
     }
 }

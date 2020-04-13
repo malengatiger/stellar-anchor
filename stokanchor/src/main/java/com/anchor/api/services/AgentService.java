@@ -60,8 +60,8 @@ public class AgentService {
         }
         Client mClient = firebaseService.getClientByNameAndAnchor(
                 anchor.getAnchorId(),
-                client.getPersonalKYCFields().getFirst_name(),
-                client.getPersonalKYCFields().getLast_name());
+                client.getPersonalKYCFields().getFirstName(),
+                client.getPersonalKYCFields().getLastName());
 
         if (mClient != null) {
             LOGGER.info("\uD83D\uDE21 \uD83D\uDE21 Client already exists for this Anchor: ".concat(anchorName)
@@ -70,7 +70,7 @@ public class AgentService {
         }
         //create firebase auth user
         UserRecord record = firebaseService.createUser(client.getFullName(),
-                client.getPersonalKYCFields().getEmail_address(), client.getPassword());
+                client.getPersonalKYCFields().getEmailAddress(), client.getPassword());
         client.setClientId(record.getUid());
         client.setDateRegistered(new DateTime().toDateTimeISO().toString());
         client.setDateUpdated(new DateTime().toDateTimeISO().toString());
@@ -109,8 +109,8 @@ public class AgentService {
         }
         Agent mAgent = firebaseService.getAgentByNameAndAnchor(
                 anchor.getAnchorId(),
-                agent.getPersonalKYCFields().getFirst_name(),
-                agent.getPersonalKYCFields().getLast_name());
+                agent.getPersonalKYCFields().getFirstName(),
+                agent.getPersonalKYCFields().getLastName());
         if (mAgent != null) {
             LOGGER.info("\uD83D\uDE21 \uD83D\uDE21 Agent already exists for this Anchor: ".concat(anchorName)
                     .concat(" \uD83D\uDE21 \uD83D\uDE21 "));
@@ -118,7 +118,7 @@ public class AgentService {
         }
         //create firebase auth user
         UserRecord record = firebaseService.createUser(agent.getFullName(),
-                agent.getPersonalKYCFields().getEmail_address(),agent.getPassword());
+                agent.getPersonalKYCFields().getEmailAddress(),agent.getPassword());
         agent.setAgentId(record.getUid());
         agent.setDateRegistered(new DateTime().toDateTimeISO().toString());
         agent.setDateUpdated(new DateTime().toDateTimeISO().toString());
@@ -147,7 +147,7 @@ public class AgentService {
     private void sendEmail(Agent agent) throws IOException {
 
         LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C Sending registration email to user: "
-                + agent.getPersonalKYCFields().getEmail_address());
+                + agent.getPersonalKYCFields().getEmailAddress());
 
         //todo - finish registration email composition, links and all, html etc.
         StringBuilder sb = new StringBuilder();
@@ -161,7 +161,7 @@ public class AgentService {
 
         Email from = new Email(fromMail);
         String subject = "Welcome to Anchor registration";
-        Email to = new Email(agent.getPersonalKYCFields().getEmail_address());
+        Email to = new Email(agent.getPersonalKYCFields().getEmailAddress());
         Content content = new Content("text/plain", sb.toString());
         Mail mail = new Mail(from, subject, to, content);
 
@@ -187,7 +187,7 @@ public class AgentService {
     private void sendEmail(Client agent) throws IOException {
 
         LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C Sending registration email to user: "
-                + agent.getPersonalKYCFields().getEmail_address());
+                + agent.getPersonalKYCFields().getEmailAddress());
 
         //todo - finish registration email composition, links and all, html etc.
         StringBuilder sb = new StringBuilder();
@@ -201,7 +201,7 @@ public class AgentService {
 
         Email from = new Email(fromMail);
         String subject = "Welcome to Anchor registration";
-        Email to = new Email(agent.getPersonalKYCFields().getEmail_address());
+        Email to = new Email(agent.getPersonalKYCFields().getEmailAddress());
         Content content = new Content("text/plain", sb.toString());
         Mail mail = new Mail(from, subject, to, content);
 
