@@ -2,10 +2,26 @@ package com.anchor.api.data.anchor;
 
 import com.anchor.api.data.transfer.sep9.PersonalKYCFields;
 
+/*
+    🌼 🌼 AGENT 🌼 🌼 🌼
+    The Agent is registered with an Anchor and is enabled, via a Flutter app, to provide micro to small loans
+    within a community. The Agent may be funded by the Anchor to provide these loans or to manage group grants
+    for some set of people.
+
+    🍎  externalAccountId - optional, may refer to an external app or system
+    🍎  organizationId - optional, refers Organization that this Agent belongs in
+    🍎  secretSeed - returned to Agent at Registration and NEVER saved in database
+ */
 public class Agent {
     String anchorId, agentId, anchorName;
     double latitude, longitude;
-    String dateRegistered, dateUpdated, externalAccountId, stellarAccountId, organizationId, password, secretSeed;
+    String dateRegistered,
+            dateUpdated,
+            externalAccountId,
+            stellarAccountId,
+            organizationId,
+            password, secretSeed;
+
     PersonalKYCFields personalKYCFields;
 
     public PersonalKYCFields getPersonalKYCFields() {

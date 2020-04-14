@@ -1,8 +1,7 @@
 package com.anchor.api.services;
 
 import com.anchor.api.data.account.AccountResponseBag;
-import com.anchor.api.data.anchor.Agent;
-import com.anchor.api.data.anchor.Anchor;
+import com.anchor.api.data.anchor.*;
 import com.anchor.api.data.anchor.Client;
 import com.anchor.api.util.Emoji;
 import com.google.firebase.auth.UserRecord;
@@ -17,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.List;
 
 @Service
 public class AgentService {
@@ -50,6 +50,47 @@ public class AgentService {
     @Value("${clientStartingBalance}")
     private String clientStartingBalance;
 
+    public String removeClient(String clientId) throws Exception {
+        return null;
+    }
+    public List<Client> getAgentClients(String agentId) throws Exception {
+        return null;
+    }
+    public List<LoanApplication> getAgentLoans(String agentId) throws Exception {
+        return null;
+    }
+    public List<LoanPayment> getLoanPayments(String loanId) throws Exception {
+        return null;
+    }
+    public LoanPayment makeLoanPayment(LoanPayment application) throws Exception {
+        return null;
+    }
+    public LoanApplication approveApplication(LoanApplication application) throws Exception {
+        return null;
+    }
+    public LoanApplication declineApplication(LoanApplication application) throws Exception {
+        return null;
+    }
+    public LoanApplication addApplication(LoanApplication application) throws Exception {
+        //todo - check application for correctness prior to adding ...
+        firebaseService.addLoanApplication(application);
+
+        return  null;
+    }
+    public LoanPayment addLoanPayment(LoanPayment loanPayment) throws Exception {
+        //todo - check loanPayment for correctness prior to adding ...
+        //todo - payment from client account to anchor account - royalty to agent account
+        firebaseService.addLoanPayment(loanPayment);
+        LOGGER.info("LoanPayment added to Firestore");
+        return null;
+    }
+    public String updateClient(com.anchor.api.data.anchor.Client client) throws Exception {
+
+        LOGGER.info(Emoji.LEMON + Emoji.LEMON +
+                "....... creating Client ....... ");
+
+        return "Client updated";
+    }
     public com.anchor.api.data.anchor.Client createClient(com.anchor.api.data.anchor.Client client) throws Exception {
 
         LOGGER.info(Emoji.LEMON + Emoji.LEMON +
@@ -99,6 +140,10 @@ public class AgentService {
         return client;
     }
 
+    public String updateAgent(Agent agent) throws Exception {
+
+        return "Agent updated";
+    }
     public Agent createAgent(Agent agent) throws Exception {
         //todo - create Stellar account; add to Firestore;
         LOGGER.info(Emoji.YELLOW_STAR + Emoji.YELLOW_STAR + Emoji.YELLOW_STAR +

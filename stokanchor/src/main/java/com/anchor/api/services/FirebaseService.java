@@ -1,8 +1,6 @@
 package com.anchor.api.services;
 
-import com.anchor.api.data.anchor.Agent;
-import com.anchor.api.data.anchor.Anchor;
-import com.anchor.api.data.anchor.Client;
+import com.anchor.api.data.anchor.*;
 import com.anchor.api.data.info.Info;
 import com.anchor.api.util.Constants;
 import com.anchor.api.util.Emoji;
@@ -40,16 +38,17 @@ public class FirebaseService {
 
     @Value("${status}")
     private String status;
-//💙 💙
+
+    //💙 💙
     public FirebaseService() {
         LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE
                 + "FirebaseService Constructor: " + Emoji.HEART_GREEN);
     }
 
     public void initializeFirebase() throws Exception {
-        LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE +"Starting Firebase initialization " +
+        LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE + "Starting Firebase initialization " +
                 ".... \uD83D\uDC99 DEV STATUS: " + Emoji.HEART_PURPLE
-                + status + " " + Emoji.HEART_BLUE + Emoji.HEART_BLUE );
+                + status + " " + Emoji.HEART_BLUE + Emoji.HEART_BLUE);
 
         FirebaseApp app;
         try {
@@ -63,16 +62,16 @@ public class FirebaseService {
             LOGGER.severe("Unable to initialize Firebase");
             throw new Exception("Unable to initialize Firebase", e);
         }
-        LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE +"Firebase has been set up and initialized. " +
+        LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE + "Firebase has been set up and initialized. " +
                 "\uD83D\uDC99 URL: " + app.getOptions().getDatabaseUrl() + Emoji.HAPPY);
-        LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE +"Firebase has been set up and initialized. " +
-                "\uD83E\uDD66 Name: " + app.getName() + Emoji.HEART_ORANGE + Emoji.HEART_GREEN );
+        LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE + "Firebase has been set up and initialized. " +
+                "\uD83E\uDD66 Name: " + app.getName() + Emoji.HEART_ORANGE + Emoji.HEART_GREEN);
 
         Firestore fs = FirestoreClient.getFirestore();
         int cnt = 0;
         for (CollectionReference listCollection : fs.listCollections()) {
             cnt++;
-            LOGGER.info(Emoji.RAIN_DROPS + Emoji.RAIN_DROPS + "Collection: #" +cnt + " \uD83D\uDC99 " + listCollection.getId());
+            LOGGER.info(Emoji.RAIN_DROPS + Emoji.RAIN_DROPS + "Collection: #" + cnt + " \uD83D\uDC99 " + listCollection.getId());
         }
         List<Anchor> list = getAnchors();
         LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE +
@@ -87,12 +86,14 @@ public class FirebaseService {
         createRequest.setDisplayName(name);
         createRequest.setPassword(password);
         UserRecord userRecord = firebaseAuth.createUser(createRequest);
-        LOGGER.info(Emoji.HEART_ORANGE + Emoji.HEART_ORANGE +"Firebase user record created: ".concat(userRecord.getUid()));
+        LOGGER.info(Emoji.HEART_ORANGE + Emoji.HEART_ORANGE + "Firebase user record created: ".concat(userRecord.getUid()));
         return userRecord;
 
     }
+
     static final GsonBuilder gsonBuilder = new GsonBuilder();
     static final Gson gson = gsonBuilder.create();
+
     public List<Anchor> getAnchors() throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         List<Anchor> mList = new ArrayList<>();
@@ -101,7 +102,7 @@ public class FirebaseService {
         for (QueryDocumentSnapshot document : future.get().getDocuments()) {
             Map<String, Object> map = document.getData();
             String object = gson.toJson(map);
-            Anchor anchor = gson.fromJson(object,Anchor.class);
+            Anchor anchor = gson.fromJson(object, Anchor.class);
             cnt++;
             LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 ANCHOR: #" + cnt +
                     " \uD83D\uDC99 " + anchor.getName() + "  \uD83E\uDD66 anchorId: "
@@ -109,6 +110,19 @@ public class FirebaseService {
             mList.add(anchor);
         }
         return mList;
+    }
+
+    public String addLoanApplication(LoanApplication application) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        ApiFuture<DocumentReference> future = fs.collection(Constants.LOAN_APPLICATIONS).add(application);
+        LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F LoanApplication added at path: ".concat(future.get().getPath()));
+        return "\uD83C\uDF4F LoanApplication added";
+    }
+    public String addLoanPayment(LoanPayment loanPayment) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        ApiFuture<DocumentReference> future = fs.collection(Constants.LOAN_PAYMENTS).add(loanPayment);
+        LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F LoanPayment added at path: ".concat(future.get().getPath()));
+        return "\uD83C\uDF4F LoanPayment added";
     }
 
     public String addClient(Client client) throws Exception {
@@ -124,6 +138,7 @@ public class FirebaseService {
             throw new Exception("Client already exists for this Anchor");
         }
     }
+
     public String addAgent(Agent agent) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Agent current = getAgentByNameAndAnchor(agent.getAnchorId(),
@@ -137,6 +152,7 @@ public class FirebaseService {
             throw new Exception("Agent already exists for this Anchor");
         }
     }
+
     public String addAnchorInfo(Info info) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Info current = getAnchorInfo(info.getAnchorId());
@@ -146,7 +162,7 @@ public class FirebaseService {
             return "Info added";
         } else {
             ApiFuture<QuerySnapshot> future = fs.collection(Constants.INFOS)
-                    .whereEqualTo("anchorId",current.getAnchorId()).get();
+                    .whereEqualTo("anchorId", current.getAnchorId()).get();
             for (QueryDocumentSnapshot document : future.get().getDocuments()) {
                 ApiFuture<WriteResult> m = document.getReference().delete();
                 LOGGER.info("Info deleted, updateTime: ".concat(m.get().getUpdateTime().toString()));
@@ -156,16 +172,17 @@ public class FirebaseService {
             return "Info Updated";
         }
     }
+
     public Info getAnchorInfo(String anchorId) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Info info;
         List<Info> mList = new ArrayList<>();
         ApiFuture<QuerySnapshot> future = fs.collection(Constants.INFOS)
-                .whereEqualTo("anchorId",anchorId).get();
+                .whereEqualTo("anchorId", anchorId).get();
         for (QueryDocumentSnapshot document : future.get().getDocuments()) {
             Map<String, Object> map = document.getData();
             String object = gson.toJson(map);
-            Info mInfo = gson.fromJson(object,Info.class);
+            Info mInfo = gson.fromJson(object, Info.class);
             mList.add(mInfo);
         }
         if (mList.isEmpty()) {
@@ -176,16 +193,17 @@ public class FirebaseService {
 
         return info;
     }
+
     public Anchor getAnchorByName(String name) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Anchor info;
         List<Anchor> mList = new ArrayList<>();
         ApiFuture<QuerySnapshot> future = fs.collection(Constants.ANCHORS)
-                .whereEqualTo("name",name).get();
+                .whereEqualTo("name", name).get();
         for (QueryDocumentSnapshot document : future.get().getDocuments()) {
             Map<String, Object> map = document.getData();
             String object = gson.toJson(map);
-            Anchor mInfo = gson.fromJson(object,Anchor.class);
+            Anchor mInfo = gson.fromJson(object, Anchor.class);
             mList.add(mInfo);
         }
         if (mList.isEmpty()) {
@@ -196,16 +214,17 @@ public class FirebaseService {
 
         return info;
     }
+
     public Agent getAgent(String agentId) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Agent agent;
         List<Agent> mList = new ArrayList<>();
         ApiFuture<QuerySnapshot> future = fs.collection(Constants.AGENTS)
-                .whereEqualTo("agentId",agentId).get();
+                .whereEqualTo("agentId", agentId).get();
         for (QueryDocumentSnapshot document : future.get().getDocuments()) {
             Map<String, Object> map = document.getData();
             String object = gson.toJson(map);
-            Agent mInfo = gson.fromJson(object,Agent.class);
+            Agent mInfo = gson.fromJson(object, Agent.class);
             mList.add(mInfo);
         }
         if (mList.isEmpty()) {
@@ -216,18 +235,19 @@ public class FirebaseService {
 
         return agent;
     }
+
     public Agent getAgentByNameAndAnchor(String anchorId, String firstName, String lastName) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Agent agent;
         List<Agent> mList = new ArrayList<>();
         ApiFuture<QuerySnapshot> future = fs.collection(Constants.AGENTS)
-                .whereEqualTo("anchorId",anchorId)
-                .whereEqualTo("personalKYCFields.first_name",firstName)
+                .whereEqualTo("anchorId", anchorId)
+                .whereEqualTo("personalKYCFields.first_name", firstName)
                 .whereEqualTo("personalKYCFields.last_name", lastName).get();
         for (QueryDocumentSnapshot document : future.get().getDocuments()) {
             Map<String, Object> map = document.getData();
             String object = gson.toJson(map);
-            Agent mInfo = gson.fromJson(object,Agent.class);
+            Agent mInfo = gson.fromJson(object, Agent.class);
             mList.add(mInfo);
         }
         if (mList.isEmpty()) {
@@ -238,18 +258,19 @@ public class FirebaseService {
 
         return agent;
     }
+
     public Client getClientByNameAndAnchor(String anchorId, String firstName, String lastName) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Client agent;
         List<Client> mList = new ArrayList<>();
         ApiFuture<QuerySnapshot> future = fs.collection(Constants.CLIENTS)
-                .whereEqualTo("anchorId",anchorId)
-                .whereEqualTo("personalKYCFields.first_name",firstName)
+                .whereEqualTo("anchorId", anchorId)
+                .whereEqualTo("personalKYCFields.first_name", firstName)
                 .whereEqualTo("personalKYCFields.last_name", lastName).get();
         for (QueryDocumentSnapshot document : future.get().getDocuments()) {
             Map<String, Object> map = document.getData();
             String object = gson.toJson(map);
-            Client mInfo = gson.fromJson(object,Client.class);
+            Client mInfo = gson.fromJson(object, Client.class);
             mList.add(mInfo);
         }
         if (mList.isEmpty()) {
@@ -260,6 +281,7 @@ public class FirebaseService {
 
         return agent;
     }
+
     public String addAccountResponse(AccountResponse accountResponse) throws Exception {
         LOGGER.info("\uD83C\uDFBD Adding accountResponse to Firestore: ".concat(accountResponse.getAccountId()));
 //        Firestore fs = FirestoreClient.getFirestore();
@@ -268,6 +290,7 @@ public class FirebaseService {
 //        LOGGER.info("\uD83C\uDFBD AccountResponseWithDate added, \uD83C\uDFBD at path: ".concat(future2.get().getPath()));
         return "\uD83C\uDF51 AccountResponse added";
     }
+
     public String addOperationResponse(OperationResponse operationResponse) throws Exception {
         LOGGER.info("\uD83C\uDFBD Adding operationResponse to Firestore: ".concat(operationResponse.getSourceAccount()));
 //        Firestore fs = FirestoreClient.getFirestore();
@@ -276,6 +299,7 @@ public class FirebaseService {
 //        LOGGER.info("\uD83C\uDFBD operationResponse added, \uD83C\uDFBD at path: ".concat(future2.get().getPath()));
         return "\uD83C\uDF51 operationResponse added";
     }
+
     public String addTransactionResponse(TransactionResponse transactionResponse) throws Exception {
         LOGGER.info("\uD83C\uDFBD Adding transactionResponse to Firestore: createdAt: ".concat(transactionResponse.getCreatedAt()));
 //        Firestore fs = FirestoreClient.getFirestore();

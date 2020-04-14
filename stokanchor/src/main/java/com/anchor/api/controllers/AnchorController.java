@@ -25,12 +25,12 @@ import java.util.logging.Logger;
 
 @CrossOrigin(maxAge = 3600)
 @RestController
-public class MainController {
-    public static final Logger LOGGER = Logger.getLogger(MainController.class.getSimpleName());
+public class AnchorController {
+    public static final Logger LOGGER = Logger.getLogger(AnchorController.class.getSimpleName());
     private static final Gson G = new GsonBuilder().setPrettyPrinting().create();
 
-    public MainController() {
-        LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C MainController  " +
+    public AnchorController() {
+        LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C AnchorController  " +
                 "\uD83C\uDF51 constructed and ready to go! \uD83C\uDF45 CORS enabled for the controller");
     }
 
@@ -106,16 +106,16 @@ public class MainController {
 
     @GetMapping(value = "/getAccount", produces = MediaType.APPLICATION_JSON_VALUE)
     public AccountResponse getAccount(@RequestParam String seed) throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:getAccount ...");
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorController:getAccount ...");
         AccountResponse response = accountService.getAccount(seed);
-        LOGGER.info( "\uD83D\uDC99 \uD83D\uDC9C MainController getAccount returned"
+        LOGGER.info( "\uD83D\uDC99 \uD83D\uDC9C AnchorController getAccount returned"
                 + response.getAccountId() + " \uD83D\uDC99 \uD83D\uDC9C");
         return response;
     }
 
     @PostMapping(value = "/createAnchor", produces = MediaType.APPLICATION_JSON_VALUE)
     public Anchor createAnchor(@RequestBody AnchorBag anchorBag) throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:createAnchor ...");
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorController:createAnchor ...");
         if (anchorBag.getFundingSeed() == null) {
             throw new Exception("Funding Account Seed missing");
         }
@@ -126,24 +126,6 @@ public class MainController {
         + "  \uD83C\uDF4E");
         LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F \uD83C\uDF4F ANCHOR CREATED: ".concat(G.toJson(anchor)));
         return anchor;
-    }
-
-    @PostMapping(value = "/createAgent", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Agent createAgent(@RequestBody Agent agent) throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:createAgent ...");
-        Agent mAgent = agentService.createAgent(agent);
-        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 Stellar returns Agent: \uD83C\uDF4E "
-                + mAgent.getAgentId() + " anchor: " + mAgent.getAnchorId());
-        return mAgent;
-    }
-
-    @PostMapping(value = "/createClient", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Client createClient(@RequestBody Client client) throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:createClient...");
-        Client mClient = agentService.createClient(client);
-        LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 Stellar returns Client: \uD83C\uDF4E "
-                + mClient.getClientId() + " anchor: " + mClient.getAnchorId());
-        return mClient;
     }
 
     @Autowired
@@ -168,7 +150,7 @@ public class MainController {
 
     @GetMapping("/createTestInfo")
     public Info createTestInfo() {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 MainController:createTestInfo ...");
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorController:createTestInfo ...");
         return Util.createTestInfo();
     }
 

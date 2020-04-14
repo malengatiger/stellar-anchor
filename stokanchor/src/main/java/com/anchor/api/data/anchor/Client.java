@@ -5,6 +5,38 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 /*
+    🍎 🍎 The Client wraps the functionality of Stellar Protocol SEP 009 and extends it for other Anchor related shit.
+         Client is created by Agent and will accept loans and other interaction with the Agent
+
+    🌼 🌼 SEP 009 🌼 🌼 🌼 🌼 🌼 🌼 🌼 🌼
+    This SEP defines a standard way for stellar wallets to upload KYC (or other) information to anchors
+    that implement non-interactive SEP-6.
+
+    🍎 This SEP was made with these goals in mind:
+
+        interoperability
+        Allow a user to enter their KYC information once and use it across many anchors without re-entering information manually
+        handle the most common 80% of use cases
+        handle image and binary data
+        support the set of fields defined in SEP-9
+        support authentication via SEP-10
+        give users control over their data by supporting complete data erasure
+
+    🍏 🍏
+    To support this protocol an anchor acts as a server and implements the specified REST API endpoints,
+    while a wallet implements a client that consumes the API. The goal is interoperability,
+    so a wallet implements a single client according to the protocol, and will be able to interact with any compliant anchor.
+    Similarly, an anchor that implements the API endpoints according to the protocol will work with any compliant wallet.
+
+    🍎 Prerequisites
+    An anchor must define the location of their 🌼 KYC_SERVER or TRANSFER_SERVER in their stellar.toml.
+    This is how a client app knows where to find the anchor's server. A client app will send KYC requests to the KYC_SERVER if it is specified, otherwise to the TRANSFER_SERVER.
+    Anchors and clients must support SEP-10 web authentication and use it for all SEP-12 endpoints.
+    API Endpoints
+    PUT /customer: Idempotent upload of customer info
+    DELETE /customer: Idempotent upload of customer info
+
+
     🌼 🌼 SEP 009 🌼 🌼 Customer PUT
     Upload customer information to an anchor in an authenticated and idempotent fashion.
 

@@ -320,7 +320,8 @@ public class AnchorSep10Challenge {
      * @throws InvalidSep10ChallengeException If the SEP-0010 validation fails, the exception will be thrown.
      * @throws IOException                    If read XDR string fails, the exception will be thrown.
      */
-    private Set<String> verifyChallengeTransactionSigners(String challengeXdr, Set<String> signers) throws Exception {
+    private Set<String> verifyChallengeTransactionSigners(
+            String challengeXdr, Set<String> signers) throws Exception {
         if (signers == null || signers.isEmpty()) {
             throw new InvalidSep10ChallengeException("No verifiable signers provided, at least one G... address must be provided.");
         }
@@ -412,8 +413,9 @@ public class AnchorSep10Challenge {
      * @throws InvalidSep10ChallengeException If the SEP-0010 validation fails, the exception will be thrown.
      * @throws IOException                    If read XDR string fails, the exception will be thrown.
      */
-    private Set<String> verifyChallengeTransactionThreshold(String challengeXdr,
-                                                            int threshold, Set<AccountResponse.Signer> signers) throws Exception {
+    private Set<String> verifyChallengeTransactionThreshold(
+            String challengeXdr,
+            int threshold, Set<AccountResponse.Signer> signers) throws Exception {
         setServerAndNetwork();
         LOGGER.info(Emoji.PANDA + Emoji.PANDA +
                 "verifyChallengeTransactionThreshold ".concat(Emoji.PANDA));
@@ -444,7 +446,8 @@ public class AnchorSep10Challenge {
         return signersFound;
     }
 
-    private  Set<String> verifyTransactionSignatures(Transaction transaction, Set<String> signers) throws InvalidSep10ChallengeException {
+    private Set<String> verifyTransactionSignatures(
+            Transaction transaction, Set<String> signers) throws Exception {
         if (transaction.getSignatures().isEmpty()) {
             throw new InvalidSep10ChallengeException("Transaction has no signatures.");
         }
@@ -478,7 +481,7 @@ public class AnchorSep10Challenge {
         return signersFound;
     }
 
-    private  boolean verifyTransactionSignature(Transaction transaction, String accountId) throws InvalidSep10ChallengeException {
+    private boolean verifyTransactionSignature(Transaction transaction, String accountId) throws Exception {
         return !verifyTransactionSignatures(transaction, Collections.singleton(accountId)).isEmpty();
     }
 
