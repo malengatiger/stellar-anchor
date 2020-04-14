@@ -83,19 +83,31 @@ import com.google.gson.annotations.SerializedName;
  * Client is created by Agent and will accept loans
  */
 public class Client {
-    String anchorId, agentId, anchorName, clientId, agentName;
-    double latitude, longitude;
-    String dateRegistered, dateUpdated, externalAccountId, account,
-            memo, organizationId, password, secretSeed;
+    private String anchorId,
+            agentId,
+            anchorName,
+            clientId,
+            agentName;
+    private double latitude, longitude;
+    private String dateRegistered,
+            dateUpdated,
+            externalAccountId,
+            account,
+            memo,
+            password,
+            secretSeed;
+
     @SerializedName("memo_type")
     @Expose
-    String memoType;
-    PersonalKYCFields personalKYCFields;
+    private String memoType;
+    private PersonalKYCFields personalKYCFields;
 
     public PersonalKYCFields getPersonalKYCFields() {
         return personalKYCFields;
     }
-
+    public void setPersonalKYCFields(PersonalKYCFields personalKYCFields) {
+        this.personalKYCFields = personalKYCFields;
+    }
     public String getMemo() {
         return memo;
     }
@@ -146,21 +158,11 @@ public class Client {
 
     public String getFullName() {
         if (personalKYCFields != null) {
-            return personalKYCFields.getFirstName() + " " + personalKYCFields.getLastName();
+            return personalKYCFields.getFirst_name() + " " + personalKYCFields.getLast_name();
         }
         return null;
     }
-    public void setPersonalKYCFields(PersonalKYCFields personalKYCFields) {
-        this.personalKYCFields = personalKYCFields;
-    }
 
-    public String getOrganizationId() {
-        return organizationId;
-    }
-
-    public void setOrganizationId(String organizationId) {
-        this.organizationId = organizationId;
-    }
 
     public String getExternalAccountId() {
         return externalAccountId;

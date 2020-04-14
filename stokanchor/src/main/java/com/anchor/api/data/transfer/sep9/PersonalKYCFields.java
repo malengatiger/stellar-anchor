@@ -64,137 +64,101 @@ import com.google.gson.annotations.SerializedName;
  * 💧 💧 💧 💧 💧 💧 💧 💧 💧 💧
  */
 public class PersonalKYCFields {
-    @SerializedName("last_name")
-    @Expose
-    String lastName;
-    @SerializedName("first_name")
-    @Expose
-    String firstName;
-    @SerializedName("mobile_number")
-    @Expose
-    String mobileNumber;
-    @SerializedName("email_address")
-    @Expose
-    String emailAddress;
-    @SerializedName("birth_date")
-    @Expose
-    String birthDate;
-    @SerializedName("bank_account_number")
-    @Expose
-    String bankAccountNumber;
 
-    @SerializedName("bank_number")
-    @Expose
-    String bankNumber;
+    String last_name;
 
-    @SerializedName("address")
-    @Expose
+    String first_name;
+
+    String mobile_number;
+
+    String email_address;
+
+    String birth_date;
+
+    String bank_account_number;
+
+    String bank_number;
+
     String address;
 
-    @SerializedName("bank_phone_number")
-    @Expose
-    String bankPhoneNumber;
+    String bank_phone_number;
 
-    @SerializedName("id_type")
-    @Expose
-    String idType;
+    String id_type;
 
-    @SerializedName("id_country_code")
-    @Expose
-    String idCountryCode;
+    String id_country_code;
 
-    @SerializedName("id_issue_date")
-    @Expose
-    String idIssueDate;
+    String id_issue_date;
 
-    @SerializedName("id_number")
-    @Expose
-    String idNumber;
+    String id_number;
 
-    @SerializedName("language_code")
-    @Expose
-    String languageCode;
+    String language_code;
 
+    String tax_id;
 
-    @SerializedName("tax_id")
-    @Expose
-    String taxId;
+    String tax_id_name;
 
-    @SerializedName("tax_id_name")
-    @Expose
-    String taxIdName;
+    byte[] photo_proof_residence;
 
-    //binary fields
-    @SerializedName("photo_proof_residence")
-    @Expose
-    byte[] photoProofOfResidence;
+    byte[] photo_id_front;
 
-    @SerializedName("photo_id_front")
-    @Expose
-    byte[] photoIdFront;
+    byte[] photo_id_back;
 
-    @SerializedName("photo_id_back")
-    @Expose
-    byte[] photoIdBack;
+    byte[] notary_approval_of_photo_id;
 
-    @SerializedName("notary_approval_of_photo_id")
-    @Expose
-    byte[] notaryApprovalOfPhotoId;
-
-    public String getLastName() {
-        return lastName;
+    public String getLast_name() {
+        return last_name;
     }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public void setLast_name(String last_name) {
+        this.last_name = last_name;
     }
 
-    public String getFirstName() {
-        return firstName;
+    public String getFirst_name() {
+        return first_name;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
+    public void setFirst_name(String first_name) {
+        this.first_name = first_name;
     }
 
-    public String getMobileNumber() {
-        return mobileNumber;
+    public String getMobile_number() {
+        return mobile_number;
     }
 
-    public void setMobileNumber(String mobileNumber) {
-        this.mobileNumber = mobileNumber;
+    public void setMobile_number(String mobile_number) {
+        this.mobile_number = mobile_number;
     }
 
-    public String getEmailAddress() {
-        return emailAddress;
+    public String getEmail_address() {
+        return email_address;
     }
 
-    public void setEmailAddress(String emailAddress) {
-        this.emailAddress = emailAddress;
+    public void setEmail_address(String email_address) {
+        this.email_address = email_address;
     }
 
-    public String getBirthDate() {
-        return birthDate;
+    public String getBirth_date() {
+        return birth_date;
     }
 
-    public void setBirthDate(String birthDate) {
-        this.birthDate = birthDate;
+    public void setBirth_date(String birth_date) {
+        this.birth_date = birth_date;
     }
 
-    public String getBankAccountNumber() {
-        return bankAccountNumber;
+    public String getBank_account_number() {
+        return bank_account_number;
     }
 
-    public void setBankAccountNumber(String bankAccountNumber) {
-        this.bankAccountNumber = bankAccountNumber;
+    public void setBank_account_number(String bank_account_number) {
+        this.bank_account_number = bank_account_number;
     }
 
-    public String getBankNumber() {
-        return bankNumber;
+    public String getBank_number() {
+        return bank_number;
     }
 
-    public void setBankNumber(String bankNumber) {
-        this.bankNumber = bankNumber;
+    public void setBank_number(String bank_number) {
+        this.bank_number = bank_number;
     }
 
     public String getAddress() {
@@ -205,99 +169,99 @@ public class PersonalKYCFields {
         this.address = address;
     }
 
-    public String getBankPhoneNumber() {
-        return bankPhoneNumber;
+    public String getBank_phone_number() {
+        return bank_phone_number;
     }
 
-    public void setBankPhoneNumber(String bankPhoneNumber) {
-        this.bankPhoneNumber = bankPhoneNumber;
+    public void setBank_phone_number(String bank_phone_number) {
+        this.bank_phone_number = bank_phone_number;
     }
 
-    public String getIdType() {
-        return idType;
+    public String getId_type() {
+        return id_type;
     }
 
-    public void setIdType(String idType) {
-        this.idType = idType;
+    public void setId_type(String id_type) {
+        this.id_type = id_type;
     }
 
-    public String getIdCountryCode() {
-        return idCountryCode;
+    public String getId_country_code() {
+        return id_country_code;
     }
 
-    public void setIdCountryCode(String idCountryCode) {
-        this.idCountryCode = idCountryCode;
+    public void setId_country_code(String id_country_code) {
+        this.id_country_code = id_country_code;
     }
 
-    public String getIdIssueDate() {
-        return idIssueDate;
+    public String getId_issue_date() {
+        return id_issue_date;
     }
 
-    public void setIdIssueDate(String idIssueDate) {
-        this.idIssueDate = idIssueDate;
+    public void setId_issue_date(String id_issue_date) {
+        this.id_issue_date = id_issue_date;
     }
 
-    public String getIdNumber() {
-        return idNumber;
+    public String getId_number() {
+        return id_number;
     }
 
-    public void setIdNumber(String idNumber) {
-        this.idNumber = idNumber;
+    public void setId_number(String id_number) {
+        this.id_number = id_number;
     }
 
-    public String getLanguageCode() {
-        return languageCode;
+    public String getLanguage_code() {
+        return language_code;
     }
 
-    public void setLanguageCode(String languageCode) {
-        this.languageCode = languageCode;
+    public void setLanguage_code(String language_code) {
+        this.language_code = language_code;
     }
 
-    public String getTaxId() {
-        return taxId;
+    public String getTax_id() {
+        return tax_id;
     }
 
-    public void setTaxId(String taxId) {
-        this.taxId = taxId;
+    public void setTax_id(String tax_id) {
+        this.tax_id = tax_id;
     }
 
-    public String getTaxIdName() {
-        return taxIdName;
+    public String getTax_id_name() {
+        return tax_id_name;
     }
 
-    public void setTaxIdName(String taxIdName) {
-        this.taxIdName = taxIdName;
+    public void setTax_id_name(String tax_id_name) {
+        this.tax_id_name = tax_id_name;
     }
 
-    public byte[] getPhotoProofOfResidence() {
-        return photoProofOfResidence;
+    public byte[] getPhoto_proof_residence() {
+        return photo_proof_residence;
     }
 
-    public void setPhotoProofOfResidence(byte[] photoProofOfResidence) {
-        this.photoProofOfResidence = photoProofOfResidence;
+    public void setPhoto_proof_residence(byte[] photo_proof_residence) {
+        this.photo_proof_residence = photo_proof_residence;
     }
 
-    public byte[] getPhotoIdFront() {
-        return photoIdFront;
+    public byte[] getPhoto_id_front() {
+        return photo_id_front;
     }
 
-    public void setPhotoIdFront(byte[] photoIdFront) {
-        this.photoIdFront = photoIdFront;
+    public void setPhoto_id_front(byte[] photo_id_front) {
+        this.photo_id_front = photo_id_front;
     }
 
-    public byte[] getPhotoIdBack() {
-        return photoIdBack;
+    public byte[] getPhoto_id_back() {
+        return photo_id_back;
     }
 
-    public void setPhotoIdBack(byte[] photoIdBack) {
-        this.photoIdBack = photoIdBack;
+    public void setPhoto_id_back(byte[] photo_id_back) {
+        this.photo_id_back = photo_id_back;
     }
 
-    public byte[] getNotaryApprovalOfPhotoId() {
-        return notaryApprovalOfPhotoId;
+    public byte[] getNotary_approval_of_photo_id() {
+        return notary_approval_of_photo_id;
     }
 
-    public void setNotaryApprovalOfPhotoId(byte[] notaryApprovalOfPhotoId) {
-        this.notaryApprovalOfPhotoId = notaryApprovalOfPhotoId;
+    public void setNotary_approval_of_photo_id(byte[] notary_approval_of_photo_id) {
+        this.notary_approval_of_photo_id = notary_approval_of_photo_id;
     }
 }

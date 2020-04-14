@@ -3,13 +3,10 @@ package com.anchor.api.services;
 import com.anchor.api.data.account.Account;
 import com.anchor.api.data.account.AccountResponseBag;
 import com.anchor.api.data.anchor.Anchor;
+import com.anchor.api.data.anchor.AnchorBag;
 import com.anchor.api.data.anchor.AnchorUser;
 import com.anchor.api.util.Emoji;
-import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.Firestore;
 import com.google.firebase.auth.UserRecord;
-import com.google.firebase.cloud.FirestoreClient;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sendgrid.*;
@@ -18,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.io.IOException;
@@ -47,6 +45,8 @@ public class AnchorAccountService {
     private String anchorStartingBalance;
     @Autowired
     private AccountService accountService;
+    @Autowired
+    private FirebaseService firebaseService;
 
     @Autowired
     private CryptoService cryptoService;
@@ -57,12 +57,11 @@ public class AnchorAccountService {
     }
 
     public Anchor createAnchorAccounts(Anchor newAnchor, String password, String assetCode,
-                                       String assetAmount, String fundingSeed, String startingBalance)
+                                          String assetAmount, String fundingSeed, String startingBalance)
             throws Exception {
         LOGGER.info(Emoji.FERN + Emoji.FERN + "AnchorAccountService: creating Anchor Accounts " +
                 ".... \uD83C\uDF40 DEV STATUS: " + status + " \uD83C\uDF51 " +
                 "startingBalance: " + startingBalance + " \uD83C\uDF51 seed: " + fundingSeed);
-        accountService = context.getBean(AccountService.class);
         Anchor anchor = new Anchor();
 
         DateTime dateTime = new DateTime();
@@ -84,17 +83,20 @@ public class AnchorAccountService {
 
         Account base = new Account();
         base.setAccountId(baseAccount.getAccountResponse().getAccountId());
-        base.setDate(new DateTime().toMutableDateTimeISO().toString());
+        base.setName("Base Account");
+        base.setDate(new DateTime().toDateTimeISO().toString());
 
 
 
         Account issuing = new Account();
         issuing.setAccountId(issuingAccount.getAccountResponse().getAccountId());
-        issuing.setDate(new DateTime().toMutableDateTimeISO().toString());
+        issuing.setDate(new DateTime().toDateTimeISO().toString());
+        issuing.setName("Issuing Account");
 
         Account distribution = new Account();
         distribution.setAccountId(distributionAccount.getAccountResponse().getAccountId());
-        distribution.setDate(new DateTime().toMutableDateTimeISO().toString());
+        distribution.setDate(new DateTime().toDateTimeISO().toString());
+        distribution.setName("Distribution Account");
 
         anchor.setBaseAccount(base);
         anchor.setIssuingAccount(issuing);
@@ -121,6 +123,7 @@ public class AnchorAccountService {
                     issuingAccount.getSecretSeed(),
                     distributionAccount.getAccountResponse().getAccountId(),
                     assetCode,assetAmount);
+
             LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: createAnchorAccounts " +
                     ".... \uD83C\uDF45 Payment GetTransactionsResponse Response isSuccess:  " + response.isSuccess());
 
@@ -132,10 +135,7 @@ public class AnchorAccountService {
         LOGGER.info(Emoji.LEAF + Emoji.LEAF + Emoji.LEAF +
                 "Anchor created and will be added to Firestore: " +
                 " " + anchor.getName());
-        Firestore fs = FirestoreClient.getFirestore();
-        ApiFuture<DocumentReference> future = fs.collection("anchors").add(anchor);
-        LOGGER.info(Emoji.LEAF + Emoji.LEAF + Emoji.LEAF + "Anchor added to Firestore at path: " +
-                "\uD83E\uDD6C " + future.get().getPath());
+        firebaseService.addAnchor(anchor);
         LOGGER.info(G.toJson(anchor));
         //todo - send email to confirm the anchor with link ...
         try {
@@ -145,14 +145,16 @@ public class AnchorAccountService {
             e.printStackTrace();
             LOGGER.severe("Email sending failed");
         }
-        //todo - list accounts and check balances
-//        AccountResponse response1 = accountService.getAccount(baseAccount.getSecretSeed());
-//        AccountResponse response2 = accountService.getAccount(issuingAccount.getSecretSeed());
-//        AccountResponse response3 = accountService.getAccount(distributionAccount.getSecretSeed());
-//        LOGGER.info("\n\n \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ..... CHECKING ACCOUNTS AFTER ALL THAT .... \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ");
-//        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 BASE ACCOUNT: " + G.toJson(response1));
-//        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ISSUING ACCOUNT: " + G.toJson(response2));
-//        LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 DISTRIBUTION ACCOUNT: " + G.toJson(response3));
+        //todo - list accounts and check balances, REMOVE after dev
+        if (status.equalsIgnoreCase("dev")) {
+            AccountResponse response1 = accountService.getAccount(baseAccount.getSecretSeed());
+            AccountResponse response2 = accountService.getAccount(issuingAccount.getSecretSeed());
+            AccountResponse response3 = accountService.getAccount(distributionAccount.getSecretSeed());
+            LOGGER.info("\n\n \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ..... CHECKING ACCOUNTS AFTER ALL THAT .... \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ");
+            LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 BASE ACCOUNT: " + G.toJson(response1));
+            LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 ISSUING ACCOUNT: " + G.toJson(response2));
+            LOGGER.info(" \uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 DISTRIBUTION ACCOUNT: " + G.toJson(response3));
+        }
         return anchor;
     }
 
@@ -190,12 +192,7 @@ public class AnchorAccountService {
         DateTime dateTime = new DateTime();
         anchorUser.setDate(dateTime.toDateTimeISO().toString());
         anchorUser.setActive(true);
-        LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 about to write Anchor USER to Firestore: ".concat(anchorUser.getFirstName()));
-        Firestore fs = FirestoreClient.getFirestore();
-        ApiFuture<DocumentReference> future = fs.collection("anchorUsers").add(anchorUser);
-        LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C Anchor AnchorUser created and added to Firestore at path:" +
-                " \uD83E\uDD6C " + future.get().getPath());
-        LOGGER.info(G.toJson(anchorUser));
+        firebaseService.addAnchorUser(anchorUser);
 
         return anchorUser;
     }

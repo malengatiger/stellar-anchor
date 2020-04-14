@@ -8,7 +8,7 @@ public class Emoji {
             GREEN_THING = "\uD83E\uDDA0 ",  // 🦠
             GREEN_APPLE = "\uD83C\uDF4F",   // 🍏
             RED_APPLE = "\uD83C\uDF4E ",    // 🍎
-            PEACH = "\uD83C\uDF4A",         // 🍊
+            PEACH = "\uD83C\uDF4A ",         // 🍊
             LEMON = "\uD83C\uDF4B ",        // 🍋
             SOCCER_BALL = "⚽️ ",            // ⚽️
             BASKET_BALL = "\uD83C\uDFC0 ",  // 🏀

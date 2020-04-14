@@ -2,7 +2,15 @@ package com.anchor.api.data.account;
 
 public class Account {
     String accountId;
-    String date;
+    String date, name;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public String getAccountId() {
         return accountId;

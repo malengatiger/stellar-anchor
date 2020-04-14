@@ -7,6 +7,7 @@ public class Constants {
             CLIENTS = "clients",
             LOAN_APPLICATIONS = "loanApplications",
             LOAN_PAYMENTS = "loanPayments",
+            ORGANIZATIONS = "organizations",
             INFOS = "infos",
             ANCHOR_USERS = "anchorUsers";
 

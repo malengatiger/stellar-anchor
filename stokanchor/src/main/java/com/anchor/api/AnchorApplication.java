@@ -25,8 +25,12 @@ public class AnchorApplication implements ApplicationListener<ApplicationReadyEv
 
 	@Autowired
 	private ApplicationContext context;
+
 	@Autowired
 	private AccountService accountService;
+
+	@Autowired
+	private FirebaseService firebaseService;
 
 	@Value("${status}")
 	private String status;
@@ -40,9 +44,8 @@ public class AnchorApplication implements ApplicationListener<ApplicationReadyEv
 		LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C onApplicationEvent: DEVELOPMENT STATUS: \uD83C\uDF51 " + status + " \uD83C\uDF51 ");
 		accountService.printStellarHorizonServer();
 
-		FirebaseService scaffold = context.getBean(FirebaseService.class);
 		try {
-			scaffold.initializeFirebase();
+			firebaseService.initializeFirebase();
 			accountService.listenForTransactions();
 		} catch (Exception e) {
 			LOGGER.severe(" \uD83C\uDF45 Firebase initialization FAILED");

@@ -30,7 +30,7 @@ public class Agent {
 
     public String getFullName() {
         if (personalKYCFields != null) {
-            return personalKYCFields.getFirstName() + " " + personalKYCFields.getLastName();
+            return personalKYCFields.getFirst_name() + " " + personalKYCFields.getLast_name();
         }
         return null;
     }

@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -37,18 +38,18 @@ public class JWTokenService {
         long nowMillis = System.currentTimeMillis();
         Date now = new Date(nowMillis);
 
-        LOGGER.info(em +" We will sign our JWT with our ApiKey secret");
+        LOGGER.info(em +" We will sign our JWT with  \uD83C\uDF4E SignatureAlgorithm.HS256 and our ApiKey secret");
         byte[] apiKeySecretBytes = DatatypeConverter.parseBase64Binary(jwtKey);
         Key signingKey = new SecretKeySpec(apiKeySecretBytes, signatureAlgorithm.getJcaName());
 
-        LOGGER.info(em +" Let's set the JWT Claims");
+        LOGGER.info(em +" Let's set the JWT Claims ... \uD83D\uDC3C issuer, date, subject ...");
         JwtBuilder builder = Jwts.builder().setId(id)
                 .setIssuedAt(now)
                 .setSubject(subject)
                 .setIssuer(issuer)
                 .signWith(signatureAlgorithm, signingKey);
 
-        LOGGER.info(em +" if it has been specified, let's add the expiration");
+        LOGGER.info(em +" if it has been specified,  \uD83C\uDF4E add the expiration constraint");
         if (ttlMillis >= 0) {
             long expMillis = nowMillis + ttlMillis;
             Date exp = new Date(expMillis);
@@ -70,5 +71,6 @@ public class JWTokenService {
                 .parseClaimsJws(jwt).getBody();
         return claims;
     }
+
 
 }

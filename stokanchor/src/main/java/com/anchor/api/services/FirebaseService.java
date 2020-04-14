@@ -35,11 +35,9 @@ public class FirebaseService {
 
     @Autowired
     private ApplicationContext context;
+    @Value("${databaseUrl}")
+    private String databaseUrl;
 
-    @Value("${status}")
-    private String status;
-
-    //💙 💙
     public FirebaseService() {
         LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE
                 + "FirebaseService Constructor: " + Emoji.HEART_GREEN);
@@ -47,20 +45,20 @@ public class FirebaseService {
 
     public void initializeFirebase() throws Exception {
         LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE + "Starting Firebase initialization " +
-                ".... \uD83D\uDC99 DEV STATUS: " + Emoji.HEART_PURPLE
-                + status + " " + Emoji.HEART_BLUE + Emoji.HEART_BLUE);
+                ".... \uD83D\uDC99 DEV STATUS: " + Emoji.HEART_PURPLE + " " + Emoji.HEART_BLUE + Emoji.HEART_BLUE);
 
         FirebaseApp app;
         try {
             FirebaseOptions prodOptions = new FirebaseOptions.Builder()
                     .setCredentials(GoogleCredentials.getApplicationDefault())
-                    .setDatabaseUrl("https://stellar-anchor-333.firebaseio.com/")
+                    .setDatabaseUrl(databaseUrl)
                     .build();
 
             app = FirebaseApp.initializeApp(prodOptions);
         } catch (Exception e) {
-            LOGGER.severe("Unable to initialize Firebase");
-            throw new Exception("Unable to initialize Firebase", e);
+            String msg = "Unable to initialize Firebase";
+            LOGGER.severe(msg);
+            throw new Exception(msg, e);
         }
         LOGGER.info(Emoji.HEART_BLUE + Emoji.HEART_BLUE + "Firebase has been set up and initialized. " +
                 "\uD83D\uDC99 URL: " + app.getOptions().getDatabaseUrl() + Emoji.HAPPY);
@@ -124,12 +122,30 @@ public class FirebaseService {
         LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F LoanPayment added at path: ".concat(future.get().getPath()));
         return "\uD83C\uDF4F LoanPayment added";
     }
+    public String addOrganization(Organization organization) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        ApiFuture<DocumentReference> future = fs.collection(Constants.ORGANIZATIONS).add(organization);
+        LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Organization added at path: ".concat(future.get().getPath()));
+        return "\uD83C\uDF4F Organization added";
+    }
+    public String addAnchor(Anchor anchor) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        ApiFuture<DocumentReference> future = fs.collection(Constants.ANCHORS).add(anchor);
+        LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Anchor added at path: ".concat(future.get().getPath()));
+        return "\uD83C\uDF4F Anchor added";
+    }
+    public String addAnchorUser(AnchorUser anchorUser) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        ApiFuture<DocumentReference> future = fs.collection(Constants.ANCHOR_USERS).add(anchorUser);
+        LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F AnchorUser added at path: ".concat(future.get().getPath()));
+        return "\uD83C\uDF4F AnchorUser added";
+    }
 
     public String addClient(Client client) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Client current = getClientByNameAndAnchor(client.getAnchorId(),
-                client.getPersonalKYCFields().getFirstName(),
-                client.getPersonalKYCFields().getLastName());
+                client.getPersonalKYCFields().getFirst_name(),
+                client.getPersonalKYCFields().getLast_name());
         if (current == null) {
             ApiFuture<DocumentReference> future = fs.collection(Constants.CLIENTS).add(client);
             LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Client added at path: ".concat(future.get().getPath()));
@@ -142,8 +158,8 @@ public class FirebaseService {
     public String addAgent(Agent agent) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Agent current = getAgentByNameAndAnchor(agent.getAnchorId(),
-                agent.getPersonalKYCFields().getFirstName(),
-                agent.getPersonalKYCFields().getLastName());
+                agent.getPersonalKYCFields().getFirst_name(),
+                agent.getPersonalKYCFields().getLast_name());
         if (current == null) {
             ApiFuture<DocumentReference> future = fs.collection(Constants.AGENTS).add(agent);
             LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Agent added at path: ".concat(future.get().getPath()));
@@ -153,6 +169,50 @@ public class FirebaseService {
         }
     }
 
+    public String updateLoanApplication(LoanApplication application) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.LOAN_APPLICATIONS)
+                .whereEqualTo("loanId", application.getLoanId())
+                .limit(1)
+                .get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            document.getReference().set(application);
+            String msg = "LoanApplication updated";
+            LOGGER.info(Emoji.WINE.concat(Emoji.WINE).concat(msg));
+            return msg;
+        }
+       throw new Exception("LoanApplication not found for update");
+
+    }
+    public String updateClient(Client client) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.CLIENTS)
+                .whereEqualTo("clientId", client.getClientId())
+                .limit(1)
+                .get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            document.getReference().set(client);
+            String msg = "Client updated";
+            LOGGER.info(Emoji.WINE.concat(Emoji.WINE).concat(msg));
+            return msg;
+        }
+        throw new Exception("Client not found for update");
+    }
+    public String updateAgent(Agent agent) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.CLIENTS)
+                .whereEqualTo("agentId", agent.getAgentId())
+                .limit(1)
+                .get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            document.getReference().set(agent);
+            String msg = "Agent updated";
+            LOGGER.info(Emoji.WINE.concat(Emoji.WINE).concat(msg));
+            return msg;
+        }
+        throw new Exception("Agent not found for update");
+    }
     public String addAnchorInfo(Info info) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Info current = getAnchorInfo(info.getAnchorId());
@@ -235,6 +295,26 @@ public class FirebaseService {
 
         return agent;
     }
+    public LoanApplication getLoanApplication(String loanId) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        LoanApplication loanApplication;
+        List<LoanApplication> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.LOAN_APPLICATIONS)
+                .whereEqualTo("loanId", loanId).get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = gson.toJson(map);
+            LoanApplication mInfo = gson.fromJson(object, LoanApplication.class);
+            mList.add(mInfo);
+        }
+        if (mList.isEmpty()) {
+            return null;
+        } else {
+            loanApplication = mList.get(0);
+        }
+
+        return loanApplication;
+    }
 
     public Agent getAgentByNameAndAnchor(String anchorId, String firstName, String lastName) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
@@ -257,6 +337,50 @@ public class FirebaseService {
         }
 
         return agent;
+    }
+    public List<Client> getAgentClients(String agentId) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        List<Client> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.CLIENTS)
+                .whereEqualTo("agentId", agentId).get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = gson.toJson(map);
+            Client mInfo = gson.fromJson(object, Client.class);
+            mList.add(mInfo);
+        }
+       LOGGER.info(Emoji.LEAF + "Found " + mList.size() + " Agent Clients");
+        return mList;
+    }
+    public List<LoanApplication> getAgentLoans(String agentId) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        List<LoanApplication> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.LOAN_APPLICATIONS)
+                .whereEqualTo("agentId", agentId)
+                .orderBy("date", Query.Direction.DESCENDING).get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = gson.toJson(map);
+            LoanApplication mInfo = gson.fromJson(object, LoanApplication.class);
+            mList.add(mInfo);
+        }
+        LOGGER.info(Emoji.LEAF + "Found " + mList.size() + " Agent Loans");
+        return mList;
+    }
+    public List<LoanPayment> getLoanPayments(String loanId) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        List<LoanPayment> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.LOAN_PAYMENTS)
+                .whereEqualTo("loanId", loanId)
+                .orderBy("date", Query.Direction.DESCENDING).get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = gson.toJson(map);
+            LoanPayment payment = gson.fromJson(object, LoanPayment.class);
+            mList.add(payment);
+        }
+        LOGGER.info(Emoji.LEAF + "Found " + mList.size() + " Loan Payments");
+        return mList;
     }
 
     public Client getClientByNameAndAnchor(String anchorId, String firstName, String lastName) throws Exception {

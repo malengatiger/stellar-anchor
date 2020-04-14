@@ -24,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -33,6 +34,7 @@ import java.util.logging.Logger;
 public class TransferController {
     public static final Logger LOGGER = Logger.getLogger(TransferController.class.getSimpleName());
     private static final Gson G = new GsonBuilder().setPrettyPrinting().create();
+
     /*
     😈 👿 😈 👿
     Every other HTTP status code will be considered an error.
@@ -87,9 +89,10 @@ public class TransferController {
     @PostMapping("deposit")
     public DepositOKResponse deposit(@RequestBody DepositRequestParameters requestParameters) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:deposit ...");
-       
+
         return null;
     }
+
     /*
     This operation allows a user to redeem an asset currently on the Stellar network for the real asset
     (BTC, USD, stock, etc...) via the anchor of the Stellar asset.
@@ -118,15 +121,17 @@ public class TransferController {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:withdraw ...");
         //todo - check
 
-        
+
         return null;
     }
+
     @PostMapping
     public SubmitTransactionResponse setOptions(@RequestBody Options options) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:setOptions ...");
-        return accountService.setOptions(options.getSeed(),options.getClearFlags(),options.getHighThreshold(),
-                options.getLowThreshold(),options.getInflationDestination(),options.getMasterKeyWeight());
+        return accountService.setOptions(options.getSeed(), options.getClearFlags(), options.getHighThreshold(),
+                options.getLowThreshold(), options.getInflationDestination(), options.getMasterKeyWeight());
     }
+
     @PostMapping("/setAnchorInfo")
     public String setAnchorInfo(@RequestBody Info info) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:setAnchorInfo ...");
@@ -138,7 +143,7 @@ public class TransferController {
                                             @RequestParam String assetIssuer,
                                             @RequestParam String lang) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:getServerInfo ...");
-      return null;
+        return null;
     }
 
     /*
@@ -186,10 +191,19 @@ public class TransferController {
     }
 
     @GetMapping(value = "/auth", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ChallengeResponse newChallenge(@RequestParam String account) throws Exception {
+    public ResponseEntity<?> auth(@RequestParam String account) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:auth ...");
-        return anchorSep10Challenge.newChallenge(account);
+        try {
+            ChallengeResponse response = anchorSep10Challenge.newChallenge(account);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            String msg = "Authentication Failed";
+            LOGGER.info(msg);
+            return ResponseEntity.badRequest()
+                    .body(msg);
+        }
     }
+
     /*
         🌼 🌼 Get JWT token from transaction xdr
             Client submits a challenge transaction (that was previously returned by the challenge endpoint) as a HTTP POST request to WEB_AUTH_ENDPOINT using one of the following formats (both should be equally supported by the server):
@@ -199,10 +213,19 @@ public class TransferController {
             Content-Type: application/json, body: {"transaction": "<signed XDR>"}
      */
     @PostMapping(value = "/token", produces = MediaType.APPLICATION_JSON_VALUE)
-    public JWTToken getToken(@RequestParam String transaction, @RequestParam String seed) throws Exception {
-        String token = anchorSep10Challenge.getToken(transaction, seed);
-        return new JWTToken(token);
+    public ResponseEntity<?> token(@RequestParam String transaction, @RequestParam String seed) throws Exception {
+        try {
+            String token = anchorSep10Challenge.getToken(transaction, seed);
+            LOGGER.info("Token returned");
+            return ResponseEntity.ok(new JWTToken(token));
+        } catch (Exception e) {
+            String msg = "Token acquisition failed";
+            LOGGER.info(msg);
+            return ResponseEntity.badRequest()
+                    .body(msg);
+        }
     }
+
     /*
         🌼 One of id, 🥏 stellar_transaction_id or 🥏 external_transaction_id is required.
 
@@ -223,8 +246,8 @@ public class TransferController {
      */
     @GetMapping("/transaction")
     public ResponseEntity<GetTransactionsResponse> transaction(@RequestParam String id,
-                                      @RequestParam String stellar_transaction_id,
-                                      @RequestParam String external_transaction_id) throws NotFoundException {
+                                                               @RequestParam String stellar_transaction_id,
+                                                               @RequestParam String external_transaction_id) throws NotFoundException {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 TransferController:transaction ...");
         GetTransactionsResponse transactionsResponse = null;
         ResponseEntity<GetTransactionsResponse> responseEntity = null;
@@ -235,6 +258,7 @@ public class TransferController {
         }
         return responseEntity;
     }
+
     /*
     🥏 🥏 🥏 GET TRANSFER_SERVER/transactions
         🍎 Request parameters:

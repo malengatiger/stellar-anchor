@@ -7,10 +7,34 @@ package com.anchor.api.data.anchor;
  */
 public class LoanPayment {
     private String loanId, clientId, agentId, anchorId;
-    private String date, amount;
+    private String date, amount, clientSeed, agentAccount, assetCode;
     private boolean completed;
     private boolean onTime;
     private int monthOfLoan, yearOfLoan;
+
+    public String getAssetCode() {
+        return assetCode;
+    }
+
+    public void setAssetCode(String assetCode) {
+        this.assetCode = assetCode;
+    }
+
+    public String getAgentAccount() {
+        return agentAccount;
+    }
+
+    public void setAgentAccount(String agentAccount) {
+        this.agentAccount = agentAccount;
+    }
+
+    public String getClientSeed() {
+        return clientSeed;
+    }
+
+    public void setClientSeed(String clientSeed) {
+        this.clientSeed = clientSeed;
+    }
 
     public String getLoanId() {
         return loanId;

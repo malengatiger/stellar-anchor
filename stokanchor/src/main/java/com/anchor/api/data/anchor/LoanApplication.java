@@ -9,11 +9,51 @@ package com.anchor.api.data.anchor;
  */
 public class LoanApplication {
     private String loanId, clientId, agentId, anchorId;
-    private String date, amount;
+    private String date, amount, agentSeed, clientAccount, assetCode, datePaid;
     private int loanPeriodInMonths;
     private int startMonth, endMonth;
     private double interestRate;
-    private boolean approved;
+    private boolean approved, paid;
+
+    public String getDatePaid() {
+        return datePaid;
+    }
+
+    public void setDatePaid(String datePaid) {
+        this.datePaid = datePaid;
+    }
+
+    public boolean isPaid() {
+        return paid;
+    }
+
+    public void setPaid(boolean paid) {
+        this.paid = paid;
+    }
+
+    public String getAssetCode() {
+        return assetCode;
+    }
+
+    public void setAssetCode(String assetCode) {
+        this.assetCode = assetCode;
+    }
+
+    public String getClientAccount() {
+        return clientAccount;
+    }
+
+    public void setClientAccount(String clientAccount) {
+        this.clientAccount = clientAccount;
+    }
+
+    public String getAgentSeed() {
+        return agentSeed;
+    }
+
+    public void setAgentSeed(String agentSeed) {
+        this.agentSeed = agentSeed;
+    }
 
     public String getLoanId() {
         return loanId;

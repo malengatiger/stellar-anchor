@@ -29,8 +29,6 @@ import java.util.logging.Logger;
 public class AccountService {
     public static final Logger LOGGER = Logger.getLogger(AccountService.class.getSimpleName());
     private static final Gson G = new GsonBuilder().setPrettyPrinting().create();
-    private static final String DEV_SERVER = "https://horizon-testnet.stellar.org";
-    private static final String PROD_SERVER = "https://horizon.stellar.org'";
     private static final String FRIEND_BOT = "https://friendbot.stellar.org/?addr=%s",
             LUMENS = "lumens";
     private static final int TIMEOUT_IN_SECONDS = 180;
@@ -59,6 +57,7 @@ public class AccountService {
 
     @Autowired
     private ApplicationContext context;
+
     @Autowired
     private FirebaseService firebaseService;
 
@@ -69,49 +68,11 @@ public class AccountService {
     @Value("${defaultCurrencies}")
     private String defaultCurrencies;
 
+    @Value("${stellarUrl}")
+    private String stellarUrl;
 
     @Value("${domain}")
     private String domain;
-
-
-//
-//    public AnchorUser createUserWithExistingAccount(AnchorUser user) throws Exception {
-//        if (user.getAnchorId() == null) {
-//            throw new Exception("Missing anchorId");
-//        }
-//        if (user.getAccounts() == null || user.getAccounts().isEmpty()) {
-//            throw new Exception("Account is missing");
-//        }
-//        FirebaseService scaffold = context.getBean(FirebaseService.class);
-//        UserRecord record = scaffold.createUser(user.getFullName(), user.getEmail(), "temp#33pass");
-//        user.setUserId(record.getUid());
-//
-//        Firestore fs = FirestoreClient.getFirestore();
-//        ApiFuture<DocumentReference> future = fs.collection("users").add(user);
-//        LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C AnchorUser created and added to Firestore at path: \uD83E\uDD6C " + future.get().getPath());
-//        LOGGER.info(G.toJson(user));
-//
-//        return user;
-//    }
-//
-//    public AnchorUser createUser(AnchorUser user, String fundingSeed, String startingBalance) throws Exception {
-//        if (user.getAnchorId() == null) {
-//            throw new Exception("Missing anchorId");
-//        }
-//        AccountResponseBag bag = createAndFundStellarAccount(fundingSeed, startingBalance);
-//        Account account = new Account();
-//        user.addAccount(account);
-//        FirebaseService scaffold = context.getBean(FirebaseService.class);
-//        UserRecord record = scaffold.createUser(user.getFullName(), user.getEmail(), "temp#33pass");
-//        user.setUserId(record.getUid());
-//
-//        Firestore fs = FirestoreClient.getFirestore();
-//        ApiFuture<DocumentReference> future = fs.collection("users").add(user);
-//        LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C AnchorUser created and added to Firestore at path: \uD83E\uDD6C " + future.get().getPath());
-//        LOGGER.info(G.toJson(user));
-//
-//        return user;
-//    }
 
     public void talkToFriendBot(String accountId) throws IOException {
         LOGGER.info("\uD83E\uDD6C ... Begging Ms. FriendBot for some \uD83C\uDF51 pussy \uD83C\uDF51 ... " +
@@ -461,13 +422,12 @@ public class AccountService {
             status = "dev";
         }
         isDevelopment = status.equalsIgnoreCase("dev");
+        server = new Server(stellarUrl);
         if (isDevelopment) {
-            server = new Server(DEV_SERVER);
             network = Network.TESTNET;
             LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F DEVELOPMENT: ... Stellar TestNet Server and Network ... \uD83C\uDF4F \uD83C\uDF4F \n");
 
         } else {
-            server = new Server(PROD_SERVER);
             network = Network.PUBLIC;
             LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F PRODUCTION: ... Stellar Public Server and Network... \uD83C\uDF4F \uD83C\uDF4F \n");
 
