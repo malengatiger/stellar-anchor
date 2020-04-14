@@ -1,4 +1,4 @@
-package com.anchor.api.data.kyc;
+package com.anchor.api.data.transfer.sep9;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

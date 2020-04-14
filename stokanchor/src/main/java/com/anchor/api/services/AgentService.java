@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import com.anchor.api.util.Emoji;
+
 @Service
 public class AgentService {
     public AgentService() {
@@ -86,7 +86,7 @@ public class AgentService {
         //handle seed encryption
         cryptoService.encrypt(bag.getAccountResponse().getAccountId(),bag.getSecretSeed());
 
-        client.setStellarAccountId(bag.getAccountResponse().getAccountId());
+        client.setAccount(bag.getAccountResponse().getAccountId());
         client.setExternalAccountId("Not Known Yet");
         String savePassword = client.getPassword();
         client.setPassword(null);

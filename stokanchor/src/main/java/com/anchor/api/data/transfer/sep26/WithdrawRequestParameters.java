@@ -1,7 +1,5 @@
 package com.anchor.api.data.transfer.sep26;
 
-import com.anchor.api.data.kyc.OrganizationKYCFields;
-import com.anchor.api.data.kyc.PersonalKYCFields;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 

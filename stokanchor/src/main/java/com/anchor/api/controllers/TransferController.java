@@ -1,5 +1,6 @@
 package com.anchor.api.controllers;
 
+import com.anchor.api.data.anchor.Client;
 import com.anchor.api.data.transfer.sep26.DepositRequestParameters;
 import com.anchor.api.data.transfer.sep26.WithdrawRequestParameters;
 import com.anchor.api.data.*;
@@ -198,8 +199,8 @@ public class TransferController {
             Content-Type: application/json, body: {"transaction": "<signed XDR>"}
      */
     @PostMapping(value = "/token", produces = MediaType.APPLICATION_JSON_VALUE)
-    public JWTToken getToken(@RequestParam String transaction) throws Exception {
-        String token = anchorSep10Challenge.getToken(transaction);
+    public JWTToken getToken(@RequestParam String transaction, @RequestParam String seed) throws Exception {
+        String token = anchorSep10Challenge.getToken(transaction, seed);
         return new JWTToken(token);
     }
     /*
@@ -265,6 +266,16 @@ public class TransferController {
         List<GetTransactionsResponse> mList = new ArrayList<>();
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 transactions found: " + mList.size());
         return mList;
+    }
+
+    @PutMapping(value = "/customer")
+    public void putCustomer(@RequestBody Client client) {
+
+    }
+
+    @DeleteMapping(value = "/customer")
+    public void deleteCustomer(@RequestBody Client client) {
+
     }
 
 }

@@ -131,13 +131,13 @@ public class AnchorSep10Challenge {
                 +em2+"XDR "+em2+"... we done good, Boss!");
 
         //todo - REMOVE after test - get JWT token from XDR transaction string
-        String token = getToken(challengeResponse.transaction);
+        String token = getToken(challengeResponse.transaction,"SBJSQ4WSNHDJFTEH55ZR3FZFOG7J7SOGLKE3T5ZIK35D2BJ4BQJSPEQ2");
         LOGGER.info(Emoji.PANDA + Emoji.PANDA + "Tested Token acquisition complete, token: ".concat(token).concat(" ")
         .concat(Emoji.PANDA).concat(Emoji.PANDA).concat(" This message will be removed when we are done"));
         return challengeResponse;
     }
 
-    public String getToken(String transaction) throws Exception {
+    public String getToken(String transaction, String clientSeed) throws Exception {
         LOGGER.info(Emoji.ICE_CREAM + Emoji.ICE_CREAM +
                 " ... Getting JWT token from XDR transaction string ....".concat(Emoji.DIAMOND));
 
@@ -145,6 +145,8 @@ public class AnchorSep10Challenge {
         AnchorSep10Challenge.ChallengeTransaction challengeTransaction;
         try {
             challengeTransaction = readChallengeTransaction(transaction);
+            KeyPair keyPair = KeyPair.fromSecretSeed(clientSeed);
+            challengeTransaction.getTransaction().sign(keyPair);
         } catch (Exception e) {
             LOGGER.info(Emoji.ERROR + "Failed to read ChallengeTransaction ".concat(Emoji.ERROR));
             e.printStackTrace();
@@ -172,7 +174,7 @@ public class AnchorSep10Challenge {
         }
         LOGGER.info(Emoji.BLUE_DOT + "Signers acquired - start verification ...".concat(Emoji.BLUE_BIRD + Emoji.BLUE_BIRD));
         try {
-            LOGGER.info(Emoji.PIG + Emoji.PIG + "verifyChallengeTransactionSigners .... "
+            LOGGER.info(Emoji.PIG + Emoji.PIG + " ....... verifyChallengeTransactionSigners .... "
             + Emoji.PANDA);
             verifyChallengeTransactionSigners(transaction, signers);
         } catch (Exception e) {
@@ -197,9 +199,9 @@ public class AnchorSep10Challenge {
             //todo - check token claims ...
             Claims claims = tokenService.decodeJWT(token);
             LOGGER.info(Emoji.FLOWER_YELLOW + Emoji.FLOWER_YELLOW +
-                    "Claims: JWT issuer: " + claims.getIssuer() + " \uD83C\uDF4E " +
-                    Emoji.RED_APPLE + "subject: " + claims.getSubject() + " \uD83C\uDF3C iat: "
-                    + claims.getIssuedAt().toString() + " \uD83C\uDF4E exp: " + claims.getExpiration().toString());
+                    "Claims: JWT issuer: " + claims.getIssuer() + "\n \uD83C\uDF4E " +
+                    Emoji.RED_APPLE + "subject: " + claims.getSubject() + "\n \uD83C\uDF3C iat: "
+                    + claims.getIssuedAt().toString() + "\n \uD83C\uDF4E exp: " + claims.getExpiration().toString());
         } catch (Exception exception){
             LOGGER.info(Emoji.ERROR + "Failed to create TOKEN ".concat(Emoji.ERROR));
             exception.printStackTrace();
@@ -297,7 +299,8 @@ public class AnchorSep10Challenge {
             throw new InvalidSep10ChallengeException(String.format("Transaction not signed by server: %s.", serverAccountId));
         }
         ChallengeTransaction challengeTransaction = new ChallengeTransaction(transaction,clientAccountId);
-        LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C readChallengeTransaction completed. "
+        String mm = Emoji.PANDA + Emoji.PANDA;
+        LOGGER.info(mm + "readChallengeTransaction completed. "
                 .concat(challengeTransaction.getClientAccountId()));
         return new ChallengeTransaction(transaction, clientAccountId);
     }
@@ -389,7 +392,7 @@ public class AnchorSep10Challenge {
 //            throw new InvalidSep10ChallengeException("Transaction has unrecognized signatures.");
 //        }
         String em = Emoji.LEAF + Emoji.LEAF + Emoji.LEAF + Emoji.LEAF;
-                LOGGER.info(em + " verifyChallengeTransactionSigners completed. Signers: "
+                LOGGER.info(em + "..... verifyChallengeTransactionSigners completed. Signers: "
                 .concat("" +signers.size()));
         return signersFound;
     }
@@ -469,7 +472,8 @@ public class AnchorSep10Challenge {
                 }
             }
         }
-        LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C verifyTransactionSignatures completed. Signers: "
+        String mm = Emoji.ALIEN + Emoji.ALIEN;
+        LOGGER.info(mm +"verifyTransactionSignatures completed. Signers: "
                 .concat("" +signers.size()));
         return signersFound;
     }

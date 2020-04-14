@@ -1,7 +1,6 @@
 package com.anchor.api.data.anchor;
 
-import com.anchor.api.data.kyc.OrganizationKYCFields;
-import com.anchor.api.data.kyc.PersonalKYCFields;
+import com.anchor.api.data.transfer.sep9.OrganizationKYCFields;
 
 public class Organization {
     String anchorId, organizationId, anchorName;
