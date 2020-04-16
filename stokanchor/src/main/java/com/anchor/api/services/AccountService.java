@@ -2,7 +2,10 @@ package com.anchor.api.services;
 
 
 import com.anchor.api.data.account.AccountResponseBag;
+import com.anchor.api.data.anchor.Agent;
+import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.transfer.sep10.AnchorSep10Challenge;
+import com.anchor.api.util.Emoji;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,11 +48,11 @@ public class AccountService {
         try {
             RootResponse serverResponse = server.root();
             LOGGER.info("\uD83E\uDD8B \uD83E\uDD8B \uD83C\uDF3C HorizonVersion: ".concat(serverResponse.getHorizonVersion()
-            .concat(" \uD83E\uDD8B NetworkPassphrase: ").concat(serverResponse.getNetworkPassphrase()
-                    .concat(" \uD83E\uDD8B StellarCoreVersion: ").concat(serverResponse.getStellarCoreVersion()
-                            .concat(" \uD83E\uDD8B CurrentProtocolVersion: ").concat("" + serverResponse.getCurrentProtocolVersion())))));
+                    .concat(" \uD83E\uDD8B NetworkPassphrase: ").concat(serverResponse.getNetworkPassphrase()
+                            .concat(" \uD83E\uDD8B StellarCoreVersion: ").concat(serverResponse.getStellarCoreVersion()
+                                    .concat(" \uD83E\uDD8B CurrentProtocolVersion: ").concat("" + serverResponse.getCurrentProtocolVersion())))));
             LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C \uD83C\uDF3C Connected to Stellar Horizon Server \uD83E\uDD8B \uD83E\uDD8B ".concat(G.toJson(serverResponse)
-            .concat(" \uD83C\uDF3C \uD83C\uDF3C ")) );
+                    .concat(" \uD83C\uDF3C \uD83C\uDF3C ")));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -133,8 +136,13 @@ public class AccountService {
                         "\uD83D\uDC99 should be: " + startingBalance + " " + G.toJson(bag));
                 return bag;
             } else {
-                LOGGER.warning("CreateAccountOperation ERROR: \uD83C\uDF45 resultXdr: "
+                LOGGER.warning(Emoji.NOT_OK + "CreateAccountOperation ERROR: \uD83C\uDF45 resultXdr: "
                         + submitTransactionResponse.getResultXdr().get());
+                if (submitTransactionResponse.getResultXdr().get()
+                        .equalsIgnoreCase("AAAAAAAAAGT/////AAAAAQAAAAAAAAAA/////gAAAAA=")) {
+                    throw new AccountUnderfundedException(sourceAccount.getAccountId()
+                    .concat(" is UNDER FUNDED"));
+                }
 
                 throw new Exception("CreateAccountOperation transactionResponse is NOT success");
             }
@@ -145,24 +153,108 @@ public class AccountService {
             throw new Exception("\uD83D\uDD34 Unable to create Account", e);
         }
     }
+    static class AccountUnderfundedException extends Exception {
+        public AccountUnderfundedException(String message) {
+            super(message);
+        }
+    }
 
-    public SubmitTransactionResponse issueAsset(
+    @Value("${anchorName}")
+    private String anchorName;
+    private Anchor anchor;
+    @Autowired
+    private CryptoService cryptoService;
+
+    public SubmitTransactionResponse fundAgentAccount(
+                                                      String accountToFund,
+                                                      String amount,
+                                                      String assetCode,
+                                                      String agentId,
+                                                      String limit) throws Exception {
+        LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 .......... fundAgentAccount ........ \uD83C\uDF40 " +
+                " \uD83C\uDF40 code: " + assetCode + " \uD83C\uDF40 amount: " + amount
+                + " accountToFund: " + accountToFund);
+        if (anchor == null) {
+            anchor = firebaseService.getAnchorByName(anchorName);
+        }
+        Agent agent = firebaseService.getAgent(agentId);
+        cryptoService.downloadSeedFile(anchor.getIssuingAccount().getAccountId());
+        byte[] bytes = cryptoService.readFile(anchor.getIssuingAccount().getAccountId());
+        String issuingSeed = cryptoService.decrypt(bytes);
+        KeyPair keyPair = KeyPair.fromSecretSeed(issuingSeed);
+
+        List<AssetBag> assets = getDefaultAssets(keyPair.getAccountId(), assetCode);
+        AccountResponse issuingAcct = server.accounts().account(keyPair.getAccountId());
+        Transaction.Builder transactionBuilder = new Transaction.Builder(issuingAcct, network);
+        Asset asset = null;
+        for (AssetBag mAsset : assets) {
+            if (mAsset.toString().equalsIgnoreCase(assetCode)) {
+                asset = mAsset.asset;
+            }
+        }
+        if (asset == null) {
+            throw new Exception(Emoji.NOT_OK + "Asset ".concat(assetCode)
+                    .concat(" not found ").concat(Emoji.NOT_OK));
+        }
+        transactionBuilder.addOperation(new ChangeTrustOperation.Builder(
+                asset, limit)
+                .build());
+
+
+        transactionBuilder.addMemo(Memo.text("Agent Fiat Token"));
+        transactionBuilder.setOperationFee(100);
+        transactionBuilder.setTimeout(360);
+        Transaction transaction = transactionBuilder.build();
+
+        transaction.sign(keyPair);
+        LOGGER.info("\uD83C\uDF40 GetTransactionsResponse has been signed by issuing KeyPair... \uD83C\uDF51 on to submission ... ");
+
+        SubmitTransactionResponse submitTransactionResponse = server.submitTransaction(transaction);
+        if (submitTransactionResponse.isSuccess()) {
+            LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 \uD83D\uDC99  " +
+                    "Stellar issueAsset: ChangeTrustOperation has been executed OK: \uD83C\uDF4E \uD83C\uDF4E isSuccess: " + submitTransactionResponse.isSuccess());
+            //todo - remove check ...
+            AccountResponse finalResp = server.accounts().account(keyPair.getAccountId());
+            try {
+                LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 \uD83D\uDC99 Distribution account after trust operations, " +
+                        "\uD83C\uDF4E check assets and balances \uD83C\uDF4E " + G.toJson(finalResp) + " \uD83C\uDF4E \uD83C\uDF4E \uD83C\uDF4E ");
+            } catch (Exception e) {
+                //ignore
+            }
+
+        } else {
+            LOGGER.warning("ChangeTrustOperation ERROR: \uD83C\uDF45 resultXdr: " + submitTransactionResponse.getResultXdr().get());
+            throw new Exception("ChangeTrustOperation transactionResponse is \uD83C\uDF45 NOT success \uD83C\uDF45");
+        }
+        return submitTransactionResponse;
+    }
+/*
+    🍊 🍊 🍊
+    Anchors: issuing assets
+    Any account can issue assets on the Stellar network. Entities that issue assets are called anchors.
+    Anchors can be run by individuals, small businesses, local communities, nonprofits, organizations, etc.
+    Any type of financial institution–a bank, a payment processor–can be an anchor.
+
+    🍎 Each anchor has an issuing account from which it issues the asset.
+ */
+    public SubmitTransactionResponse createTrustLines(
             String issuingAccount, String distributionSeed, String limit, String assetCode) throws Exception {
-        LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 .......... issueAsset ........ \uD83C\uDF40 " +
+        LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 .......... createTrustLines ........ \uD83C\uDF40 " +
                 " \uD83C\uDF40 code: " + assetCode + " \uD83C\uDF40 limit: " + limit
                 + " issuingAccount: " + issuingAccount);
         try {
             KeyPair distKeyPair = KeyPair.fromSecretSeed(distributionSeed);
-            Asset asset = Asset.createNonNativeAsset(assetCode, issuingAccount);
-            List<Asset> assets = getDefaultAssets(issuingAccount, assetCode);
-            assets.add(asset);
+            AssetBag assetBag = new AssetBag(assetCode,Asset.createNonNativeAsset(assetCode, issuingAccount));
+            List<AssetBag> assets = getDefaultAssets(issuingAccount, assetCode);
+            assets.add(assetBag);
             LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51 " + assets.size()
-                    + " Fiat Currency Assets created,  1 custom asset: " + asset.getType());
+                    + " Fiat Currency Assets created,  1 custom asset: " + assetBag.assetCode);
 
-            server.accounts().forAsset((AssetTypeCreditAlphaNum) asset).stream(new EventListener<AccountResponse>() {
+            server.accounts().forAsset((AssetTypeCreditAlphaNum) assetBag.asset)
+                    .stream(new EventListener<AccountResponse>() {
                 @Override
                 public void onEvent(AccountResponse object) {
-
+                    LOGGER.info("onEvent ... accountId".concat(object.getAccountId()));
                 }
 
                 @Override
@@ -176,13 +268,16 @@ public class AccountService {
                     + " \uD83C\uDF51 ... add trust lines ...");
 
             Transaction.Builder transactionBuilder = new Transaction.Builder(distributionAccountResponse, network);
-            for (Asset mAsset : assets) {
+            LOGGER.info(Emoji.STAR.concat(Emoji.STAR) + "Creating ChangeTrustOperation for "
+            .concat(" " + assets.size()).concat(" assets ".concat(Emoji.RED_TRIANGLE)));
+            for (AssetBag mAsset : assets) {
                 transactionBuilder.addOperation(new ChangeTrustOperation.Builder(
-                        mAsset, limit)
+                        mAsset.asset, limit)
                         .build());
+
             }
 
-            transactionBuilder.addMemo(Memo.text("Issue Fiat Tokens"));
+            transactionBuilder.addMemo(Memo.text("Create Trust Lines"));
             transactionBuilder.setOperationFee(100);
             transactionBuilder.setTimeout(360);
             Transaction transaction = transactionBuilder.build();
@@ -213,31 +308,42 @@ public class AccountService {
         }
     }
 
-    private List<Asset> getDefaultAssets(String issuingAccount, String customAsset) {
-        List<Asset> mList = new ArrayList<>();
+    public List<AssetBag> getDefaultAssets(String issuingAccount, String customAsset) {
+        List<AssetBag> mList = new ArrayList<>();
         boolean addCurrencies = defaultCurrencies.equalsIgnoreCase("true");
         if (!addCurrencies) {
             return mList;
         }
 
         if (!customAsset.equalsIgnoreCase("USD")) {
-            mList.add(Asset.createNonNativeAsset("USD",issuingAccount));
+            mList.add(new AssetBag("USD", Asset.createNonNativeAsset("USD", issuingAccount)));
         }
         if (!customAsset.equalsIgnoreCase("GBP")) {
-            mList.add(Asset.createNonNativeAsset("GBP",issuingAccount));
+            mList.add(new AssetBag("GBP",Asset.createNonNativeAsset("GBP", issuingAccount)));
         }
         if (!customAsset.equalsIgnoreCase("CNY")) {
-            mList.add(Asset.createNonNativeAsset("CNY",issuingAccount));
+            mList.add(new AssetBag("CNY",Asset.createNonNativeAsset("CNY", issuingAccount)));
         }
         if (!customAsset.equalsIgnoreCase("CHF")) {
-            mList.add(Asset.createNonNativeAsset("CHF",issuingAccount));
+            mList.add(new AssetBag("CHF", Asset.createNonNativeAsset("CHF", issuingAccount)));
         }
         if (!customAsset.equalsIgnoreCase("EUR")) {
-            mList.add(Asset.createNonNativeAsset("EUR",issuingAccount));
+            mList.add(new AssetBag("EUR",Asset.createNonNativeAsset("EUR", issuingAccount)));
         }
 
         return mList;
     }
+
+    static class AssetBag {
+        String assetCode;
+        Asset asset;
+
+        public AssetBag(String assetCode, Asset asset) {
+            this.assetCode = assetCode;
+            this.asset = asset;
+        }
+    }
+
     public SubmitTransactionResponse createAsset(String issuingAccountSeed, String distributionAccount,
                                                  String assetCode, String amount) throws Exception {
         LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51  .......... createAsset ........ \uD83C\uDF40 " +
@@ -247,20 +353,20 @@ public class AccountService {
         try {
             setServerAndNetwork();
             KeyPair issuingKeyPair = KeyPair.fromSecretSeed(issuingAccountSeed);
-            Asset asset = Asset.createNonNativeAsset(assetCode, issuingKeyPair.getAccountId());
-            List<Asset> assets = getDefaultAssets(issuingKeyPair.getAccountId(), assetCode);
+            AssetBag asset = new AssetBag(assetCode,Asset.createNonNativeAsset(assetCode, issuingKeyPair.getAccountId()));
+            List<AssetBag> assets = getDefaultAssets(issuingKeyPair.getAccountId(), assetCode);
             assets.add(asset);
             LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51 " + assets.size()
-                    + " Fiat Currency Assets created,  1 custom asset: " + asset.getType());
+                    + " Fiat Currency Assets created,  1 custom asset: " + asset.assetCode);
 
             AccountResponse issuingAccount = server.accounts().account(issuingKeyPair.getAccountId());
             LOGGER.info("\uD83C\uDF40 Issuing account: " + issuingAccount.getAccountId()
                     + " \uD83C\uDF51 ... create transaction with multiple payment operations ... starting ...");
 
             Transaction.Builder trBuilder = new Transaction.Builder(issuingAccount, network);
-            for (Asset mAsset : assets) {
+            for (AssetBag mAsset : assets) {
                 trBuilder.addOperation(new PaymentOperation.Builder(
-                        distributionAccount, mAsset, amount)
+                        distributionAccount, mAsset.asset, amount)
                         .setSourceAccount(issuingKeyPair.getAccountId())
                         .build());
             }
@@ -307,7 +413,7 @@ public class AccountService {
                 try {
                     firebaseService.addAccountResponse(accountResponse);
                 } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE,"AccountListener failed", e);
+                    LOGGER.log(Level.SEVERE, "AccountListener failed", e);
                 }
             }
 
@@ -371,8 +477,9 @@ public class AccountService {
 //        });
 
     }
+
     public SubmitTransactionResponse setOptions(final String seed, int clearFlags, int highThreshold, int lowThreshold,
-                                                   String inflationDestination, int masterKeyWeight) throws Exception {
+                                                String inflationDestination, int masterKeyWeight) throws Exception {
 
         setServerAndNetwork();
         KeyPair keyPair = KeyPair.fromSecretSeed(seed);
@@ -404,8 +511,10 @@ public class AccountService {
             throw new Exception(msg, e);
         }
     }
+
     @Autowired
     AnchorSep10Challenge anchorSep10Challenge;
+
     public String handleChallenge(final String seed) throws Exception {
 
         setServerAndNetwork();
@@ -416,6 +525,7 @@ public class AccountService {
         return null;
 
     }
+
     private void setServerAndNetwork() {
         if (status == null) {
             LOGGER.info("\uD83D\uDE08 \uD83D\uDC7F Set status to dev because status is NULL");
@@ -433,6 +543,7 @@ public class AccountService {
 
         }
     }
+
     public Server getServer() {
         setServerAndNetwork();
         return server;

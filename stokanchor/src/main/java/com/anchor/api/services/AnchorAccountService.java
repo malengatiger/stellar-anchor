@@ -3,7 +3,6 @@ package com.anchor.api.services;
 import com.anchor.api.data.account.Account;
 import com.anchor.api.data.account.AccountResponseBag;
 import com.anchor.api.data.anchor.Anchor;
-import com.anchor.api.data.anchor.AnchorBag;
 import com.anchor.api.data.anchor.AnchorUser;
 import com.anchor.api.util.Emoji;
 import com.google.firebase.auth.UserRecord;
@@ -15,10 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import org.stellar.sdk.Asset;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -55,7 +56,27 @@ public class AnchorAccountService {
         LOGGER.info(Emoji.DRUM + Emoji.DRUM + "AnchorAccountService Constructor fired ..." +
                 Emoji.HEART_ORANGE + "manages the setup of Anchor base and issuing accounts");
     }
+/*
+    🍎 🍎 🍎 Assets
+    The Stellar distributed network can be used to track, hold, and transfer any type of asset: dollars, euros, bitcoin, stocks, gold, and other tokens of value. Any asset on the network can be traded and exchanged with any other.
 
+    Other than lumens (see below), all assets have
+
+    Asset type: e.g., USD or BTC
+    Issuer: the account that created the asset
+    Trustlines
+    When you hold assets in Stellar, you’re actually holding credit from a particular issuer.
+    The issuer has agreed that it will trade you its credit on the Stellar network for the corresponding asset–e.g.,
+    fiat currency, precious metal–outside of Stellar. Let’s say that Scott issues oranges as credit on the network.
+    If you hold orange credits, you and Scott have an agreement based on trust, or a trustline: you both agree that when you give Scott an orange credit, he gives you an orange.
+
+    When you hold an asset, you must trust the issuer to properly redeem its credit.
+    Since users of Stellar will not want to trust just any issuer, accounts must explicitly
+    trust an issuing account before they’re able to hold the issuer’s credit.
+    In the example above, you must explicitly trust Scott before you can hold orange credits.
+
+    To trust an issuing account, you create a trustline. Trustlines are entries that persist in the Stellar ledger. They track the limit for which your account trusts the issuing account and the amount of credit from the issuing account that your account currently holds.
+ */
     public Anchor createAnchorAccounts(Anchor newAnchor, String password, String assetCode,
                                           String assetAmount, String fundingSeed, String startingBalance)
             throws Exception {
@@ -112,24 +133,37 @@ public class AnchorAccountService {
                 distributionAccount.getSecretSeed());
 
         try {
-            SubmitTransactionResponse transactionResponse = accountService.issueAsset(
+
+            SubmitTransactionResponse createTrustResponse = accountService.createTrustLines(
                     issuingAccount.getAccountResponse().getAccountId(),
                     distributionAccount.getSecretSeed(),
                     limit, assetCode);
             LOGGER.info(Emoji.FLOWER_RED + Emoji.FLOWER_RED + "AnchorAccountService: createAnchorAccounts " +
-                    ".... "+Emoji.HAPPY+" TrustLine GetTransactionsResponse Response isSuccess:  " + transactionResponse.isSuccess());
+                    ".... "+Emoji.HAPPY+" TrustLine GetTransactionsResponse Response isSuccess:  " + createTrustResponse.isSuccess());
 
-            SubmitTransactionResponse response = accountService.createAsset(
-                    issuingAccount.getSecretSeed(),
-                    distributionAccount.getAccountResponse().getAccountId(),
-                    assetCode,assetAmount);
+            // Create assets for all asset types
+            AccountService.AssetBag bag = new AccountService.AssetBag(assetCode, Asset.createNonNativeAsset(assetCode, issuingAccount.getAccountResponse().getAccountId()));
+            List< AccountService.AssetBag > assets = accountService.getDefaultAssets(issuingAccount.getAccountResponse().getAccountId(),
+                    assetCode);
+            assets.add(0,bag);
+            for (AccountService.AssetBag assetBag : assets) {
+                LOGGER.info(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD) +
+                        "Creating Asset .... ".concat(assetBag.assetCode)
+                                .concat(" with assetAmount: ".concat(assetAmount)));
+                SubmitTransactionResponse createAssetResponse = accountService.createAsset(
+                        issuingAccount.getSecretSeed(),
+                        distributionAccount.getAccountResponse().getAccountId(),
+                        assetBag.assetCode,assetAmount);
 
-            LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 AnchorAccountService: createAnchorAccounts " +
-                    ".... \uD83C\uDF45 Payment GetTransactionsResponse Response isSuccess:  " + response.isSuccess());
+                LOGGER.info(Emoji.HASH.concat(Emoji.HAND2)
+                        .concat(" Asset " + assetBag.assetCode + " \uD83C\uDF4E created? "
+                                + createAssetResponse.isSuccess())
+                .concat(" asset amount: ").concat(assetAmount));
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.severe("GetTransactionsResponse for Asset Issue/Payment failed" + Emoji.ERROR);
+            LOGGER.severe(Emoji.NOT_OK + "Trustline/Asset creation failed" + Emoji.ERROR);
         }
         //🥬 🌼
         LOGGER.info(Emoji.LEAF + Emoji.LEAF + Emoji.LEAF +
