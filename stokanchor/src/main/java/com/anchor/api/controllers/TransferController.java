@@ -14,6 +14,7 @@ import com.anchor.api.data.transfer.sep26.WithdrawOKResponse;
 import com.anchor.api.data.transfer.sep27.InfoServerResponse;
 import com.anchor.api.services.AccountService;
 import com.anchor.api.services.FirebaseService;
+import com.anchor.api.util.Emoji;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -213,19 +214,20 @@ public class TransferController {
             Content-Type: application/json, body: {"transaction": "<signed XDR>"}
      */
     @PostMapping(value = "/token", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> token(@RequestParam String transaction, @RequestParam String seed) throws Exception {
+    public ResponseEntity<?> token(@RequestParam String transaction) throws Exception {
         try {
-            String token = anchorSep10Challenge.getToken(transaction, seed);
-            LOGGER.info("Token returned");
+            String token = anchorSep10Challenge.getToken(transaction);
+            LOGGER.info(emm + "Token returned: ".concat(token).concat(emm));
             return ResponseEntity.ok(new JWTToken(token));
         } catch (Exception e) {
-            String msg = "Token acquisition failed";
+            String msg = Emoji.ERROR + "Token acquisition failed " + Emoji.ERROR + e.getMessage();
             LOGGER.info(msg);
             return ResponseEntity.badRequest()
                     .body(msg);
         }
     }
 
+    public static final String emm = Emoji.BLUE_DOT + Emoji.BLUE_DOT + Emoji.BLUE_DOT + Emoji.BLUE_DOT ;
     /*
         🌼 One of id, 🥏 stellar_transaction_id or 🥏 external_transaction_id is required.
 
@@ -302,4 +304,11 @@ public class TransferController {
 
     }
 
+    class Error {
+        String message;
+
+        public Error(String message) {
+            this.message = message;
+        }
+    }
 }

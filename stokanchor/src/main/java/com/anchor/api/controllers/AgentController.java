@@ -72,14 +72,6 @@ public class AgentController {
         return message;
     }
 
-    @PostMapping(value = "/apply", produces = MediaType.APPLICATION_JSON_VALUE)
-    public LoanApplication addApplication(@RequestBody LoanApplication agent) throws Exception {
-        LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AgentController:apply ...");
-        LoanApplication application = agentService.addLoanApplication(agent);
-        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + G.toJson(application));
-        return application;
-    }
-
     @PostMapping(value = "/approve", produces = MediaType.APPLICATION_JSON_VALUE)
     public LoanApplication approveApplication(@RequestBody LoanApplication agent) throws Exception {
         LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AgentController:approve ...");
@@ -114,7 +106,8 @@ public class AgentController {
     }
     @PostMapping(value = "/loanApplication", produces = MediaType.APPLICATION_JSON_VALUE)
     public LoanApplication loanApplication(@RequestBody LoanApplication loanApplication) throws Exception {
-        LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AgentController:loanApplication ...");
+        LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS).concat(Emoji.RAIN_DROPS)
+                + "AgentController:loanApplication ...");
         LoanApplication org = agentService.addLoanApplication(loanApplication);
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + G.toJson(org));
         return org;

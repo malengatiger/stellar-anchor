@@ -8,7 +8,7 @@ import com.google.gson.annotations.SerializedName;
     🍎 🍎 The Client wraps the functionality of Stellar Protocol SEP 009 and extends it for other Anchor related shit.
          Client is created by Agent and will accept loans and other interaction with the Agent
 
-    🌼 🌼 SEP 009 🌼 🌼 🌼 🌼 🌼 🌼 🌼 🌼
+    🌼 🌼 SEP 009, and 🥦 WHAT THE FUCK!! 🥦 weirdly looks like SEP 012 🌼 🌼 🌼 🌼 🌼 🌼 🌼 🌼
     This SEP defines a standard way for stellar wallets to upload KYC (or other) information to anchors
     that implement non-interactive SEP-6.
 
@@ -37,7 +37,7 @@ import com.google.gson.annotations.SerializedName;
     DELETE /customer: Idempotent upload of customer info
 
 
-    🌼 🌼 SEP 009 🌼 🌼 Customer PUT
+    🌼 🌼 SEP 009 🌼  SEP 012 ??? 🌼 Customer PUT
     Upload customer information to an anchor in an authenticated and idempotent fashion.
 
     PUT [KYC_SERVER || TRANSFER_SERVER]/customer
@@ -97,9 +97,7 @@ public class Client {
             password,
             secretSeed;
 
-    @SerializedName("memo_type")
-    @Expose
-    private String memoType;
+    private String memo_type;
     private PersonalKYCFields personalKYCFields;
 
     public PersonalKYCFields getPersonalKYCFields() {
@@ -116,12 +114,12 @@ public class Client {
         this.memo = memo;
     }
 
-    public String getMemoType() {
-        return memoType;
+    public String getMemo_type() {
+        return memo_type;
     }
 
-    public void setMemoType(String memoType) {
-        this.memoType = memoType;
+    public void setMemo_type(String memo_type) {
+        this.memo_type = memo_type;
     }
 
     public String getSecretSeed() {

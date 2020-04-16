@@ -72,17 +72,42 @@ public class AgentService {
 
     public LoanApplication approveApplication(LoanApplication application) throws Exception {
 
+        LOGGER.info(Emoji.HEART_GREEN.concat(Emoji.HEART_GREEN)
+        .concat("Approve LoanApplication: ".concat(G.toJson(application))));
+        Agent agent = firebaseService.getAgent(application.getAgentId());
+        if (agent == null) {
+            throw new Exception("Agent not found");
+        }
+        //todo - check agent balance for this asset code ...
+        cryptoService.downloadSeedFile(agent.getStellarAccountId());
+        byte[] bytes = cryptoService.readFile(agent.getStellarAccountId());
+        String seed = cryptoService.decrypt(bytes);
+        LOGGER.info(Emoji.HAND1.concat(Emoji.HAND2) + "Agent seed for eventual payment to Client: ".concat(seed));
+        if (application.getAgentSeed() != null) {
+            if (!seed.equalsIgnoreCase(application.getAgentSeed())) {
+                throw new Exception(Emoji.ERROR.concat(Emoji.ERROR) + "Bad seed rising");
+            }
+        } else {
+            throw new Exception("Agent seed missing");
+        }
         application.setApproved(true);
-        boolean ok = sendPayment(application.getAgentSeed(), application.getAssetCode(), application.getAmount(),
+        boolean ok = sendPayment(seed, application.getAssetCode(), application.getAmount(),
                 application.getClientAccount());
         application.setPaid(ok);
         if (ok) {
             application.setDatePaid(new DateTime().toDateTimeISO().toString());
             firebaseService.updateLoanApplication(application);
             //todo - send email to Client notifying approval and payment
+            LOGGER.info(Emoji.OK.concat(Emoji.OK.concat(Emoji.OK)) +
+                    "Loan application approved and funds transferred to Client "
+                            .concat(G.toJson(application)));
             return application;
+        } else {
+            String msg = Emoji.NOT_OK.concat(Emoji.ERROR).concat(Emoji.ERROR)
+                    .concat("LoanApplication Approval Failed, looks like Payment fell down");
+            LOGGER.info(msg);
+            throw new Exception(msg);
         }
-        throw new Exception(Emoji.ERROR + "LoanApplication Approval Failed");
     }
 
     public LoanApplication declineApplication(LoanApplication application) throws Exception {
@@ -111,7 +136,14 @@ public class AgentService {
         if (application.getAgentId() == null) {
             throw new Exception("Agent is missing");
         }
-
+        if (application.getClientId() == null) {
+            throw new Exception("Client is missing");
+        }
+        if (application.getLoanPeriodInMonths() == 0) {
+            throw new Exception("LoanPeriodInMonths should be > 0");
+        }
+        application.setDate(new DateTime().toDateTimeISO().toString());
+        application.setLoanId(UUID.randomUUID().toString());
         application.setApproved(false);
         String msg = firebaseService.addLoanApplication(application);
         LOGGER.info(msg);
@@ -283,6 +315,7 @@ public class AgentService {
 
     public boolean sendPayment(String seed, String assetCode, String amount,
                                String destinationAccount) throws Exception {
+        LOGGER.info(Emoji.DICE.concat(Emoji.DICE) + ".... Sending to PaymentService ....");
         SubmitTransactionResponse response = paymentService.sendPayment(
                 seed, assetCode, amount, destinationAccount);
         LOGGER.info(Emoji.LEAF + Emoji.RED_APPLE +
