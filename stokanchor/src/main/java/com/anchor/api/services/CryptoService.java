@@ -106,12 +106,12 @@ public class CryptoService {
     /** Decrypts the provided ciphertext with the specified crypto key. */
     public String decrypt(byte[] encryptedStringBytes )
             throws IOException {
-        LOGGER.info("\uD83D\uDD11 \uD83D\uDD11 .............. decrypting byte[] ............ \uD83C\uDF4E ");
+//        LOGGER.info("\uD83D\uDD11 \uD83D\uDD11 .............. decrypting byte[] ............ \uD83C\uDF4E ");
         try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {
             String resourceName = CryptoKeyPathName.format(projectId, locationId, keyRingId, cryptoKeyId);
             DecryptResponse response = client.decrypt(resourceName, ByteString.copyFrom(encryptedStringBytes));
-            LOGGER.info("\uD83D\uDD11 \uD83D\uDD11 \uD83D\uDD11 BYTE[] DecryptResponse response: \uD83E\uDD4F ".concat(response.getPlaintext().toStringUtf8())
-            .concat(" \uD83E\uDD4F "));
+//            LOGGER.info("\uD83D\uDD11 \uD83D\uDD11 \uD83D\uDD11 BYTE[] DecryptResponse response: \uD83E\uDD4F ".concat(response.getPlaintext().toStringUtf8())
+//            .concat(" \uD83E\uDD4F "));
             return response.getPlaintext().toStringUtf8();
         }
     }
@@ -136,7 +136,7 @@ public class CryptoService {
         Path path = Paths.get(DOWNLOAD_PATH.concat(accountId));
         byte[] read = Files.readAllBytes(path);
         Files.delete(path);
-        LOGGER.info("\uD83D\uDCA7 Local Seed File deleted after reading: \uD83D\uDCA7 ".concat(DOWNLOAD_PATH.concat(accountId)));
+//        LOGGER.info("\uD83D\uDCA7 Local Seed File deleted after reading: \uD83D\uDCA7 ".concat(DOWNLOAD_PATH.concat(accountId)));
         return read;
     }
 
@@ -159,8 +159,6 @@ public class CryptoService {
     public static final String DOWNLOAD_PATH = "downloaded_seed";
 
     public void downloadSeedFile(String accountId) {
-        LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C Downloading encrypted seed file from Cloud Storage " +
-                ".... \uD83C\uDF3C to path: ").concat(DOWNLOAD_PATH.concat(accountId)));
         Path destFilePath = Paths.get(DOWNLOAD_PATH.concat(accountId));
         Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
 

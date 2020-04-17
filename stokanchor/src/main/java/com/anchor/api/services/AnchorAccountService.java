@@ -95,11 +95,11 @@ public class AnchorAccountService {
         AnchorUser anchorUser = createAnchorUser(anchor, password);
         anchor.setAnchorUser(anchorUser);
 
-        AccountResponseBag baseAccount = accountService.createAndFundStellarAccount(
+        AccountResponseBag baseAccount = accountService.createAndFundAnchorAccount(
                 fundingSeed,startingBalance);
-        AccountResponseBag distributionAccount = accountService.createAndFundStellarAccount(
+        AccountResponseBag distributionAccount = accountService.createAndFundAnchorAccount(
                 baseAccount.getSecretSeed(),anchorStartingBalance);
-        AccountResponseBag issuingAccount = accountService.createAndFundStellarAccount(
+        AccountResponseBag issuingAccount = accountService.createAndFundAnchorAccount(
                 baseAccount.getSecretSeed(),anchorStartingBalance);
 
         Account base = new Account();
@@ -133,19 +133,24 @@ public class AnchorAccountService {
                 distributionAccount.getSecretSeed());
 
         try {
-
-            SubmitTransactionResponse createTrustResponse = accountService.createTrustLines(
-                    issuingAccount.getAccountResponse().getAccountId(),
-                    distributionAccount.getSecretSeed(),
-                    limit, assetCode);
-            LOGGER.info(Emoji.FLOWER_RED + Emoji.FLOWER_RED + "AnchorAccountService: createAnchorAccounts " +
-                    ".... "+Emoji.HAPPY+" TrustLine GetTransactionsResponse Response isSuccess:  " + createTrustResponse.isSuccess());
-
-            // Create assets for all asset types
             AccountService.AssetBag bag = new AccountService.AssetBag(assetCode, Asset.createNonNativeAsset(assetCode, issuingAccount.getAccountResponse().getAccountId()));
             List< AccountService.AssetBag > assets = accountService.getDefaultAssets(issuingAccount.getAccountResponse().getAccountId(),
                     assetCode);
             assets.add(0,bag);
+
+            // Create trustlines for all asset types
+            for (AccountService.AssetBag assetBag : assets) {
+                SubmitTransactionResponse createTrustResponse = accountService.createTrustLine(
+                        issuingAccount.getAccountResponse().getAccountId(),
+                        distributionAccount.getSecretSeed(),
+                        limit, assetBag.assetCode);
+
+                LOGGER.info(Emoji.FLOWER_RED + Emoji.FLOWER_RED + "AnchorAccountService: createTrustLine for asset: " + assetBag.assetCode +
+                        ".... "+Emoji.HAPPY+" TrustLine Response isSuccess:  " + createTrustResponse.isSuccess());
+            }
+
+            // Create assets for all asset types
+
             for (AccountService.AssetBag assetBag : assets) {
                 LOGGER.info(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD) +
                         "Creating Asset .... ".concat(assetBag.assetCode)

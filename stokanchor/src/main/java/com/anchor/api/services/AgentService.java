@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.io.IOException;
@@ -239,7 +238,7 @@ public class AgentService {
         byte[] bytes = cryptoService.readFile(anchor.getBaseAccount().getAccountId());
         String seed = cryptoService.decrypt(bytes);
 
-        AccountResponseBag bag = accountService.createAndFundStellarAccount(seed, clientStartingBalance);
+        AccountResponseBag bag = accountService.createAndFundAnchorAccount(seed, clientStartingBalance);
         LOGGER.info(Emoji.HEART_PURPLE + Emoji.HEART_PURPLE +
                 "Client Stellar account has been created and funded with ... "
                         .concat(clientStartingBalance).concat(" XLM"));
@@ -282,31 +281,64 @@ public class AgentService {
                     .concat(" ").concat(Emoji.ERROR));
             throw new Exception(Emoji.ERROR + "Agent already exists for this Anchor");
         }
-        //create firebase auth user
-        UserRecord record = firebaseService.createUser(agent.getFullName(),
-                agent.getPersonalKYCFields().getEmail_address(), agent.getPassword());
-        agent.setAgentId(record.getUid());
-        agent.setDateRegistered(new DateTime().toDateTimeISO().toString());
-        agent.setDateUpdated(new DateTime().toDateTimeISO().toString());
-        cryptoService.downloadSeedFile(anchor.getBaseAccount().getAccountId());
-        byte[] bytes = cryptoService.readFile(anchor.getBaseAccount().getAccountId());
-        String seed = cryptoService.decrypt(bytes);
+
+//        //get seed for anchor distribution account
+//        cryptoService.downloadSeedFile(anchor.getDistributionAccount().getAccountId());
+//        byte[] bytes = cryptoService.readFile(anchor.getDistributionAccount().getAccountId());
+//        String seed = cryptoService.decrypt(bytes);
 //  🍅
-        AccountResponseBag bag = accountService.createAndFundStellarAccount(seed, agentStartingBalance);
+        AccountResponseBag bag = accountService.createAndFundUserAccount(agentStartingBalance,
+                agent.getFiatBalance(), agent.getFiatLimit());
         LOGGER.info(Emoji.RED_APPLE + Emoji.RED_APPLE +
                 "Agent Stellar account has been created and funded with ... "
-                        .concat(agentStartingBalance).concat(" XLM"));
+                        .concat(agentStartingBalance).concat(" XLM; secretSeed: ".concat(bag.getSecretSeed())));
         cryptoService.encrypt(bag.getAccountResponse().getAccountId(), bag.getSecretSeed());
-        agent.setStellarAccountId(bag.getAccountResponse().getAccountId());
-        agent.setExternalAccountId("Not Known Yet");
-        String savePassword = agent.getPassword();
-        agent.setPassword(null);
-        firebaseService.addAgent(agent);
-        sendEmail(agent);
-        LOGGER.info((Emoji.LEAF + Emoji.LEAF +
-                "Agent has been added to Firestore ").concat(G.toJson(agent)));
-        agent.setPassword(savePassword);
-        agent.setSecretSeed(bag.getSecretSeed());
+
+        //todo - create trustlines and pay from anchor distribution account
+        List<AccountService.AssetBag> assetBags = accountService.getDefaultAssets(
+                anchor.getIssuingAccount().getAccountId(),"assetCode");
+        cryptoService.downloadSeedFile(anchor.getIssuingAccount().getAccountId());
+        byte[] bytes2 = cryptoService.readFile(anchor.getIssuingAccount().getAccountId());
+        String issuingAccountSeed = cryptoService.decrypt(bytes2);
+
+        LOGGER.info(Emoji.WARNING.concat(Emoji.WARNING) + "createAgent:.... Creating Agent Fiat Asset Balances .... userSeed: "
+        .concat(bag.getSecretSeed()));
+        //todo - what, exactly is limit?
+        for (AccountService.AssetBag assetBag : assetBags) {
+            accountService.createTrustLine(anchor.getIssuingAccount().getAccountId(),bag.getSecretSeed(),agent.getFiatLimit(),
+                    assetBag.assetCode);
+            accountService.createAsset(issuingAccountSeed,anchor.getDistributionAccount().getAccountId(),
+                    assetBag.assetCode, agent.getFiatBalance());
+        }
+        //create firebase auth user
+        String savedPassword;
+        try {
+            LOGGER.info(Emoji.LIGHTNING.concat(Emoji.LIGHTNING.concat(Emoji.LIGHTNING))
+            .concat("Check agent, password seems to be missing .......".concat(G.toJson(agent))));
+            agent.setStellarAccountId(bag.getAccountResponse().getAccountId());
+            agent.setExternalAccountId("Not Known Yet");
+
+            UserRecord record = firebaseService.createUser(agent.getFullName(),
+                    agent.getPersonalKYCFields().getEmail_address(), agent.getPassword());
+            agent.setAgentId(record.getUid());
+            agent.setDateRegistered(new DateTime().toDateTimeISO().toString());
+            agent.setDateUpdated(new DateTime().toDateTimeISO().toString());
+            savedPassword = agent.getPassword();
+            agent.setPassword(null);
+            firebaseService.addAgent(agent);
+            sendEmail(agent);
+            LOGGER.info((Emoji.LEAF + Emoji.LEAF +
+                    "Agent has been added to Firestore without seed or password ").concat(G.toJson(agent)));
+            agent.setPassword(savedPassword);
+            agent.setSecretSeed(bag.getSecretSeed());
+        } catch (Exception e) {
+            String msg = Emoji.NOT_OK.concat(Emoji.ERROR)
+                    .concat("Firebase error: ".concat(e.getMessage()));
+            LOGGER.info(msg);
+            throw new Exception(msg);
+        }
+
+
         return agent;
     }
 

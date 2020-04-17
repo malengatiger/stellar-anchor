@@ -49,19 +49,16 @@ public class AgentController {
      * @throws Exception
      */
     @PostMapping(value = "/createAgent", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createAgent(@RequestBody Agent agent) throws Exception {
+    public Agent createAgent(@RequestBody Agent agent) throws Exception {
         LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AgentController:createAgent ...");
-        try {
-            Agent mAgent = agentService.createAgent(agent);
-            LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + "Anchor returns Agent with a new Stellar account:" +
-                    " \uD83C\uDF4E "
-                    + G.toJson(mAgent));
-            return ResponseEntity.ok(mAgent);
-        } catch (Exception e) {
-            LOGGER.info("CreateAgent Failed", e);
-            return ResponseEntity.badRequest()
-                    .body("Create Agent Failed");
-        }
+
+        //todo - externalize variables .....
+        Agent mAgent = agentService.createAgent(agent);
+        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + "Anchor returns Agent with a new Stellar account:" +
+                " \uD83C\uDF4E "
+                + G.toJson(mAgent));
+        return mAgent;
+
     }
 
     @PostMapping(value = "/updateAgent", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -100,10 +97,11 @@ public class AgentController {
     public Organization addOrganization(@RequestBody Organization organization) throws Exception {
         LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AgentController:addOrganization ...");
 
-            Organization org = agentService.addOrganization(organization);
-            LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + G.toJson(org));
-            return org;
+        Organization org = agentService.addOrganization(organization);
+        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + G.toJson(org));
+        return org;
     }
+
     @PostMapping(value = "/loanApplication", produces = MediaType.APPLICATION_JSON_VALUE)
     public LoanApplication loanApplication(@RequestBody LoanApplication loanApplication) throws Exception {
         LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS).concat(Emoji.RAIN_DROPS)
@@ -112,6 +110,7 @@ public class AgentController {
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + G.toJson(org));
         return org;
     }
+
     @PostMapping(value = "/approveLoanApplication", produces = MediaType.APPLICATION_JSON_VALUE)
     public LoanApplication approveLoanApplication(@RequestBody LoanApplication loanApplication) throws Exception {
         LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AgentController:approveLoanApplication ...");
@@ -119,6 +118,7 @@ public class AgentController {
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + G.toJson(org));
         return org;
     }
+
     @PostMapping(value = "/declineLoanApplication", produces = MediaType.APPLICATION_JSON_VALUE)
     public LoanApplication declineLoanApplication(@RequestBody LoanApplication loanApplication) throws Exception {
         LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AgentController:declineLoanApplication ...");
@@ -126,6 +126,7 @@ public class AgentController {
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + G.toJson(org));
         return org;
     }
+
     @PostMapping(value = "/loanPayment", produces = MediaType.APPLICATION_JSON_VALUE)
     public LoanPayment loanPayment(@RequestBody LoanPayment loanPayment) throws Exception {
         LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AgentController:loanPayment ...");

@@ -19,7 +19,7 @@ public class Agent {
             dateUpdated,
             externalAccountId,
             stellarAccountId,
-            organizationId,
+            organizationId, fiatBalance, fiatLimit,
             password, secretSeed;
 
     PersonalKYCFields personalKYCFields;
@@ -36,6 +36,22 @@ public class Agent {
     }
     public void setPersonalKYCFields(PersonalKYCFields personalKYCFields) {
         this.personalKYCFields = personalKYCFields;
+    }
+
+    public String getFiatBalance() {
+        return fiatBalance;
+    }
+
+    public void setFiatBalance(String fiatBalance) {
+        this.fiatBalance = fiatBalance;
+    }
+
+    public String getFiatLimit() {
+        return fiatLimit;
+    }
+
+    public void setFiatLimit(String fiatLimit) {
+        this.fiatLimit = fiatLimit;
     }
 
     public String getSecretSeed() {
