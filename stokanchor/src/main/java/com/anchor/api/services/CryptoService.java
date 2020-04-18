@@ -158,7 +158,12 @@ public class CryptoService {
     }
     public static final String DOWNLOAD_PATH = "downloaded_seed";
 
-    public void downloadSeedFile(String accountId) {
+    public String getDecryptedSeed(String accountId) throws IOException {
+        downloadSeedFile(accountId);
+        byte[] bytes = readFile(accountId);
+        return decrypt(bytes);
+    }
+    private void downloadSeedFile(String accountId) {
         Path destFilePath = Paths.get(DOWNLOAD_PATH.concat(accountId));
         Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
 

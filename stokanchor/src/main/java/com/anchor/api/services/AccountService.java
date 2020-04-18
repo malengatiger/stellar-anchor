@@ -2,12 +2,12 @@ package com.anchor.api.services;
 
 
 import com.anchor.api.data.account.AccountResponseBag;
-import com.anchor.api.data.anchor.Agent;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.transfer.sep10.AnchorSep10Challenge;
 import com.anchor.api.util.Emoji;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.moandjiezana.toml.Toml;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -19,12 +19,9 @@ import org.stellar.sdk.responses.RootResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 import shadow.com.google.common.base.Optional;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -165,17 +162,13 @@ public class AccountService {
         }
 
         try {
-            cryptoService.downloadSeedFile(anchor.getBaseAccount().getAccountId());
-            byte[] bytes1 = cryptoService.readFile(anchor.getBaseAccount().getAccountId());
-            String baseSeed = cryptoService.decrypt(bytes1);
+            String baseSeed = cryptoService.getDecryptedSeed(anchor.getBaseAccount().getAccountId());
             KeyPair agentKeyPair = KeyPair.random();
             KeyPair sourceKeyPair = KeyPair.fromSecretSeed(baseSeed);
 
             AccountResponse baseAccount = server.accounts().account(sourceKeyPair.getAccountId());
 
-            cryptoService.downloadSeedFile(anchor.getDistributionAccount().getAccountId());
-            byte[] bytes2 = cryptoService.readFile(anchor.getDistributionAccount().getAccountId());
-            String distributionSeed = cryptoService.decrypt(bytes2);
+            String distributionSeed = cryptoService.getDecryptedSeed(anchor.getDistributionAccount().getAccountId());
             KeyPair distributionKeyPair = KeyPair.fromSecretSeed(distributionSeed);
 
             Transaction transaction = new Transaction.Builder(baseAccount, network)
@@ -225,7 +218,7 @@ public class AccountService {
                                                                 KeyPair userKeyPair,
                                                                 KeyPair distributionKeyPair) throws Exception {
 
-        List<AssetBag> assetBags = getDefaultAssets(anchor.getIssuingAccount().getAccountId(),"");
+        List<AssetBag> assetBags = getDefaultAssets(anchor.getIssuingAccount().getAccountId());
         LOGGER.info(Emoji.PEAR.concat(Emoji.PEAR).concat(("addTrustlinesAndOriginalBalances: " +
                 "Building transaction with trustline operations ... FIAT ASSETS: " + assetBags.size())
                 .concat(Emoji.RED_DOT)));
@@ -295,33 +288,50 @@ public class AccountService {
                     .concat("Payment Transaction is successful. Check fiat balances on user account"));
             LOGGER.info(msg);
             AccountResponse userAccountResponse = server.accounts().account(destinationKeyPair.getAccountId());
-            AccountResponseBag bag = new AccountResponseBag(userAccountResponse,destinationKeyPair.getSecretSeed().toString());
-            LOGGER.info(Emoji.PEACH + "Payment Destination Account after TrustLines and Fiat Payments "
-                    .concat(Emoji.PEACH.concat(Emoji.PEACH)).concat(G.toJson(bag)));
-            AccountResponse distAccountResponse = server.accounts().account(sourceAccount.getAccountId());
-            LOGGER.info(Emoji.BLUE_BIRD.concat(Emoji.BLUE_BIRD).concat(Emoji.BLUE_BIRD).concat("........ " +
-                    "DISTRIBUTION (SOURCE) account after all the shit; check balances ....").concat(G.toJson(distAccountResponse)));
+            String seed = new String(destinationKeyPair.getSecretSeed());
+            AccountResponseBag bag = new AccountResponseBag(userAccountResponse,seed);
+//            LOGGER.info(Emoji.PEACH + "Payment Destination Account after TrustLines and Fiat Payments "
+//                    .concat(Emoji.PEACH.concat(Emoji.PEACH)).concat(G.toJson(bag)));
+//            AccountResponse distAccountResponse = server.accounts().account(sourceAccount.getAccountId());
+//            LOGGER.info(Emoji.BLUE_BIRD.concat(Emoji.BLUE_BIRD).concat(Emoji.BLUE_BIRD).concat("........ " +
+//                    "DISTRIBUTION (SOURCE) account after all the shit; check balances ....").concat(G.toJson(distAccountResponse)));
             return bag;
         } else {
+            String xdr = payTransactionResponse.getResultXdr().get();
             String msg = Emoji.NOT_OK.concat(Emoji.NOT_OK.concat(Emoji.ERROR)
-                    .concat("Payment Transaction Failed"));
+                    .concat("Payment Transaction Failed; xdr: ".concat(xdr)));
             LOGGER.info(msg);
+
             throw new Exception(msg);
         }
     }
 
-    public AccountResponse sendPayment(String amount,
-                                           KeyPair destinationKeyPair,
-                                           KeyPair sourceKeyPair,
-                                           Asset asset) throws Exception {
+    public String sendPayment(String amount,
+                                       String sourceSeed,
+                                       String destinationAccount,
+                                       String assetCode) throws Exception {
 
-        LOGGER.info(Emoji.BLUE_BIRD.concat(Emoji.BLUE_BIRD).concat("sendPayment: Creating payment transaction ... "
+        LOGGER.info(Emoji.BLUE_BIRD.concat(Emoji.BLUE_BIRD).concat("sendPayment: ... Creating payment transaction ... "
                 .concat(Emoji.FIRE)));
         setServerAndNetwork();
+        if (anchor == null) {
+            anchor = firebaseService.getAnchorByName(anchorName);
+        }
+        List<AssetBag> assetBags = getDefaultAssets(anchor.getIssuingAccount().getAccountId());
+        Asset asset = null;
+        for (AssetBag assetBag : assetBags) {
+            if (assetBag.assetCode.equalsIgnoreCase(assetCode)) {
+                asset = assetBag.asset;
+            }
+        }
+        if (asset == null) {
+            throw new Exception(Emoji.NOT_OK + "Asset not found: ".concat(assetCode));
+        }
+        KeyPair sourceKeyPair = KeyPair.fromSecretSeed(sourceSeed);
         AccountResponse sourceAccount = server.accounts().account(sourceKeyPair.getAccountId());
         Transaction.Builder paymentTxBuilder = new Transaction.Builder(sourceAccount, network);
         paymentTxBuilder.addOperation(new PaymentOperation.Builder(
-                destinationKeyPair.getAccountId(), asset, amount).build());
+                destinationAccount, asset, amount).build());
         Transaction paymentTx = paymentTxBuilder.addMemo(Memo.text("User Payment Tx"))
                 .setTimeout(180)
                 .setOperationFee(100)
@@ -337,16 +347,18 @@ public class AccountService {
             String msg = Emoji.LEAF.concat(Emoji.LEAF.concat(Emoji.LEAF)
                     .concat("Payment Transaction is successful. Check fiat balances on user account"));
             LOGGER.info(msg);
-            AccountResponse userAccountResponse = server.accounts().account(destinationKeyPair.getAccountId());
-            LOGGER.info(Emoji.PEACH + "Payment Destination Account after Payment "
-                    .concat(Emoji.PEACH.concat(Emoji.PEACH)).concat(G.toJson(userAccountResponse)));
-            AccountResponse sourceAccountResponse = server.accounts().account(sourceAccount.getAccountId());
-            LOGGER.info(Emoji.BLUE_BIRD.concat(Emoji.BLUE_BIRD).concat(Emoji.BLUE_BIRD).concat("........ " +
-                    "DISTRIBUTION (SOURCE) account after all the payment; check balances ....").concat(G.toJson(sourceAccountResponse)));
-            return userAccountResponse;
+//            AccountResponse userAccountResponse = server.accounts().account(destinationAccount);
+//            LOGGER.info(Emoji.PEACH + "Payment Destination Account after Payment "
+//                    .concat(Emoji.PEACH.concat(Emoji.PEACH)).concat(G.toJson(userAccountResponse)));
+//            AccountResponse sourceAccountResponse = server.accounts().account(sourceAccount.getAccountId());
+//            LOGGER.info(Emoji.BLUE_BIRD.concat(Emoji.BLUE_BIRD).concat(Emoji.BLUE_BIRD).concat("........ " +
+//                    "DISTRIBUTION (SOURCE) account after all the payment; check balances ....").concat(G.toJson(sourceAccountResponse)));
+            return msg;
         } else {
+
+            String xdr = payTransactionResponse.getResultXdr().get();
             String msg = Emoji.NOT_OK.concat(Emoji.NOT_OK.concat(Emoji.ERROR)
-                    .concat("Payment Transaction Failed"));
+                    .concat("Payment Transaction Failed; xdr: ".concat(xdr)));
             LOGGER.info(msg);
             throw new Exception(msg);
         }
@@ -377,13 +389,11 @@ public class AccountService {
         if (anchor == null) {
             anchor = firebaseService.getAnchorByName(anchorName);
         }
-        Agent agent = firebaseService.getAgent(agentId);
-        cryptoService.downloadSeedFile(anchor.getIssuingAccount().getAccountId());
-        byte[] bytes = cryptoService.readFile(anchor.getIssuingAccount().getAccountId());
-        String issuingSeed = cryptoService.decrypt(bytes);
+
+        String issuingSeed = cryptoService.getDecryptedSeed(anchor.getIssuingAccount().getAccountId());
         KeyPair keyPair = KeyPair.fromSecretSeed(issuingSeed);
 
-        List<AssetBag> assets = getDefaultAssets(keyPair.getAccountId(), assetCode);
+        List<AssetBag> assets = getDefaultAssets(keyPair.getAccountId());
         AccountResponse issuingAcct = server.accounts().account(keyPair.getAccountId());
         Transaction.Builder transactionBuilder = new Transaction.Builder(issuingAcct, network);
         Asset asset = null;
@@ -513,31 +523,33 @@ public class AccountService {
     }
 
     public static final String LIMIT_ERROR = "AAAAAAAAAGT/////AAAAAQAAAAAAAAAG/////QAAAAA=";
-    public List<AssetBag> getDefaultAssets(String issuingAccount, String customAsset) {
-        //todo - fetch toml ..... get currencies
+    private static File TOML_FILE;
+    public List<AssetBag> getDefaultAssets(String issuingAccount) throws Exception {
         List<AssetBag> mList = new ArrayList<>();
-        boolean addCurrencies = defaultCurrencies.equalsIgnoreCase("true");
-        if (!addCurrencies) {
-            return mList;
+        LOGGER.info(Emoji.PRESCRIPTION.concat(Emoji.PRESCRIPTION) +
+                "getDefaultAssets: get stellar.toml file and return to caller...");
+        ClassLoader classLoader = getClass().getClassLoader();
+        if (TOML_FILE == null) {
+            TOML_FILE = new File(Objects.requireNonNull(classLoader.getResource("_well-known/stellar.toml")).getFile());
         }
+//        File file = new File(Objects.requireNonNull(classLoader.getResource("_well-known/stellar.toml")).getFile());
+        if (TOML_FILE.exists()) {
+            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C ... stellar.toml File has been found \uD83C\uDF45 " + TOML_FILE.getAbsolutePath());
+            Toml toml = new Toml().read(TOML_FILE);
+            List<HashMap> currencies = toml.getList("CURRENCIES");
+            for (HashMap currency : currencies) {
+                LOGGER.info("\uD83C\uDF3C stellar.toml: \uD83C\uDF3C Currency: ".concat((currency.get("code").toString())
+                        .concat(" \uD83D\uDE21 issuer: ").concat(currency.get("issuer").toString())));
+                if (issuingAccount.equalsIgnoreCase(currency.get("issuer").toString())) {
+                    String code = currency.get("code").toString();
+                    mList.add(new AssetBag(code, Asset.createNonNativeAsset(code, issuingAccount)));
+                }
+            }
 
-        if (!customAsset.equalsIgnoreCase("USD")) {
-            mList.add(new AssetBag("USD", Asset.createNonNativeAsset("USD", issuingAccount)));
-        }
-        if (!customAsset.equalsIgnoreCase("GBP")) {
-            mList.add(new AssetBag("GBP",Asset.createNonNativeAsset("GBP", issuingAccount)));
-        }
-        if (!customAsset.equalsIgnoreCase("CNY")) {
-            mList.add(new AssetBag("CNY",Asset.createNonNativeAsset("CNY", issuingAccount)));
-        }
-        if (!customAsset.equalsIgnoreCase("CHF")) {
-            mList.add(new AssetBag("CHF", Asset.createNonNativeAsset("CHF", issuingAccount)));
-        }
-        if (!customAsset.equalsIgnoreCase("EUR")) {
-            mList.add(new AssetBag("EUR",Asset.createNonNativeAsset("EUR", issuingAccount)));
-        }
-        if (!customAsset.equalsIgnoreCase("ZAR")) {
-            mList.add(new AssetBag("ZAR",Asset.createNonNativeAsset("ZAR", issuingAccount)));
+            //return IOUtils.toByteArray(new FileInputStream(file));
+        } else {
+            LOGGER.info(" \uD83C\uDF45 stellar.toml : File NOT found. this is where .toml needs to go;  \uD83C\uDF45 ");
+            throw new Exception("stellar.toml not found");
         }
 
         return mList;

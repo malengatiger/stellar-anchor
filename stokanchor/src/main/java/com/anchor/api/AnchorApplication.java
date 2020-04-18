@@ -1,5 +1,6 @@
 package com.anchor.api;
 
+import com.anchor.api.controllers.AnchorController;
 import com.anchor.api.services.AccountService;
 import com.anchor.api.services.FirebaseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,8 @@ public class AnchorApplication implements ApplicationListener<ApplicationReadyEv
 		try {
 			firebaseService.initializeFirebase();
 			accountService.listenForTransactions();
+			AnchorController controller = context.getBean(AnchorController.class);
+			controller.getStellarToml();
 		} catch (Exception e) {
 			LOGGER.severe(" \uD83C\uDF45 Firebase initialization FAILED");
 			e.printStackTrace();

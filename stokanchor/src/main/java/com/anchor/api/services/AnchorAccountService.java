@@ -134,8 +134,7 @@ public class AnchorAccountService {
 
         try {
             AccountService.AssetBag bag = new AccountService.AssetBag(assetCode, Asset.createNonNativeAsset(assetCode, issuingAccount.getAccountResponse().getAccountId()));
-            List< AccountService.AssetBag > assets = accountService.getDefaultAssets(issuingAccount.getAccountResponse().getAccountId(),
-                    assetCode);
+            List< AccountService.AssetBag > assets = accountService.getDefaultAssets(issuingAccount.getAccountResponse().getAccountId());
             assets.add(0,bag);
 
             // Create trustlines for all asset types

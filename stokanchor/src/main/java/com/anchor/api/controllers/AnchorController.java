@@ -105,12 +105,16 @@ public class AnchorController {
     }
 
     @GetMapping(value = "/getAccount", produces = MediaType.APPLICATION_JSON_VALUE)
-    public AccountResponse getAccount(@RequestParam String seed) throws Exception {
+    public AccountBag getAccount(@RequestParam String seed) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorController:getAccount ...");
         AccountResponse response = accountService.getAccount(seed);
-        LOGGER.info( "\uD83D\uDC99 \uD83D\uDC9C AnchorController getAccount returned"
+        LOGGER.info( "\uD83D\uDC99 \uD83D\uDC9C AnchorController getAccount returned: "
                 + response.getAccountId() + " \uD83D\uDC99 \uD83D\uDC9C");
-        return response;
+        AccountResponse.Balance[] balances = response.getBalances();
+        List<AccountResponse.Balance> balanceList = new ArrayList<>();
+        Collections.addAll(balanceList, balances);
+        AccountBag bag = new AccountBag(balanceList,response.getAccountId(),response.getSequenceNumber());
+        return bag;
     }
 
     @PostMapping(value = "/createAnchor", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -152,6 +156,42 @@ public class AnchorController {
     public Info createTestInfo() {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorController:createTestInfo ...");
         return Util.createTestInfo();
+    }
+
+    class AccountBag {
+        List<AccountResponse.Balance> balances;
+        String account;
+        private Long sequenceNumber;
+
+        public AccountBag(List<AccountResponse.Balance> balances, String account, Long sequenceNumber) {
+            this.balances = balances;
+            this.account = account;
+            this.sequenceNumber = sequenceNumber;
+        }
+
+        public List<AccountResponse.Balance> getBalances() {
+            return balances;
+        }
+
+        public void setBalances(List<AccountResponse.Balance> balances) {
+            this.balances = balances;
+        }
+
+        public String getAccount() {
+            return account;
+        }
+
+        public void setAccount(String account) {
+            this.account = account;
+        }
+
+        public Long getSequenceNumber() {
+            return sequenceNumber;
+        }
+
+        public void setSequenceNumber(Long sequenceNumber) {
+            this.sequenceNumber = sequenceNumber;
+        }
     }
 
 }

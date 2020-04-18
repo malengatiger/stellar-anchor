@@ -78,9 +78,7 @@ public class AgentService {
             throw new Exception("Agent not found");
         }
         //todo - check agent balance for this asset code ...
-        cryptoService.downloadSeedFile(agent.getStellarAccountId());
-        byte[] bytes = cryptoService.readFile(agent.getStellarAccountId());
-        String seed = cryptoService.decrypt(bytes);
+        String seed = cryptoService.getDecryptedSeed(agent.getStellarAccountId());
         LOGGER.info(Emoji.HAND1.concat(Emoji.HAND2) + "Agent seed for eventual payment to Client: ".concat(seed));
         if (application.getAgentSeed() != null) {
             if (!seed.equalsIgnoreCase(application.getAgentSeed())) {
@@ -234,9 +232,8 @@ public class AgentService {
         client.setDateRegistered(new DateTime().toDateTimeISO().toString());
         client.setDateUpdated(new DateTime().toDateTimeISO().toString());
         //handle encryption of secret seed
-        cryptoService.downloadSeedFile(anchor.getBaseAccount().getAccountId());
-        byte[] bytes = cryptoService.readFile(anchor.getBaseAccount().getAccountId());
-        String seed = cryptoService.decrypt(bytes);
+
+        String seed = cryptoService.getDecryptedSeed(anchor.getBaseAccount().getAccountId());
 
         AccountResponseBag bag = accountService.createAndFundAnchorAccount(seed, clientStartingBalance);
         LOGGER.info(Emoji.HEART_PURPLE + Emoji.HEART_PURPLE +
@@ -296,10 +293,9 @@ public class AgentService {
 
         //todo - create trustlines and pay from anchor distribution account
         List<AccountService.AssetBag> assetBags = accountService.getDefaultAssets(
-                anchor.getIssuingAccount().getAccountId(),"assetCode");
-        cryptoService.downloadSeedFile(anchor.getIssuingAccount().getAccountId());
-        byte[] bytes2 = cryptoService.readFile(anchor.getIssuingAccount().getAccountId());
-        String issuingAccountSeed = cryptoService.decrypt(bytes2);
+                anchor.getIssuingAccount().getAccountId());
+
+        String issuingAccountSeed = cryptoService.getDecryptedSeed(anchor.getIssuingAccount().getAccountId());
 
         LOGGER.info(Emoji.WARNING.concat(Emoji.WARNING) + "createAgent:.... Creating Agent Fiat Asset Balances .... userSeed: "
         .concat(bag.getSecretSeed()));

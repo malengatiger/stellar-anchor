@@ -76,9 +76,8 @@ public class AnchorSep10Challenge {
         }
         LOGGER.info(em1 + "Anchor found on Firestore: "
                 .concat(anchorName));
-        cryptoService.downloadSeedFile(anchor.getBaseAccount().getAccountId());
-        byte[] mBytes = cryptoService.readFile(anchor.getBaseAccount().getAccountId());
-        String seed = cryptoService.decrypt(mBytes);
+
+        String seed = cryptoService.getDecryptedSeed(anchor.getBaseAccount().getAccountId());
         LOGGER.info(em1 + " " + em1 +"Decrypted seed: "
                 .concat(seed).concat(" ").concat(em1));
         setServerAndNetwork();
