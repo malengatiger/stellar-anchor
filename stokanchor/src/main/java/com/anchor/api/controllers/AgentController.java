@@ -4,6 +4,7 @@ import com.anchor.api.data.anchor.*;
 import com.anchor.api.services.AccountService;
 import com.anchor.api.services.AgentService;
 import com.anchor.api.services.AnchorAccountService;
+import com.anchor.api.services.PaymentService;
 import com.anchor.api.util.Emoji;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -15,6 +16,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.util.List;
 
@@ -118,6 +120,17 @@ public class AgentController {
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + G.toJson(org));
         return org;
     }
+    @Autowired
+    private PaymentService paymentService;
+    @PostMapping(value = "/sendPayment", produces = MediaType.APPLICATION_JSON_VALUE)
+    public boolean sendPayment(@RequestBody PaymentRequest p) throws Exception {
+        SubmitTransactionResponse response = paymentService.sendPayment(p.seed,p.assetCode,p.amount,
+                p.destinationAccount);
+        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat("Payment sent? ")
+        .concat("" + response.isSuccess()));
+
+        return response.isSuccess();
+    }
 
     @PostMapping(value = "/declineLoanApplication", produces = MediaType.APPLICATION_JSON_VALUE)
     public LoanApplication declineLoanApplication(@RequestBody LoanApplication loanApplication) throws Exception {
@@ -199,4 +212,52 @@ public class AgentController {
     }
 
 
+    static class PaymentRequest {
+        private String seed,
+        assetCode,
+        amount,
+        destinationAccount;
+
+        public PaymentRequest() {
+        }
+
+        public PaymentRequest(String seed, String assetCode, String amount, String destinationAccount) {
+            this.seed = seed;
+            this.assetCode = assetCode;
+            this.amount = amount;
+            this.destinationAccount = destinationAccount;
+        }
+
+        public String getSeed() {
+            return seed;
+        }
+
+        public void setSeed(String seed) {
+            this.seed = seed;
+        }
+
+        public String getAssetCode() {
+            return assetCode;
+        }
+
+        public void setAssetCode(String assetCode) {
+            this.assetCode = assetCode;
+        }
+
+        public String getAmount() {
+            return amount;
+        }
+
+        public void setAmount(String amount) {
+            this.amount = amount;
+        }
+
+        public String getDestinationAccount() {
+            return destinationAccount;
+        }
+
+        public void setDestinationAccount(String destinationAccount) {
+            this.destinationAccount = destinationAccount;
+        }
+    }
 }
