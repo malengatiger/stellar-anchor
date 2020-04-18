@@ -86,7 +86,7 @@ public class Client {
     private String anchorId,
             agentId,
             anchorName,
-            clientId,
+            clientId, startingFiatBalance,
             agentName;
     private double latitude, longitude;
     private String dateRegistered,
@@ -106,6 +106,15 @@ public class Client {
     public void setPersonalKYCFields(PersonalKYCFields personalKYCFields) {
         this.personalKYCFields = personalKYCFields;
     }
+
+    public String getStartingFiatBalance() {
+        return startingFiatBalance;
+    }
+
+    public void setStartingFiatBalance(String startingFiatBalance) {
+        this.startingFiatBalance = startingFiatBalance;
+    }
+
     public String getMemo() {
         return memo;
     }

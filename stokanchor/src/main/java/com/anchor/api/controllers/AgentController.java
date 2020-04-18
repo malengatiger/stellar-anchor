@@ -179,20 +179,15 @@ public class AgentController {
      * @throws Exception
      */
     @PostMapping(value = "/createClient", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createClient(@RequestBody Client client) throws Exception {
+    public Client createClient(@RequestBody Client client) throws Exception {
         LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS).concat(Emoji.DRUM)
                 + "AnchorController:createClient...".concat(Emoji.DRUM));
-        try {
-            Client mClient = agentService.createClient(client);
-            LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + "Agent returns Client with brand new Stellar account: \uD83C\uDF4E "
-                    + G.toJson(mClient));
-            return ResponseEntity.ok(mClient);
-        } catch (Exception e) {
-            String msg = Emoji.ERROR + "Create Client Failed";
-            LOGGER.info(msg, e);
-            return ResponseEntity.badRequest()
-                    .body(msg);
-        }
+
+        Client mClient = agentService.createClient(client);
+        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + "Agent returns Client with brand new Stellar account: \uD83C\uDF4E "
+                + G.toJson(mClient));
+        return mClient;
+
     }
 
     @PostMapping(value = "/updateClient", produces = MediaType.TEXT_PLAIN_VALUE)

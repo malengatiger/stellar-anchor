@@ -246,16 +246,27 @@ public class AccountService {
             String xdr = trustlineTransactionResponse.getResultXdr().get();
             String msg = Emoji.NOT_OK.concat(Emoji.NOT_OK.concat(Emoji.ERROR)
                     .concat("Trustline Transaction Failed: xdr: ".concat(xdr)));
-            if (xdr.contains(TX_BAD_AUTH)) {
+            if (xdr.contains(TX_BadAuth)) {
                 msg = Emoji.NOT_OK.concat(Emoji.NOT_OK.concat(Emoji.ERROR)
                         .concat("Bad Auth for Trustline Transaction Response; xdr: ".concat(xdr)));
+            }
+            if (xdr.contains(TX_ChangeTrustLowReserve)) {
+                msg = Emoji.NOT_OK.concat(Emoji.NOT_OK.concat(Emoji.ERROR)
+                        .concat("ChangeTrustLowReserve Response; xdr: ".concat(xdr)));
             }
             LOGGER.info(msg);
             throw new Exception(msg);
         }
 
     }
-    public static final String TX_BAD_AUTH = "AAAAAAAAAlj////6AAAAAA==";
+    public static final String TX_BadAuth = "AAAAAAAAAlj////6AAAAAA==",
+    TX_ChangeTrustSuccess = "AAAAAACYloD/////AAAAAQAAAAAAAAAGAAAAAAAAAAA=",
+    TX_ChangeTrustLowReserve = "AAAAAACYloD/////AAAAAQAAAAAAAAAG/////AAAAAA=",
+    TX_ChangeTrustInvalidLimit = "AAAAAACYloD/////AAAAAQAAAAAAAAAG/////QAAAAA=",
+    TX_ChangeTrustMalformed = "AAAAAACYloD/////AAAAAQAAAAAAAAAG/////wAAAAA=",
+    TX_ChangeTrustSelfNotAllowed = "AAAAAACYloD/////AAAAAQAAAAAAAAAG////+wAAAAA=",
+    TX_ChangeTrustNoIssuer = "AAAAAACYloD/////AAAAAQAAAAAAAAAG/////gAAAAA=";
+
     private AccountResponseBag sendFiatPayments(String amount,
                                                 KeyPair destinationKeyPair,
                                                 KeyPair sourceKeyPair,
@@ -530,23 +541,29 @@ public class AccountService {
                 "getDefaultAssets: get stellar.toml file and return to caller...");
         ClassLoader classLoader = getClass().getClassLoader();
         if (TOML_FILE == null) {
-            TOML_FILE = new File(Objects.requireNonNull(classLoader.getResource("_well-known/stellar.toml")).getFile());
-        }
-//        File file = new File(Objects.requireNonNull(classLoader.getResource("_well-known/stellar.toml")).getFile());
-        if (TOML_FILE.exists()) {
-            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C ... stellar.toml File has been found \uD83C\uDF45 " + TOML_FILE.getAbsolutePath());
+            TOML_FILE = new File(Objects.requireNonNull(
+                    classLoader.getResource("_well-known/stellar.toml")).getFile());
             Toml toml = new Toml().read(TOML_FILE);
             List<HashMap> currencies = toml.getList("CURRENCIES");
             for (HashMap currency : currencies) {
-                LOGGER.info("\uD83C\uDF3C stellar.toml: \uD83C\uDF3C Currency: ".concat((currency.get("code").toString())
-                        .concat(" \uD83D\uDE21 issuer: ").concat(currency.get("issuer").toString())));
+                if (issuingAccount.equalsIgnoreCase(currency.get("issuer").toString())) {
+                    String code = currency.get("code").toString();
+                    LOGGER.info("\uD83C\uDF3C stellar.toml: \uD83C\uDF3C Currency: ".concat((code)
+                            .concat(" \uD83D\uDE21 issuer: ").concat(currency.get("issuer").toString())));
+                }
+            }
+        }
+        if (TOML_FILE.exists()) {
+            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C ... stellar.toml File has been found: "
+                    + TOML_FILE.getAbsolutePath());
+            Toml toml = new Toml().read(TOML_FILE);
+            List<HashMap> currencies = toml.getList("CURRENCIES");
+            for (HashMap currency : currencies) {
                 if (issuingAccount.equalsIgnoreCase(currency.get("issuer").toString())) {
                     String code = currency.get("code").toString();
                     mList.add(new AssetBag(code, Asset.createNonNativeAsset(code, issuingAccount)));
                 }
             }
-
-            //return IOUtils.toByteArray(new FileInputStream(file));
         } else {
             LOGGER.info(" \uD83C\uDF45 stellar.toml : File NOT found. this is where .toml needs to go;  \uD83C\uDF45 ");
             throw new Exception("stellar.toml not found");

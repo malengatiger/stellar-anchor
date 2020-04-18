@@ -212,6 +212,7 @@ public class AgentService {
         LOGGER.info(Emoji.LEMON + Emoji.LEMON +
                 "....... creating Client ....... ");
         Anchor anchor = firebaseService.getAnchorByName(anchorName);
+        Agent agent = firebaseService.getAgent(client.getAgentId());
         if (anchor == null) {
             throw new Exception("Missing anchor");
         }
@@ -225,23 +226,41 @@ public class AgentService {
                     .concat(Emoji.ERROR));
             throw new Exception(Emoji.ERROR + "Client already exists for this Anchor");
         }
+
+        AccountResponseBag bag = accountService.createAndFundUserAccount(
+                clientStartingBalance,
+                client.getStartingFiatBalance(), agent.getFiatLimit());
+        LOGGER.info(Emoji.HEART_PURPLE + Emoji.HEART_PURPLE +
+                "Client Stellar account has been created and funded with ... "
+                        .concat(clientStartingBalance).concat(" XLM"));
+
+        List<AccountService.AssetBag> assetBags = accountService.getDefaultAssets(
+                anchor.getIssuingAccount().getAccountId());
+        LOGGER.info(Emoji.WARNING.concat(Emoji.WARNING) + "createClient:.... Creating Client Fiat Trustlines .... userSeed: "
+                .concat(bag.getSecretSeed()));
+        for (AccountService.AssetBag assetBag : assetBags) {
+            accountService.createTrustLine(
+                    anchor.getIssuingAccount().getAccountId(),
+                    bag.getSecretSeed(),
+                    agent.getFiatLimit(),
+                    assetBag.assetCode);
+
+        }
+        encryptAndSave(client, bag);
+        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF.concat(Emoji.LEAF))+
+                "Client created OK: ".concat(G.toJson(client)));
+        return client;
+    }
+
+    private void encryptAndSave(Client client, AccountResponseBag bag) throws Exception {
         //create firebase auth user
         UserRecord record = firebaseService.createUser(client.getFullName(),
                 client.getPersonalKYCFields().getEmail_address(), client.getPassword());
         client.setClientId(record.getUid());
         client.setDateRegistered(new DateTime().toDateTimeISO().toString());
         client.setDateUpdated(new DateTime().toDateTimeISO().toString());
-        //handle encryption of secret seed
-
-        String seed = cryptoService.getDecryptedSeed(anchor.getBaseAccount().getAccountId());
-
-        AccountResponseBag bag = accountService.createAndFundAnchorAccount(seed, clientStartingBalance);
-        LOGGER.info(Emoji.HEART_PURPLE + Emoji.HEART_PURPLE +
-                "Client Stellar account has been created and funded with ... "
-                        .concat(clientStartingBalance).concat(" XLM"));
         //handle seed encryption
         cryptoService.encrypt(bag.getAccountResponse().getAccountId(), bag.getSecretSeed());
-
         client.setAccount(bag.getAccountResponse().getAccountId());
         client.setExternalAccountId("Not Known Yet");
         String savePassword = client.getPassword();
@@ -249,10 +268,9 @@ public class AgentService {
         firebaseService.addClient(client);
         sendEmail(client);
         client.setPassword(savePassword);
+        client.setSecretSeed(bag.getSecretSeed());
         LOGGER.info((Emoji.BLUE_DOT + Emoji.BLUE_DOT +
                 "Client has been added to Firestore ").concat(G.toJson(client)));
-        client.setSecretSeed(bag.getSecretSeed());
-        return client;
     }
 
     public String updateAgent(Agent agent) throws Exception {
@@ -279,11 +297,6 @@ public class AgentService {
             throw new Exception(Emoji.ERROR + "Agent already exists for this Anchor");
         }
 
-//        //get seed for anchor distribution account
-//        cryptoService.downloadSeedFile(anchor.getDistributionAccount().getAccountId());
-//        byte[] bytes = cryptoService.readFile(anchor.getDistributionAccount().getAccountId());
-//        String seed = cryptoService.decrypt(bytes);
-//  🍅
         AccountResponseBag bag = accountService.createAndFundUserAccount(agentStartingBalance,
                 agent.getFiatBalance(), agent.getFiatLimit());
         LOGGER.info(Emoji.RED_APPLE + Emoji.RED_APPLE +
