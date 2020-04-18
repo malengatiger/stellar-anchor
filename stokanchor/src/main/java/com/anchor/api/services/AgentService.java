@@ -82,25 +82,28 @@ public class AgentService {
         LOGGER.info(Emoji.HAND1.concat(Emoji.HAND2) + "Agent seed for eventual payment to Client: ".concat(seed));
         if (application.getAgentSeed() != null) {
             if (!seed.equalsIgnoreCase(application.getAgentSeed())) {
-                throw new Exception(Emoji.ERROR.concat(Emoji.ERROR) + "Bad seed rising");
+                throw new Exception(Emoji.ERROR.concat(Emoji.ERROR) + "Bad Agent seed rising");
             }
         } else {
             throw new Exception("Agent seed missing");
         }
-        application.setApproved(true);
+        LOGGER.info(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD)
+                .concat("Ready to send loan amount to client: ".concat(application.getAmount()
+                .concat(" ").concat(application.getAssetCode())))));
         boolean ok = sendPayment(seed, application.getAssetCode(), application.getAmount(),
                 application.getClientAccount());
         application.setPaid(ok);
         if (ok) {
+            application.setApproved(true);
             application.setDatePaid(new DateTime().toDateTimeISO().toString());
             firebaseService.updateLoanApplication(application);
             //todo - send email to Client notifying approval and payment
-            LOGGER.info(Emoji.OK.concat(Emoji.OK.concat(Emoji.OK)) +
+            LOGGER.info(Emoji.HAND2.concat(Emoji.HAND2.concat(Emoji.HAND2).concat(Emoji.LEAF)) +
                     "Loan application approved and funds transferred to Client "
                             .concat(G.toJson(application)));
             return application;
         } else {
-            String msg = Emoji.NOT_OK.concat(Emoji.ERROR).concat(Emoji.ERROR)
+            String msg = Emoji.NOT_OK.concat(Emoji.NOT_OK).concat(Emoji.ERROR)
                     .concat("LoanApplication Approval Failed, looks like Payment fell down");
             LOGGER.info(msg);
             throw new Exception(msg);

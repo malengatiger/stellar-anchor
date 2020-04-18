@@ -476,29 +476,8 @@ public class AccountService {
             setServerAndNetwork();
             KeyPair userKeyPair = KeyPair.fromSecretSeed(userSeed);
             Asset asset = Asset.createNonNativeAsset(assetCode, issuingAccount);
-            server.accounts().forAsset((AssetTypeCreditAlphaNum) asset)
-                    .stream(new EventListener<AccountResponse>() {
-                @Override
-                public void onEvent(AccountResponse object) {
-                    LOGGER.info(Emoji.BASKET_BALL.concat(Emoji.BASKET_BALL) +
-                            "stream onEvent ... accountId".concat(object.getAccountId()));
-                }
-
-                @Override
-                public void onFailure(Optional<Throwable> optional, Optional<Integer> optional1) {
-                    LOGGER.info(Emoji.NOT_OK.concat(Emoji.NOT_OK) +
-                            "server.accounts().forAsset stream onFailure event fired ... "
-                    .concat(Emoji.LEMON.concat(Emoji.LEMON)));
-                }
-            });
-
             AccountResponse userAccountResponse = server.accounts().account(userKeyPair.getAccountId());
-            LOGGER.info("\uD83C\uDF40 createTrustLine: User account: " + userAccountResponse.getAccountId()
-                    + " \uD83C\uDF51 ... add trust lines ...");
-
             Transaction.Builder transactionBuilder = new Transaction.Builder(userAccountResponse, network);
-            LOGGER.info(Emoji.STAR.concat(Emoji.STAR) + "Creating ChangeTrustOperation for "
-            .concat(" asset ".concat(assetCode).concat(" ").concat(Emoji.RED_TRIANGLE)));
 
             transactionBuilder.addOperation(new ChangeTrustOperation.Builder(
                     asset, limit)
@@ -510,13 +489,14 @@ public class AccountService {
             Transaction transaction = transactionBuilder.build();
 
             transaction.sign(userKeyPair);
-            LOGGER.info("\uD83C\uDF40 ChangeTrustOperation transaction has been signed by distribution KeyPair... \uD83C\uDF51 on to submission ... ");
 
             SubmitTransactionResponse submitTransactionResponse = server.submitTransaction(transaction);
 
             if (submitTransactionResponse.isSuccess()) {
                 LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 \uD83D\uDC99  " +
-                        "Stellar issueAsset: ChangeTrustOperation has been executed OK: \uD83C\uDF4E \uD83C\uDF4E isSuccess: " + submitTransactionResponse.isSuccess());
+                        "Stellar issueAsset: ChangeTrustOperation has been executed OK: " +
+                        "\uD83C\uDF4E \uD83C\uDF4E isSuccess: " + submitTransactionResponse.isSuccess()
+                + " \uD83C\uDF4E assetCode: ".concat(assetCode) + " \uD83C\uDF4E User account: " + userAccountResponse.getAccountId());
             } else {
                 if (submitTransactionResponse.getResultXdr().get().contains(LIMIT_ERROR)) {
                     String msg = Emoji.NOT_OK.concat(Emoji.GOLD_BELL.concat(Emoji.GOLD_BELL))
