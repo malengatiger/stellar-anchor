@@ -13,7 +13,7 @@ import com.anchor.api.data.transfer.sep9.PersonalKYCFields;
     🍎  secretSeed - returned to Agent at Registration and NEVER saved in database
  */
 public class Agent {
-    String anchorId, agentId, anchorName;
+    String anchorId, agentId;
     double latitude, longitude;
     String dateRegistered,
             dateUpdated,
@@ -116,14 +116,6 @@ public class Agent {
 
     public void setAgentId(String agentId) {
         this.agentId = agentId;
-    }
-
-    public String getAnchorName() {
-        return anchorName;
-    }
-
-    public void setAnchorName(String anchorName) {
-        this.anchorName = anchorName;
     }
 
 

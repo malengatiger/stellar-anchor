@@ -83,6 +83,8 @@ public class PaymentService {
             request.setLedger(response.getLedger());
             request.setDate(new DateTime().toDateTimeISO().toString());
             request.setAnchorId(anchor.getAnchorId());
+            request.setSeed(null);
+            request.setSourceAccount(sourceKeyPair.getAccountId());
             firebaseService.addPaymentRequest(request);
         } else {
             String err = "Payment Failed";

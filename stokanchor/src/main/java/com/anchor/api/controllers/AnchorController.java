@@ -6,6 +6,7 @@ import com.anchor.api.data.info.Info;
 import com.anchor.api.services.*;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.anchor.AnchorBag;
+import com.anchor.api.util.DemoDataGenerator;
 import com.anchor.api.util.Util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -42,8 +43,18 @@ public class AnchorController {
     private AgentService agentService;
     @Autowired
     private AccountService accountService;
+    @Autowired
+    private DemoDataGenerator demoDataGenerator;
     @Value("${status}")
     private String status;
+
+    @GetMapping(value = "/generateDemo", produces = MediaType.TEXT_PLAIN_VALUE)
+    public String generateDemo() throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication /generateDemo ...");
+        demoDataGenerator.startGeneration();
+        return "\uD83D\uDC99 \uD83D\uDC9C GenerateDemoData completed ... "
+                + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
+    }
 
     @GetMapping(value = "/", produces = MediaType.TEXT_PLAIN_VALUE)
     public String hello() {
@@ -51,6 +62,7 @@ public class AnchorController {
         return "\uD83D\uDC99 \uD83D\uDC9C AnchorApplication up and running ... "
                 + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
     }
+
     @GetMapping(value = "/.well-known/stellar.toml", produces = MediaType.TEXT_PLAIN_VALUE)
     public byte[] getStellarToml() throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 get stellar.toml file and return to caller...");
@@ -117,6 +129,13 @@ public class AnchorController {
         return bag;
     }
 
+    @Autowired
+    private FirebaseService firebaseService;
+    @GetMapping(value = "/getAnchorClients", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Client> getClients(@RequestParam String anchorId) throws Exception {
+        return firebaseService.getAnchorClients(anchorId);
+    }
+
     @PostMapping(value = "/createAnchor", produces = MediaType.APPLICATION_JSON_VALUE)
     public Anchor createAnchor(@RequestBody AnchorBag anchorBag) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorController:createAnchor ...");
@@ -124,7 +143,7 @@ public class AnchorController {
             throw new Exception("Funding Account Seed missing");
         }
         Anchor anchor = anchorAccountService.createAnchorAccounts(anchorBag.getAnchor(),
-                anchorBag.getPassword(),anchorBag.getAssetCode(),anchorBag.getAssetAmount(), anchorBag.getFundingSeed(), anchorBag.getStartingBalance());
+                anchorBag.getPassword(),anchorBag.getAssetAmount(), anchorBag.getFundingSeed(), anchorBag.getStartingBalance());
         LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 AnchorAccountService returns Anchor: \uD83C\uDF4E "
                 + anchor.getName() + "  \uD83C\uDF4E anchorId: " + anchor.getAnchorId()
         + "  \uD83C\uDF4E");

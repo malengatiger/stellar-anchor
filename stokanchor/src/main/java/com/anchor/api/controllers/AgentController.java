@@ -237,19 +237,29 @@ public class AgentController {
         assetCode,
         amount,
         date, anchorId,
-        destinationAccount;
+        destinationAccount, sourceAccount;
         private Long ledger;
         public PaymentRequest() {
         }
 
         public PaymentRequest(String seed, String assetCode, String amount,
-                              String date, String anchorId, String destinationAccount) {
+                              String date, String anchorId, String destinationAccount,
+                              String sourceAccount) {
             this.seed = seed;
             this.assetCode = assetCode;
             this.amount = amount;
             this.date = date;
             this.anchorId = anchorId;
             this.destinationAccount = destinationAccount;
+            this.sourceAccount = sourceAccount;
+        }
+
+        public String getSourceAccount() {
+            return sourceAccount;
+        }
+
+        public void setSourceAccount(String sourceAccount) {
+            this.sourceAccount = sourceAccount;
         }
 
         public String getAnchorId() {

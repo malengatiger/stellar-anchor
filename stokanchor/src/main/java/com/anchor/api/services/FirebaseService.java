@@ -10,9 +10,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.*;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthException;
-import com.google.firebase.auth.UserRecord;
+import com.google.firebase.auth.*;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -392,6 +390,20 @@ public class FirebaseService {
         return agent;
     }
 
+    public List<Client> getAnchorClients(String anchorId) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        List<Client> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.CLIENTS)
+                .whereEqualTo("anchorId", anchorId).get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = gson.toJson(map);
+            Client mInfo = gson.fromJson(object, Client.class);
+            mList.add(mInfo);
+        }
+        LOGGER.info(Emoji.LEAF + "Found " + mList.size() + " Anchor Clients");
+        return mList;
+    }
     public List<Client> getAgentClients(String agentId) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         List<Client> mList = new ArrayList<>();
@@ -486,5 +498,74 @@ public class FirebaseService {
 //        ApiFuture<DocumentReference> future2 = fs.collection("transactionResponses").add(transactionResponse);
 //        LOGGER.info("\uD83C\uDFBD transactionResponse added, \uD83C\uDFBD at path: ".concat(future2.get().getPath()));
         return "\uD83C\uDF51 transactionResponse added";
+    }
+    public List<ExportedUserRecord> getAuthUsers() throws FirebaseAuthException {
+        // Start listing users from the beginning, 1000 at a time.
+        List<ExportedUserRecord> mList = new ArrayList<>();
+        ListUsersPage page = FirebaseAuth.getInstance().listUsers(null);
+        while (page != null) {
+            for (ExportedUserRecord user : page.getValues()) {
+                LOGGER.info(Emoji.PIG.concat(Emoji.PIG) + "Auth User: " + user.getDisplayName());
+                mList.add(user);
+            }
+            page = page.getNextPage();
+        }
+
+        return mList;
+    }
+    public void deleteAuthUsers() throws Exception {
+        LOGGER.info(Emoji.WARNING.concat(Emoji.WARNING.concat(Emoji.WARNING)
+                .concat(" DELETING ALL AUTH USERS from Firebase .... ").concat(Emoji.RED_DOT)));
+        List<ExportedUserRecord> list = getAuthUsers();
+        for (ExportedUserRecord exportedUserRecord : list) {
+            FirebaseAuth.getInstance().deleteUser(exportedUserRecord.getUid());
+            LOGGER.info(Emoji.OK.concat(Emoji.RED_APPLE) + "Successfully deleted user: "
+            .concat(exportedUserRecord.getDisplayName()));
+        }
+    }
+    public void deleteCollections() throws Exception {
+        LOGGER.info(Emoji.WARNING.concat(Emoji.WARNING.concat(Emoji.WARNING)
+        .concat(" DELETING ALL DATA from Firestore .... ").concat(Emoji.RED_DOT)));
+        Firestore fs = FirestoreClient.getFirestore();
+        CollectionReference ref1 = fs.collection(Constants.ANCHORS);
+        deleteCollection(ref1,1000);
+        CollectionReference ref2 = fs.collection(Constants.ANCHOR_USERS);
+        deleteCollection(ref2,1000);
+        CollectionReference ref3 = fs.collection(Constants.AGENTS);
+        deleteCollection(ref3,1000);
+        CollectionReference ref4 = fs.collection(Constants.LOAN_APPLICATIONS);
+        deleteCollection(ref4,1000);
+        CollectionReference ref5 = fs.collection(Constants.LOAN_PAYMENTS);
+        deleteCollection(ref5,1000);
+        CollectionReference ref6 = fs.collection(Constants.PAYMENT_REQUESTS);
+        deleteCollection(ref6,1000);
+        CollectionReference ref7 = fs.collection(Constants.CLIENTS);
+        deleteCollection(ref7,1000);
+        LOGGER.info(Emoji.PEAR.concat(Emoji.PEAR.concat(Emoji.PEAR)
+                .concat(" DELETED ALL DATA from Firestore .... ").concat(Emoji.RED_TRIANGLE)));
+    }
+    /** Delete a collection in batches to avoid out-of-memory errors.
+     * Batch size may be tuned based on document size (atmost 1MB) and application requirements.
+     */
+    private void deleteCollection(CollectionReference collection, int batchSize) {
+        try {
+            // retrieve a small batch of documents to avoid out-of-memory errors
+            ApiFuture<QuerySnapshot> future = collection.limit(batchSize).get();
+            int deleted = 0;
+            // future.get() blocks on document retrieval
+            List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+            for (QueryDocumentSnapshot document : documents) {
+                document.getReference().delete();
+                ++deleted;
+                LOGGER.info(Emoji.RECYCLE.concat(document.getReference().getPath()
+                .concat(" deleted")));
+            }
+            if (deleted >= batchSize) {
+                // retrieve and delete another batch
+                deleteCollection(collection, batchSize);
+            }
+        } catch (Exception e) {
+            LOGGER.info(Emoji.NOT_OK.concat(Emoji.ERROR) + "Error deleting collection : " + e.getMessage());
+        }
     }
 }

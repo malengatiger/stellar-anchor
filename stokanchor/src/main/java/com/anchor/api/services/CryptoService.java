@@ -23,7 +23,6 @@ public class CryptoService {
     private KeyManagementServiceClient client;
     public static final Logger LOGGER = LoggerFactory.getLogger(CryptoService.class);
     private void listKeyRings() throws IOException {
-        LOGGER.info("Running setup .... \uD83E\uDD4F \uD83E\uDD4F \uD83E\uDD4F");
         // Create the KeyManagementServiceClient using try-with-resources to manage client cleanup.
         try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {
             // The resource name of the location to search
@@ -32,7 +31,7 @@ public class CryptoService {
             KeyManagementServiceClient.ListKeyRingsPagedResponse response = client.listKeyRings(locationPath);
             // Iterate over all KeyRings (which may cause more result pages to be loaded automatically)
             for (KeyRing keyRing : response.iterateAll()) {
-                LOGGER.info("\uD83C\uDF4F \uD83C\uDF4E Found KeyRing: " + keyRing.getName());
+                LOGGER.info("\uD83C\uDF4F \uD83C\uDF4E Found KMS KeyRing: " + keyRing.getName());
             }
         }
     }
@@ -69,7 +68,6 @@ public class CryptoService {
     /** Creates a new crypto key with the given id. */
     public String createCryptoKey()
             throws IOException {
-        LOGGER.info("\uD83D\uDD11 \uD83D\uDD11 \uD83D\uDD11 createCryptoKey: ".concat(keyRingId));
         // Create the Cloud KMS client.
         try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {
             // The resource name of the location associated with the KeyRing.
@@ -87,15 +85,10 @@ public class CryptoService {
     /** Encrypts the given plaintext using the specified crypto key. */
     public byte[] encrypt(String accountId, String stringToEncrypt)
             throws IOException {
-        LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E Encrypt starting ...... \uD83C\uDF4E ".concat(stringToEncrypt));
         byte[] stringToEncryptBytes = stringToEncrypt.getBytes();
         try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {
             String resourceName = CryptoKeyPathName.format(projectId, locationId, keyRingId, cryptoKeyId);
-            LOGGER.info("\uD83D\uDD11 \uD83D\uDD11 resourceName: ".concat(resourceName));
             EncryptResponse response = client.encrypt(resourceName, ByteString.copyFrom(stringToEncryptBytes));
-            String content = Arrays.toString(response.getCiphertext().toByteArray());
-            LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E \uD83C\uDF4E Encrypted string: ".concat(response.getCiphertext().toByteArray().toString()));
-            LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E \uD83C\uDF4E Encrypted bytes: ".concat(content));
             writeFile(accountId,response.getCiphertext().toByteArray());
             uploadSeedFile(accountId);
 
@@ -106,12 +99,9 @@ public class CryptoService {
     /** Decrypts the provided ciphertext with the specified crypto key. */
     public String decrypt(byte[] encryptedStringBytes )
             throws IOException {
-//        LOGGER.info("\uD83D\uDD11 \uD83D\uDD11 .............. decrypting byte[] ............ \uD83C\uDF4E ");
         try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {
             String resourceName = CryptoKeyPathName.format(projectId, locationId, keyRingId, cryptoKeyId);
             DecryptResponse response = client.decrypt(resourceName, ByteString.copyFrom(encryptedStringBytes));
-//            LOGGER.info("\uD83D\uDD11 \uD83D\uDD11 \uD83D\uDD11 BYTE[] DecryptResponse response: \uD83E\uDD4F ".concat(response.getPlaintext().toStringUtf8())
-//            .concat(" \uD83E\uDD4F "));
             return response.getPlaintext().toStringUtf8();
         }
     }
@@ -136,13 +126,10 @@ public class CryptoService {
         Path path = Paths.get(DOWNLOAD_PATH.concat(accountId));
         byte[] read = Files.readAllBytes(path);
         Files.delete(path);
-//        LOGGER.info("\uD83D\uDCA7 Local Seed File deleted after reading: \uD83D\uDCA7 ".concat(DOWNLOAD_PATH.concat(accountId)));
         return read;
     }
 
     public void uploadSeedFile(String accountId) throws IOException {
-        LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C .................... Uploading encrypted seed file to Cloud Storage " +
-                ".... \uD83C\uDF3C path: ").concat(FILE_PATH.concat(accountId)));
         Storage storage = StorageOptions.newBuilder().setProjectId(projectId)
                 .build().getService();
         BlobId blobId = BlobId.of(bucketName, objectName.concat("_").concat(accountId));
@@ -150,7 +137,6 @@ public class CryptoService {
 
         storage.create(blobInfo, Files.readAllBytes(Paths.get(FILE_PATH.concat(accountId))));
         Files.delete(Paths.get(FILE_PATH.concat(accountId)));
-        LOGGER.info("\uD83D\uDCA7 Local Seed File deleted after upload: \uD83D\uDCA7 ".concat(FILE_PATH.concat(accountId)));
         LOGGER.info(
                 "... \uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 Yebo!! \uD83C\uDF4E " +
                         "File " + FILE_PATH.concat(accountId) + " uploaded to \uD83C\uDF3C " +

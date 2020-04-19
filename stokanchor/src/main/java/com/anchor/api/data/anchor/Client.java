@@ -85,9 +85,7 @@ import com.google.gson.annotations.SerializedName;
 public class Client {
     private String anchorId,
             agentId,
-            anchorName,
-            clientId, startingFiatBalance,
-            agentName;
+            clientId, startingFiatBalance;
     private double latitude, longitude;
     private String dateRegistered,
             dateUpdated,
@@ -155,14 +153,6 @@ public class Client {
         this.clientId = clientId;
     }
 
-    public String getAgentName() {
-        return agentName;
-    }
-
-    public void setAgentName(String agentName) {
-        this.agentName = agentName;
-    }
-
     public String getFullName() {
         if (personalKYCFields != null) {
             return personalKYCFields.getFirst_name() + " " + personalKYCFields.getLast_name();
@@ -210,15 +200,6 @@ public class Client {
     public void setAgentId(String agentId) {
         this.agentId = agentId;
     }
-
-    public String getAnchorName() {
-        return anchorName;
-    }
-
-    public void setAnchorName(String anchorName) {
-        this.anchorName = anchorName;
-    }
-
 
     public double getLatitude() {
         return latitude;

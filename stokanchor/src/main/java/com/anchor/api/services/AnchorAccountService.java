@@ -77,7 +77,7 @@ public class AnchorAccountService {
 
     To trust an issuing account, you create a trustline. Trustlines are entries that persist in the Stellar ledger. They track the limit for which your account trusts the issuing account and the amount of credit from the issuing account that your account currently holds.
  */
-    public Anchor createAnchorAccounts(Anchor newAnchor, String password, String assetCode,
+    public Anchor createAnchorAccounts(Anchor newAnchor, String password,
                                           String assetAmount, String fundingSeed, String startingBalance)
             throws Exception {
         LOGGER.info(Emoji.FERN + Emoji.FERN + "AnchorAccountService: creating Anchor Accounts " +
@@ -92,8 +92,7 @@ public class AnchorAccountService {
         anchor.setCellphone(newAnchor.getCellphone());
         anchor.setAnchorId(UUID.randomUUID().toString());
 
-        AnchorUser anchorUser = createAnchorUser(anchor, password);
-        anchor.setAnchorUser(anchorUser);
+
 
         AccountResponseBag baseAccount = accountService.createAndFundAnchorAccount(
                 fundingSeed,startingBalance);
@@ -133,9 +132,8 @@ public class AnchorAccountService {
                 distributionAccount.getSecretSeed());
 
         try {
-            AccountService.AssetBag bag = new AccountService.AssetBag(assetCode, Asset.createNonNativeAsset(assetCode, issuingAccount.getAccountResponse().getAccountId()));
-            List< AccountService.AssetBag > assets = accountService.getDefaultAssets(issuingAccount.getAccountResponse().getAccountId());
-            assets.add(0,bag);
+            List< AccountService.AssetBag > assets = accountService.getDefaultAssets(
+                    issuingAccount.getAccountResponse().getAccountId());
 
             // Create trustlines for all asset types
             for (AccountService.AssetBag assetBag : assets) {
@@ -165,6 +163,7 @@ public class AnchorAccountService {
                 .concat(" asset amount: ").concat(assetAmount));
             }
 
+
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.severe(Emoji.NOT_OK + "Trustline/Asset creation failed" + Emoji.ERROR);
@@ -173,6 +172,8 @@ public class AnchorAccountService {
         LOGGER.info(Emoji.LEAF + Emoji.LEAF + Emoji.LEAF +
                 "Anchor created and will be added to Firestore: " +
                 " " + anchor.getName());
+        AnchorUser anchorUser = createAnchorUser(anchor, password);
+        anchor.setAnchorUser(anchorUser);
         firebaseService.addAnchor(anchor);
         LOGGER.info(G.toJson(anchor));
         //todo - send email to confirm the anchor with link ...

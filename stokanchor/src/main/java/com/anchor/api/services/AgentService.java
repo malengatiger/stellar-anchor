@@ -190,7 +190,7 @@ public class AgentService {
                 loanPayment.getAmount(),
                 new DateTime().toDateTimeISO().toString(),
                 anchor.getAnchorId(),
-                loanPayment.getAgentAccount());
+                loanPayment.getAgentAccount(), null);
         SubmitTransactionResponse response = paymentService.sendPayment(request);
 
         if (response.isSuccess()) {
@@ -380,13 +380,12 @@ public class AgentService {
                 amount,
                 new DateTime().toDateTimeISO().toString(),
                 anchor.getAnchorId(),
-                destinationAccount);
+                destinationAccount, null);
         SubmitTransactionResponse response = paymentService.sendPayment(request);
         LOGGER.info(Emoji.LEAF + Emoji.RED_APPLE +
                 "Payment was successful?? : " + response.isSuccess() + " " + Emoji.RED_APPLE);
         if (response.isSuccess()) {
-            request.setSeed(null);
-            firebaseService.addPaymentRequest(request);
+
         }
         return response.isSuccess();
     }

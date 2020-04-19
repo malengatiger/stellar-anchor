@@ -1,6 +1,7 @@
 package com.anchor.api.services;
 
 
+import com.anchor.api.controllers.AgentController;
 import com.anchor.api.data.account.AccountResponseBag;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.transfer.sep10.AnchorSep10Challenge;
@@ -8,6 +9,7 @@ import com.anchor.api.util.Emoji;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.moandjiezana.toml.Toml;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -275,7 +277,7 @@ public class AccountService {
         LOGGER.info(Emoji.BLUE_BIRD.concat(Emoji.BLUE_BIRD).concat("sendFiatPayments: Creating payment transaction ... "
                 + assetBags.size() + " FIAT assets to be paid; destinationAccount: "
                 .concat(destinationKeyPair.getAccountId()).concat(" sourceAccount: ").concat(sourceKeyPair.getAccountId())
-                .concat(Emoji.FIRE).concat(Emoji.FIRE)));
+                .concat(Emoji.FIRE).concat(Emoji.FIRE)).concat(" ----- check AMOUNT: ").concat(amount));
         setServerAndNetwork();
         AccountResponse sourceAccount = server.accounts().account(sourceKeyPair.getAccountId());
         Transaction.Builder paymentTxBuilder = new Transaction.Builder(sourceAccount, network);
@@ -301,11 +303,18 @@ public class AccountService {
             AccountResponse userAccountResponse = server.accounts().account(destinationKeyPair.getAccountId());
             String seed = new String(destinationKeyPair.getSecretSeed());
             AccountResponseBag bag = new AccountResponseBag(userAccountResponse,seed);
-//            LOGGER.info(Emoji.PEACH + "Payment Destination Account after TrustLines and Fiat Payments "
-//                    .concat(Emoji.PEACH.concat(Emoji.PEACH)).concat(G.toJson(bag)));
-//            AccountResponse distAccountResponse = server.accounts().account(sourceAccount.getAccountId());
-//            LOGGER.info(Emoji.BLUE_BIRD.concat(Emoji.BLUE_BIRD).concat(Emoji.BLUE_BIRD).concat("........ " +
-//                    "DISTRIBUTION (SOURCE) account after all the shit; check balances ....").concat(G.toJson(distAccountResponse)));
+            //add original payments to database
+            for (AssetBag assetBag : assetBags) {
+                AgentController.PaymentRequest request = new AgentController.PaymentRequest();
+                request.setAmount(amount);
+                request.setAnchorId(anchor.getAnchorId());
+                request.setDate(new DateTime().toDateTimeISO().toString());
+                request.setAssetCode(assetBag.assetCode);
+                request.setSourceAccount(sourceKeyPair.getAccountId());
+                request.setDestinationAccount(destinationKeyPair.getAccountId());
+                request.setLedger(payTransactionResponse.getLedger());
+                firebaseService.addPaymentRequest(request);
+            }
             return bag;
         } else {
             String xdr = payTransactionResponse.getResultXdr().get();
@@ -490,6 +499,18 @@ public class AccountService {
             LOGGER.info(" \uD83C\uDF45 stellar.toml : File NOT found. this is where .toml needs to go;  \uD83C\uDF45 ");
             throw new Exception("stellar.toml not found");
         }
+
+        if (mList.isEmpty()) {
+            LOGGER.info(Emoji.RED_DOT.concat(Emoji.RED_DOT.concat(Emoji.RED_DOT)
+            .concat("Currencies missing from STELLAR TOML file. Please add issuing account after creation ")));
+            mList.add(new AssetBag("ZAR", Asset.createNonNativeAsset("ZAR", issuingAccount)));
+            mList.add(new AssetBag("USD", Asset.createNonNativeAsset("USD", issuingAccount)));
+            mList.add(new AssetBag("GBP", Asset.createNonNativeAsset("GBP", issuingAccount)));
+            mList.add(new AssetBag("EUR", Asset.createNonNativeAsset("EUR", issuingAccount)));
+            mList.add(new AssetBag("CHF", Asset.createNonNativeAsset("CHF", issuingAccount)));
+            mList.add(new AssetBag("CNY", Asset.createNonNativeAsset("CNY", issuingAccount)));
+        }
+
 
         return mList;
     }
