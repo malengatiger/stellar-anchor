@@ -10,10 +10,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.logging.Logger;
 
+
 @SpringBootApplication
+@EnableScheduling
 public class AnchorApplication implements ApplicationListener<ApplicationReadyEvent> {
 	public static final Logger LOGGER = Logger.getLogger(AnchorApplication.class.getSimpleName());
 

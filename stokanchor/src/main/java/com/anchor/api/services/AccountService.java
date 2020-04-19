@@ -317,64 +317,6 @@ public class AccountService {
         }
     }
 
-    public String sendPayment(String amount,
-                                       String sourceSeed,
-                                       String destinationAccount,
-                                       String assetCode) throws Exception {
-
-        LOGGER.info(Emoji.BLUE_BIRD.concat(Emoji.BLUE_BIRD).concat("sendPayment: ... Creating payment transaction ... "
-                .concat(Emoji.FIRE)));
-        setServerAndNetwork();
-        if (anchor == null) {
-            anchor = firebaseService.getAnchorByName(anchorName);
-        }
-        List<AssetBag> assetBags = getDefaultAssets(anchor.getIssuingAccount().getAccountId());
-        Asset asset = null;
-        for (AssetBag assetBag : assetBags) {
-            if (assetBag.assetCode.equalsIgnoreCase(assetCode)) {
-                asset = assetBag.asset;
-            }
-        }
-        if (asset == null) {
-            throw new Exception(Emoji.NOT_OK + "Asset not found: ".concat(assetCode));
-        }
-        KeyPair sourceKeyPair = KeyPair.fromSecretSeed(sourceSeed);
-        AccountResponse sourceAccount = server.accounts().account(sourceKeyPair.getAccountId());
-        Transaction.Builder paymentTxBuilder = new Transaction.Builder(sourceAccount, network);
-        paymentTxBuilder.addOperation(new PaymentOperation.Builder(
-                destinationAccount, asset, amount).build());
-        Transaction paymentTx = paymentTxBuilder.addMemo(Memo.text("User Payment Tx"))
-                .setTimeout(180)
-                .setOperationFee(100)
-                .build();
-
-        paymentTx.sign(sourceKeyPair);
-
-        LOGGER.info(Emoji.PEAR.concat(Emoji.PEAR).concat(("sendPayment: " +
-                "Submitting transaction with payment operations ... ")
-                .concat(Emoji.RED_DOT)));
-        SubmitTransactionResponse payTransactionResponse = server.submitTransaction(paymentTx);
-        if (payTransactionResponse.isSuccess()) {
-            String msg = Emoji.LEAF.concat(Emoji.LEAF.concat(Emoji.LEAF)
-                    .concat("Payment Transaction is successful. Check fiat balances on user account"));
-            LOGGER.info(msg);
-//            AccountResponse userAccountResponse = server.accounts().account(destinationAccount);
-//            LOGGER.info(Emoji.PEACH + "Payment Destination Account after Payment "
-//                    .concat(Emoji.PEACH.concat(Emoji.PEACH)).concat(G.toJson(userAccountResponse)));
-//            AccountResponse sourceAccountResponse = server.accounts().account(sourceAccount.getAccountId());
-//            LOGGER.info(Emoji.BLUE_BIRD.concat(Emoji.BLUE_BIRD).concat(Emoji.BLUE_BIRD).concat("........ " +
-//                    "DISTRIBUTION (SOURCE) account after all the payment; check balances ....").concat(G.toJson(sourceAccountResponse)));
-            return msg;
-        } else {
-
-            String xdr = payTransactionResponse.getResultXdr().get();
-            String msg = Emoji.NOT_OK.concat(Emoji.NOT_OK.concat(Emoji.ERROR)
-                    .concat("Payment Transaction Failed; xdr: ".concat(xdr)));
-            LOGGER.info(msg);
-            throw new Exception(msg);
-        }
-    }
-
     static class AccountUnderfundedException extends Exception {
         public AccountUnderfundedException(String message) {
             super(message);

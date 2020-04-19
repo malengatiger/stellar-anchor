@@ -1,10 +1,7 @@
 package com.anchor.api.controllers;
 
 import com.anchor.api.data.anchor.*;
-import com.anchor.api.services.AccountService;
-import com.anchor.api.services.AgentService;
-import com.anchor.api.services.AnchorAccountService;
-import com.anchor.api.services.PaymentService;
+import com.anchor.api.services.*;
 import com.anchor.api.util.Emoji;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -123,9 +120,8 @@ public class AgentController {
     @Autowired
     private PaymentService paymentService;
     @PostMapping(value = "/sendPayment", produces = MediaType.APPLICATION_JSON_VALUE)
-    public boolean sendPayment(@RequestBody PaymentRequest p) throws Exception {
-        SubmitTransactionResponse response = paymentService.sendPayment(p.seed,p.assetCode,p.amount,
-                p.destinationAccount);
+    public boolean sendPayment(@RequestBody PaymentRequest paymentRequest) throws Exception {
+        SubmitTransactionResponse response = paymentService.sendPayment(paymentRequest);
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat("Payment sent? ")
         .concat("" + response.isSuccess()));
 
@@ -156,6 +152,30 @@ public class AgentController {
         return loanPayments;
     }
 
+    @Autowired
+    private FirebaseService firebaseService;
+    @Value("${anchorName}")
+    private String anchorName;
+    @GetMapping(value = "/getAgents", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Agent> getAgents(@RequestParam String anchorId) throws Exception {
+        LOGGER.info(Emoji.PEACH.concat(Emoji.PEACH) + "AgentController:getAgents ...");
+
+        List<Agent> agents = firebaseService.getAgents(anchorId);
+        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat(
+                ("Found " + agents.size() + " agents for this Anchor "))
+                + G.toJson(agents));
+        return agents;
+    }
+    @GetMapping(value = "/getPaymentRequests", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<PaymentRequest> getPaymentRequests(@RequestParam String anchorId) throws Exception {
+        LOGGER.info(Emoji.PEACH.concat(Emoji.PEACH) + "AgentController:getPaymentRequests ...");
+
+        List<PaymentRequest> requests = firebaseService.getPaymentRequests(anchorId);
+        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat(
+                ("Found " + requests.size() + " PaymentRequests for this Anchor "))
+                + G.toJson(requests));
+        return requests;
+    }
     @GetMapping(value = "/getAgentClients", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Client> getAgentClients(@RequestParam String agentId) throws Exception {
         LOGGER.info(Emoji.PEACH.concat(Emoji.PEACH) + "AgentController:getAgentClients ...");
@@ -212,20 +232,48 @@ public class AgentController {
     }
 
 
-    static class PaymentRequest {
+    public static class PaymentRequest {
         private String seed,
         assetCode,
         amount,
+        date, anchorId,
         destinationAccount;
-
+        private Long ledger;
         public PaymentRequest() {
         }
 
-        public PaymentRequest(String seed, String assetCode, String amount, String destinationAccount) {
+        public PaymentRequest(String seed, String assetCode, String amount,
+                              String date, String anchorId, String destinationAccount) {
             this.seed = seed;
             this.assetCode = assetCode;
             this.amount = amount;
+            this.date = date;
+            this.anchorId = anchorId;
             this.destinationAccount = destinationAccount;
+        }
+
+        public String getAnchorId() {
+            return anchorId;
+        }
+
+        public void setAnchorId(String anchorId) {
+            this.anchorId = anchorId;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public void setDate(String date) {
+            this.date = date;
+        }
+
+        public Long getLedger() {
+            return ledger;
+        }
+
+        public void setLedger(Long ledger) {
+            this.ledger = ledger;
         }
 
         public String getSeed() {

@@ -1,5 +1,6 @@
 package com.anchor.api.services;
 
+import com.anchor.api.controllers.AgentController;
 import com.anchor.api.data.account.AccountResponseBag;
 import com.anchor.api.data.anchor.*;
 import com.anchor.api.data.anchor.Client;
@@ -65,6 +66,10 @@ public class AgentService {
         return firebaseService.getAgentLoans(agentId);
     }
 
+    public List<AgentController.PaymentRequest> getPaymentRequests(String anchorId) throws Exception {
+        return firebaseService.getPaymentRequests(anchorId);
+    }
+
     public List<LoanPayment> getLoanPayments(String loanId) throws Exception {
         return firebaseService.getLoanPayments(loanId);
     }
@@ -96,7 +101,8 @@ public class AgentService {
         if (ok) {
             application.setApproved(true);
             application.setDatePaid(new DateTime().toDateTimeISO().toString());
-            firebaseService.updateLoanApplication(application);
+            String msg = firebaseService.updateLoanApplication(application);
+            LOGGER.info(msg);
             //todo - send email to Client notifying approval and payment
             LOGGER.info(Emoji.HAND2.concat(Emoji.HAND2.concat(Emoji.HAND2).concat(Emoji.LEAF)) +
                     "Loan application approved and funds transferred to Client "
@@ -177,16 +183,23 @@ public class AgentService {
         if (loanPayment.getAssetCode() == null) {
             throw new Exception("Asset code missing");
         }
-        SubmitTransactionResponse response = paymentService.sendPayment(
+        Anchor anchor = firebaseService.getAnchorByName(anchorName);
+        AgentController.PaymentRequest request = new AgentController.PaymentRequest(
                 loanPayment.getClientSeed(),
                 loanPayment.getAssetCode(),
                 loanPayment.getAmount(),
+                new DateTime().toDateTimeISO().toString(),
+                anchor.getAnchorId(),
                 loanPayment.getAgentAccount());
+        SubmitTransactionResponse response = paymentService.sendPayment(request);
 
         if (response.isSuccess()) {
             //todo - royalties to Anchor and to Agent ...  🍎 set up ROYALTY REGIME!!
             loanPayment.setCompleted(true);
-            firebaseService.addLoanPayment(loanPayment);
+            String res = firebaseService.addLoanPayment(loanPayment);
+            request.setSeed(null);
+            String msg = firebaseService.addPaymentRequest(request);
+            LOGGER.info(res.concat(" " + Emoji.RED_DOT.concat(" ")).concat(msg));
             return loanPayment;
         } else {
             String msg = Emoji.ERROR + "LoanPayment failed";
@@ -360,10 +373,21 @@ public class AgentService {
     public boolean sendPayment(String seed, String assetCode, String amount,
                                String destinationAccount) throws Exception {
         LOGGER.info(Emoji.DICE.concat(Emoji.DICE) + ".... Sending to PaymentService ....");
-        SubmitTransactionResponse response = paymentService.sendPayment(
-                seed, assetCode, amount, destinationAccount);
+        Anchor anchor = firebaseService.getAnchorByName(anchorName);
+        AgentController.PaymentRequest request = new AgentController.PaymentRequest(
+                seed,
+                assetCode,
+                amount,
+                new DateTime().toDateTimeISO().toString(),
+                anchor.getAnchorId(),
+                destinationAccount);
+        SubmitTransactionResponse response = paymentService.sendPayment(request);
         LOGGER.info(Emoji.LEAF + Emoji.RED_APPLE +
                 "Payment was successful?? : " + response.isSuccess() + " " + Emoji.RED_APPLE);
+        if (response.isSuccess()) {
+            request.setSeed(null);
+            firebaseService.addPaymentRequest(request);
+        }
         return response.isSuccess();
     }
 
