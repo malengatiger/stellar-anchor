@@ -36,6 +36,7 @@ public class AnchorApplication implements ApplicationListener<ApplicationReadyEv
 	@Autowired
 	private FirebaseService firebaseService;
 
+
 	@Value("${status}")
 	private String status;
 

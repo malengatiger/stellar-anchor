@@ -509,8 +509,16 @@ public class AccountService {
             mList.add(new AssetBag("EUR", Asset.createNonNativeAsset("EUR", issuingAccount)));
             mList.add(new AssetBag("CHF", Asset.createNonNativeAsset("CHF", issuingAccount)));
             mList.add(new AssetBag("CNY", Asset.createNonNativeAsset("CNY", issuingAccount)));
-        }
+            //Currencies in Africa
+            mList.add(new AssetBag("BWP", Asset.createNonNativeAsset("BWP", issuingAccount)));
+            mList.add(new AssetBag("ETB", Asset.createNonNativeAsset("ETB", issuingAccount)));
+            mList.add(new AssetBag("NGN", Asset.createNonNativeAsset("NGN", issuingAccount)));
+            mList.add(new AssetBag("KES", Asset.createNonNativeAsset("KES", issuingAccount)));
+            mList.add(new AssetBag("RWF", Asset.createNonNativeAsset("RWF", issuingAccount)));
+            mList.add(new AssetBag("MUR", Asset.createNonNativeAsset("MUR", issuingAccount)));
 
+            //todo - write currencies to stellar.toml
+        }
 
         return mList;
     }

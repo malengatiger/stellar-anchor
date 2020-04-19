@@ -130,7 +130,7 @@ public class AgentService {
 
     }
 
-    private static DecimalFormat currencyFormat = new DecimalFormat("#.##");
+    private static DecimalFormat currencyFormat = new DecimalFormat("#.00");
     public LoanApplication addLoanApplication(LoanApplication application) throws Exception {
         //todo - check application for correctness prior to adding ...
         if (application.getInterestRate() == 0.0) {

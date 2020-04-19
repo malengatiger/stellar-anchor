@@ -10,6 +10,12 @@ public class Constants {
             LOAN_PAYMENTS = "loanPayments",
             ORGANIZATIONS = "organizations",
             INFOS = "infos",
+            STOKVELS = "stokvels",
+            STOKVEL_PAYMENTS = "stokvelPayments",
+            MEMBER_PAYMENTS = "memberPayments",
+            MEMBERS = "members",
+            STOKVEL_GOALS = "stokvelGoals",
+            INVITATIONS = "invitations",
             ANCHOR_USERS = "anchorUsers";
 
 

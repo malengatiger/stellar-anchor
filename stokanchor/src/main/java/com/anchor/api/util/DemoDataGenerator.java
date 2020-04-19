@@ -1,12 +1,13 @@
 package com.anchor.api.util;
 
+import com.anchor.api.controllers.AgentController;
 import com.anchor.api.controllers.AnchorController;
 import com.anchor.api.data.anchor.*;
+import com.anchor.api.data.stokvel.Member;
+import com.anchor.api.data.stokvel.Stokvel;
+import com.anchor.api.data.transfer.sep9.OrganizationKYCFields;
 import com.anchor.api.data.transfer.sep9.PersonalKYCFields;
-import com.anchor.api.services.AccountService;
-import com.anchor.api.services.AgentService;
-import com.anchor.api.services.AnchorAccountService;
-import com.anchor.api.services.FirebaseService;
+import com.anchor.api.services.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.joda.time.DateTime;
@@ -28,8 +29,8 @@ public class DemoDataGenerator {
         LOGGER.info(Emoji.RED_CAR.concat(Emoji.RED_CAR) + "Demo data DemoDataGenerator ready and able!");
     }
 
-    public static final String FUNDING_ACCOUNT = "GAXDOJ43FXS4D64M3DA3AVPT7OV27XZI4ZZ5FCO5YV43KBCTZB4L6MWG",
-    FUNDING_SEED = "SDHFRH4CDZ3XEWPENU423XMBEUFCC3V4XVSNGFBGP6KNO4ADQWOP4C7N";
+    public static final String FUNDING_ACCOUNT = "GBGIRK3ZV6WKBXCFLJRYPARZENSYKPIHQDZNOKHC6FAE7PRFCYQUU6ZU",
+    FUNDING_SEED = "SCJAWLHN4R7JOX6BM6B4DP22TL4SB6XB2AZJQBSRNK4LPZULVXQCUMAX";
     @Autowired
     private ApplicationContext context;
     @Autowired
@@ -46,6 +47,7 @@ public class DemoDataGenerator {
     private String anchorName;
 
     Anchor anchor;
+    private static final String PASSWORD = "pass3#TWord!";
 
     public void startGeneration() throws Exception {
         if (!status.equalsIgnoreCase("dev")) {
@@ -68,12 +70,12 @@ public class DemoDataGenerator {
         addAnchor();
         addAgents();
         addAgentClients();
-
-        //todo - generate payments and loans ...
-        // ... (how to calculate loan totals and weekly/monthly payment)
+        generateAgentFunding();
         generateLoanApplications();
-        //todo - fund agents with starting fiat balances ...
-        //todo - clients apply for loans from their agents
+
+        Stokvel stokvel = generateStokvel();
+        generateStokvelMembers(stokvel.getStokvelId());
+
         //todo - agents approve the loans and send payment
         //todo - clients pay on monthly schedule
         //for testing
@@ -82,6 +84,90 @@ public class DemoDataGenerator {
 
     }
 
+    @Autowired
+    private PaymentService paymentService;
+
+    @Autowired
+    private StokvelService stokvelService;
+    @Autowired
+    private CryptoService cryptoService;
+    public void generateAgentFunding() throws Exception {
+        LOGGER.info("Generating agent funds ...".concat(Emoji.PEAR.concat(Emoji.PEAR)));
+        if (anchor == null) {
+            anchor = firebaseService.getAnchorByName(anchorName);
+        }
+        agents = firebaseService.getAgents(anchor.getAnchorId());
+        List<AccountService.AssetBag> assetBags = accountService.getDefaultAssets(
+                anchor.getIssuingAccount().getAccountId());
+        String seed = cryptoService.getDecryptedSeed(anchor.getDistributionAccount().getAccountId());
+        for (Agent agent : agents) {
+            for (AccountService.AssetBag assetBag : assetBags) {
+                AgentController.PaymentRequest request = new AgentController.PaymentRequest();
+                request.setAssetCode(assetBag.getAssetCode());
+                request.setDate(new DateTime().toDateTimeISO().toString());
+                request.setAmount(getRandomAgentAmount());
+                request.setAnchorId(agent.getAnchorId());
+                request.setDestinationAccount(agent.getStellarAccountId());
+                request.setSeed(seed);
+                paymentService.sendPayment(request);
+            }
+        }
+    }
+    public Stokvel generateStokvel() throws Exception {
+        LOGGER.info(Emoji.PEACH.concat(Emoji.PEACH).concat("Generate Stokvel"));
+        Stokvel stokvel = new Stokvel();
+        stokvel.setName("OriginalGroup");
+        stokvel.setPassword(PASSWORD);
+        stokvel.setActive(true);
+        stokvel.setDate(new DateTime().toDateTimeISO().toString());
+        OrganizationKYCFields fields = new OrganizationKYCFields();
+        fields.setEmail("stokvel_".concat(""+System.currentTimeMillis()).concat("@modernachor.com"));
+        stokvel.setKycFields(fields);
+        stokvel = stokvelService.createStokvel(stokvel);
+        LOGGER.info(Emoji.LEMON.concat(Emoji.LEMON.concat(Emoji.LEMON)
+        .concat("Stokvel generated: ".concat(G.toJson(stokvel)))));
+        return stokvel;
+    }
+    public List<Member> generateStokvelMembers(String stokvelId) throws Exception {
+        LOGGER.info(Emoji.PEACH.concat(Emoji.PEACH).concat("Generate Member"));
+        setFirstNames();
+        setLastNames();
+        List<Member> list = new ArrayList<>();
+        int cnt = 0;
+        for (int i = 0; i < 3; i++) {
+            Member m = new Member();
+            m.setStokvelIds(new ArrayList<>());
+            m.getStokvelIds().add(stokvelId);
+            m.setActive(true);
+            m.setDate(new DateTime().toDateTimeISO().toString());
+            m.setExternalAccountId("Are we there yet?");
+            m.setPassword(PASSWORD);
+            PersonalKYCFields fields = new PersonalKYCFields();
+            int index1 = rand.nextInt(firstNames.size() - 1);
+            int index2 = rand.nextInt(lastNames.size()  - 1);
+            fields.setFirst_name(firstNames.get(index1));
+            fields.setLast_name(lastNames.get(index2));
+            fields.setEmail_address("member_" + System.currentTimeMillis() + "@modernanchor.com");
+            m.setKycFields(fields);
+            m = stokvelService.createMember(m);
+            list.add(m);
+            cnt++;
+            LOGGER.info(Emoji.RED_CAR.concat(Emoji.RED_CAR.concat(Emoji.RED_CAR)
+                    .concat("Member #"+cnt+" generated: ".concat(G.toJson(m)))));
+        }
+        LOGGER.info(Emoji.RED_CAR.concat(Emoji.RED_CAR.concat(Emoji.RED_CAR)
+                .concat("Members generated: ".concat("" + list.size()))));
+        return list;
+    }
+    private String getRandomAgentAmount() {
+        int num = rand.nextInt(1000);
+        if (num < 250) return "" + (250 * 1000) + ".00";
+        if (num > 249 && num < 500) return "" + (500 * 1000) + ".00";
+        if (num > 499 && num < 900) return "" + (1000 * 1000) + ".00";
+        if (num > 899)  return "" + (2500 * 1000) + ".00";
+        int total = num * 10000;
+        return "" + total + ".00";
+    }
     public void generateLoanApplications() throws Exception {
         LOGGER.info(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD)
         .concat(" Generating LoanApplications ....")));
@@ -142,8 +228,8 @@ public class DemoDataGenerator {
         AnchorBag bag = new AnchorBag();
         bag.setFundingSeed(FUNDING_SEED);
         bag.setAssetAmount("99999999000");
-        bag.setStartingBalance("9000");
-        bag.setPassword("pass123%T");
+        bag.setStartingBalance("9900");
+        bag.setPassword(PASSWORD);
 
         Anchor mAnchor = new Anchor();
         mAnchor.setName(anchorName);
@@ -167,12 +253,12 @@ public class DemoDataGenerator {
         LOGGER.info(Emoji.ALIEN.concat(Emoji.ALIEN.concat(Emoji.LEAF))
                 .concat("Agent created OK: ".concat(G.toJson(agent1))));
 
-        Agent agent2 = buildAgent();
-        agent2.getPersonalKYCFields().setFirst_name("Aubrey");
-        agent2.getPersonalKYCFields().setLast_name("SuperAgent");
-        agents.add(agentService.createAgent(agent2));
-        LOGGER.info(Emoji.ALIEN.concat(Emoji.ALIEN.concat(Emoji.LEAF))
-                .concat("Agent created OK: ".concat(G.toJson(agent2))));
+//        Agent agent2 = buildAgent();
+//        agent2.getPersonalKYCFields().setFirst_name("Aubrey");
+//        agent2.getPersonalKYCFields().setLast_name("SuperAgent");
+//        agents.add(agentService.createAgent(agent2));
+//        LOGGER.info(Emoji.ALIEN.concat(Emoji.ALIEN.concat(Emoji.LEAF))
+//                .concat("Agent created OK: ".concat(G.toJson(agent2))));
 
         Agent agent3 = buildAgent();
         agent3.getPersonalKYCFields().setFirst_name("Mmathabo");
@@ -203,7 +289,7 @@ public class DemoDataGenerator {
         c.setAgentId(agentId);
         c.setDateRegistered(new DateTime().toDateTimeISO().toString());
         c.setDateUpdated(new DateTime().toDateTimeISO().toString());
-        c.setPassword("pass3#W!ord");
+        c.setPassword(PASSWORD);
         c.setStartingFiatBalance("0.01");
         PersonalKYCFields fields = new PersonalKYCFields();
         fields.setMobile_number("+27998001212");
@@ -218,7 +304,7 @@ public class DemoDataGenerator {
         agent1.setDateUpdated(new DateTime().toDateTimeISO().toString());
         agent1.setFiatBalance("0.01");
         agent1.setFiatLimit("900000000000.0000000");
-        agent1.setPassword("pass3$TWord");
+        agent1.setPassword(PASSWORD);
         PersonalKYCFields fields = new PersonalKYCFields();
         fields.setMobile_number("+27998001212");
         fields.setEmail_address("agent_"+System.currentTimeMillis()+"@modernanchor.com");

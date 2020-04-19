@@ -3,6 +3,8 @@ package com.anchor.api.controllers;
 import com.anchor.api.data.anchor.Agent;
 import com.anchor.api.data.anchor.Client;
 import com.anchor.api.data.info.Info;
+import com.anchor.api.data.stokvel.Member;
+import com.anchor.api.data.stokvel.Stokvel;
 import com.anchor.api.services.*;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.anchor.AnchorBag;
@@ -60,6 +62,32 @@ public class AnchorController {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication /generateLoans ...");
         demoDataGenerator.generateLoanApplications();
         return "\uD83D\uDC99 \uD83D\uDC9C GenerateLoans completed ... "
+                + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
+    }
+    @GetMapping(value = "/generateStokvel", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Stokvel generateStokvel() throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication /generateStokvel ...");
+        Stokvel stokvel = demoDataGenerator.generateStokvel();
+        String msg =  "\uD83D\uDC99 \uD83D\uDC9C GenerateStokvel completed ... "
+                + G.toJson(stokvel) + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
+        LOGGER.info(msg);
+        return stokvel;
+    }
+    @GetMapping(value = "/generateStokvelMembers", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Member> generateStokvelMembers(@RequestParam String stokvelId) throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication /generateStokvelMembers ...");
+        List<Member> stokvel = demoDataGenerator.generateStokvelMembers(stokvelId);
+        String msg =  "\uD83D\uDC99 \uD83D\uDC9C GenerateStokvelMembers completed ... "
+                + G.toJson(stokvel) + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
+        LOGGER.info(msg);
+        return stokvel;
+    }
+
+    @GetMapping(value = "/generateAgentFunding", produces = MediaType.TEXT_PLAIN_VALUE)
+    public String generateAgentFunding() throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication /generateAgentFunding ...");
+        demoDataGenerator.generateAgentFunding();
+        return "\uD83D\uDC99 \uD83D\uDC9C GenerateAgentFunding completed ... "
                 + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
     }
 

@@ -3,6 +3,8 @@ package com.anchor.api.services;
 import com.anchor.api.controllers.AgentController;
 import com.anchor.api.data.anchor.*;
 import com.anchor.api.data.info.Info;
+import com.anchor.api.data.stokvel.Member;
+import com.anchor.api.data.stokvel.Stokvel;
 import com.anchor.api.util.Constants;
 import com.anchor.api.util.Emoji;
 import com.google.api.core.ApiFuture;
@@ -171,6 +173,32 @@ public class FirebaseService {
             throw new Exception("Agent already exists for this Anchor");
         }
     }
+    public String addStokvel(Stokvel agent) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        Stokvel current = getStokvelByName(agent.getName());
+        if (current == null) {
+            ApiFuture<DocumentReference> future = fs.collection(Constants.STOKVELS).add(agent);
+            LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Stokvel added at path: ".concat(future.get().getPath()));
+            return "\uD83C\uDF4F Stokvel added";
+        } else {
+            throw new Exception("Stokvel already exists ");
+        }
+    }
+    public String addMember(Member member) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        Member current = getMemberByName(member.getKycFields().getFirst_name(),member.getKycFields().getLast_name());
+        if (current == null) {
+            current = getMemberByEmail(member.getKycFields().getEmail_address());
+            if (current != null) {
+                throw new Exception("Member already exists ");
+            }
+            ApiFuture<DocumentReference> future = fs.collection(Constants.MEMBERS).add(member);
+            LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Member added at path: ".concat(future.get().getPath()));
+            return "\uD83C\uDF4F Member added";
+        } else {
+            throw new Exception("Member already exists ");
+        }
+    }
 
     public String addPaymentRequest(AgentController.PaymentRequest paymentRequest) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
@@ -291,6 +319,84 @@ public class FirebaseService {
         }
 
         return info;
+    }
+    public Stokvel getStokvelByName(String name) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        Stokvel info;
+        List<Stokvel> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.STOKVELS)
+                .whereEqualTo("name", name).get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = gson.toJson(map);
+            Stokvel mInfo = gson.fromJson(object, Stokvel.class);
+            mList.add(mInfo);
+        }
+        if (mList.isEmpty()) {
+            return null;
+        } else {
+            info = mList.get(0);
+        }
+
+        return info;
+    }
+    public Member getMemberByName(String firstName, String lastName) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        Member info;
+        List<Member> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.STOKVELS)
+                .whereEqualTo("kycFields.first_name", firstName)
+                .whereEqualTo("kycFields.last_name", lastName).get();
+
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = gson.toJson(map);
+            Member mInfo = gson.fromJson(object, Member.class);
+            mList.add(mInfo);
+        }
+        if (mList.isEmpty()) {
+            return null;
+        } else {
+            info = mList.get(0);
+        }
+
+        return info;
+    }
+    public Member getMemberByEmail(String email) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        Member info;
+        List<Member> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.STOKVELS)
+                .whereEqualTo("kycFields.email_address", email).get();
+
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = gson.toJson(map);
+            Member mInfo = gson.fromJson(object, Member.class);
+            mList.add(mInfo);
+        }
+        if (mList.isEmpty()) {
+            return null;
+        } else {
+            info = mList.get(0);
+        }
+
+        return info;
+    }
+    public List<Member> getStokvelMembers(String stokvelId) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        List<Member> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.MEMBERS)
+                .whereEqualTo("stokvelId", stokvelId).get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = gson.toJson(map);
+            Member mInfo = gson.fromJson(object, Member.class);
+            mList.add(mInfo);
+        }
+        LOGGER.info(Emoji.BLUE_DISC.concat(Emoji.BLUE_DISC) + mList.size() + " Members found");
+
+        return mList;
     }
 
     public List<Agent> getAgents(String anchorId) throws Exception {
