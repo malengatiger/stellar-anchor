@@ -69,7 +69,6 @@ public class DemoDataGenerator {
         //
         Stokvel stokvel = generateStokvel();
         generateStokvelMembers(stokvel.getStokvelId());
-
         //todo - clients pay on monthly schedule
         //for testing
         //todo - retrieve data for overall status of anchor ...
@@ -118,7 +117,11 @@ public class DemoDataGenerator {
                 if (loanApplication.getAgentApprovalDate() == null) {
                     String seed = cryptoService.getDecryptedSeed(agent.getStellarAccountId());
                     loanApplication.setAgentSeed(seed);
-                    agentService.approveApplicationByAgent(loanApplication);
+                    try {
+                        agentService.approveApplicationByAgent(loanApplication);
+                    } catch (Exception e) {
+                        LOGGER.info(Emoji.NOT_OK + "Bad shit: ".concat(e.getMessage()));
+                    }
                 }
             }
         }
