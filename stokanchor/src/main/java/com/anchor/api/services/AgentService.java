@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.List;
 import java.util.UUID;
 
@@ -99,7 +101,7 @@ public class AgentService {
                 application.getClientAccount());
         application.setPaid(ok);
         if (ok) {
-            application.setApproved(true);
+            application.setApprovedByAgent(true);
             application.setDatePaid(new DateTime().toDateTimeISO().toString());
             String msg = firebaseService.updateLoanApplication(application);
             LOGGER.info(msg);
@@ -117,7 +119,7 @@ public class AgentService {
     }
 
     public LoanApplication declineApplication(LoanApplication application) throws Exception {
-        application.setApproved(false);
+        application.setApprovedByAgent(false);
         application.setPaid(false);
         application.setDatePaid(null);
 
@@ -128,6 +130,7 @@ public class AgentService {
 
     }
 
+    private static DecimalFormat currencyFormat = new DecimalFormat("#.##");
     public LoanApplication addLoanApplication(LoanApplication application) throws Exception {
         //todo - check application for correctness prior to adding ...
         if (application.getInterestRate() == 0.0) {
@@ -145,15 +148,93 @@ public class AgentService {
         if (application.getClientId() == null) {
             throw new Exception("Client is missing");
         }
-        if (application.getLoanPeriodInMonths() == 0) {
-            throw new Exception("LoanPeriodInMonths should be > 0");
+        if (application.getLoanPeriodInMonths() == 0 && application.getLoanPeriodInWeeks() == 0) {
+            throw new Exception("LoanPeriod should be > 0");
         }
+        if (application.getLoanPeriodInMonths() > 0 ) {
+            double monthlyPayment = calculateMonthlyPayment(
+                    application.getAmount(),
+                    application.getLoanPeriodInMonths(),
+                    application.getInterestRate());
+
+            application.setMonthlyPayment(currencyFormat.format(monthlyPayment));
+            double total = monthlyPayment * application.getLoanPeriodInMonths();
+            application.setTotalAmountPayable(currencyFormat.format(total));
+        }
+        if (application.getLoanPeriodInWeeks() > 0 ) {
+            double weeklyPayment = calculateWeeklyPayment(
+                    application.getAmount(),
+                    application.getLoanPeriodInWeeks(),
+                    application.getInterestRate());
+
+            application.setWeeklyPayment(currencyFormat.format(weeklyPayment));
+            double total = (weeklyPayment * application.getLoanPeriodInWeeks());
+            application.setTotalAmountPayable(currencyFormat.format(total));
+        }
+
         application.setDate(new DateTime().toDateTimeISO().toString());
         application.setLoanId(UUID.randomUUID().toString());
-        application.setApproved(false);
+        application.setApprovedByAgent(false);
+        application.setApprovedByClient(false);
         String msg = firebaseService.addLoanApplication(application);
-        LOGGER.info(msg);
+        LOGGER.info(Emoji.HAND1.concat(Emoji.HAND2.concat(Emoji.HAND3)
+        .concat(" APPLICATION after payable calculations: ".concat(G.toJson(application)))));
         return application;
+    }
+    public static double calculateMonthlyPayment(
+            String amount, int loanPeriodInMonths, double interestRate) {
+
+        // Convert interest rate into a decimal
+        // eg. 6.5% = 0.065
+
+        interestRate /= 100.0;
+
+        // Monthly interest rate
+        // is the yearly rate divided by 12
+
+        double monthlyRate = interestRate / 12.0;
+
+        // The length of the term in months
+        // is the number of years times 12
+
+
+        // Calculate the monthly payment
+        // Typically this formula is provided so
+        // we won't go into the details
+
+        // The Math.pow() method is used calculate values raised to a power
+        double loanAmount = Double.parseDouble(amount);
+        double monthlyPayment =
+                (loanAmount * monthlyRate) /
+                        (1 - Math.pow(1 + monthlyRate, - loanPeriodInMonths));
+        LOGGER.info(Emoji.BLUE_DOT.concat(Emoji.BLUE_DOT)
+        .concat("Monthly Payment Required: " + monthlyPayment));
+
+        return monthlyPayment;
+    }
+    public static double calculateWeeklyPayment(
+            String amount, int loanPeriodInWeeks, double interestRate) {
+
+        // Convert interest rate into a decimal
+        // eg. 6.5% = 0.065
+
+        interestRate /= 100.0;
+
+        // Monthly interest rate
+        // is the yearly rate divided by 12
+
+        double weeklyRate = interestRate / 52.0;
+
+        // Calculate the weekly payment
+
+        double loanAmount = Double.parseDouble(amount);
+        double weeklyPayment =
+                (loanAmount * weeklyRate) /
+                        (1 - Math.pow(1 + weeklyRate, - loanPeriodInWeeks));
+        LOGGER.info(Emoji.BLUE_DOT.concat(Emoji.BLUE_DOT)
+                .concat("Weekly Payment Required: " + weeklyPayment));
+
+        return weeklyPayment;
     }
 
     /**

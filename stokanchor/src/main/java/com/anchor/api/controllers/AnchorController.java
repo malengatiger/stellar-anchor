@@ -55,6 +55,13 @@ public class AnchorController {
         return "\uD83D\uDC99 \uD83D\uDC9C GenerateDemoData completed ... "
                 + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
     }
+    @GetMapping(value = "/generateLoans", produces = MediaType.TEXT_PLAIN_VALUE)
+    public String generateLoans() throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication /generateLoans ...");
+        demoDataGenerator.generateLoanApplications();
+        return "\uD83D\uDC99 \uD83D\uDC9C GenerateLoans completed ... "
+                + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
+    }
 
     @GetMapping(value = "/", produces = MediaType.TEXT_PLAIN_VALUE)
     public String hello() {

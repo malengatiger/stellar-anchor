@@ -1,10 +1,7 @@
 package com.anchor.api.util;
 
 import com.anchor.api.controllers.AnchorController;
-import com.anchor.api.data.anchor.Agent;
-import com.anchor.api.data.anchor.Anchor;
-import com.anchor.api.data.anchor.AnchorBag;
-import com.anchor.api.data.anchor.Client;
+import com.anchor.api.data.anchor.*;
 import com.anchor.api.data.transfer.sep9.PersonalKYCFields;
 import com.anchor.api.services.AccountService;
 import com.anchor.api.services.AgentService;
@@ -54,23 +51,92 @@ public class DemoDataGenerator {
         if (!status.equalsIgnoreCase("dev")) {
             throw new Exception(Emoji.NOT_OK + "Demo Data Generation may not be run in PRODUCTION");
         }
+        if (anchorName == null) {
+            throw new Exception(Emoji.NOT_OK + "Anchor name missing from application properties file");
+        }
         LOGGER.info(Emoji.HEART_BLUE + "Start Data Generation "
                 .concat(Emoji.HEART_BLUE.concat(Emoji.HEART_BLUE)));
 
+        //delete users and collections
         firebaseService.deleteAuthUsers();
         LOGGER.info(Emoji.SOCCER_BALL.concat(Emoji.SOCCER_BALL)
                 +"Firebase auth users have been cleaned out");
         firebaseService.deleteCollections();
         LOGGER.info(Emoji.BASKET_BALL.concat(Emoji.BASKET_BALL)
                 +"Firestore collections have been cleaned out");
+        //add data
         addAnchor();
         addAgents();
         addAgentClients();
 
         //todo - generate payments and loans ...
+        // ... (how to calculate loan totals and weekly/monthly payment)
+        generateLoanApplications();
+        //todo - fund agents with starting fiat balances ...
+        //todo - clients apply for loans from their agents
+        //todo - agents approve the loans and send payment
+        //todo - clients pay on monthly schedule
+        //for testing
+        //todo - retrieve data for overall status of anchor ...
+        // ... (anchor, agent, client dashboard basics here ....)
 
     }
 
+    public void generateLoanApplications() throws Exception {
+        LOGGER.info(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD)
+        .concat(" Generating LoanApplications ....")));
+        if (anchor == null) {
+            anchor = firebaseService.getAnchorByName(anchorName);
+        }
+        List<Client> clients = firebaseService.getAnchorClients(anchor.getAnchorId());
+        List<AccountService.AssetBag> assetBags = accountService.getDefaultAssets(anchor.getIssuingAccount().getAccountId());
+        for (Client client : clients) {
+            LOGGER.info(Emoji.PANDA.concat(Emoji.PANDA).concat("Generate LoanApplication for: ")
+            .concat(client.getFullName()));
+            for (AccountService.AssetBag assetBag : assetBags) {
+                LoanApplication app = new LoanApplication();
+                app.setAnchorId(client.getAnchorId());
+                app.setAgentId(client.getAgentId());
+                app.setAmount(getRandomAmount());
+                app.setAssetCode(assetBag.getAssetCode());
+                app.setInterestRate(getRandomInterestRate());
+                int num = rand.nextInt(10);
+                if (num > 5) {
+                    app.setLoanPeriodInMonths(getLoanPeriodInMonths());
+                } else {
+                    app.setLoanPeriodInWeeks(getLoanPeriodInWeeks());
+                }
+                app.setClientAccount(client.getAccount());
+                app.setClientId(client.getClientId());
+                app.setDate(new DateTime().toDateTimeISO().toString());
+                agentService.addLoanApplication(app);
+            }
+        }
+    }
+
+    private int getLoanPeriodInMonths() {
+        int num = rand.nextInt(24);
+        if (num < 7) return 6;
+        if (num > 16) return 24;
+        return 12;
+    }
+    private int getLoanPeriodInWeeks() {
+        int num = rand.nextInt(26);
+        if (num < 7) return 4;
+        if (num > 16) return 8;
+        return 16;
+    }
+    private String getRandomAmount() {
+        int num = rand.nextInt(100);
+        if (num < 3) num = 10;
+        int total = num * 100;
+        return "" + total + ".00";
+    }
+    private double getRandomInterestRate() {
+        int num = rand.nextInt(15);
+        if (num < 6) num = 6;
+        return num * 1.5;
+    }
     private void addAnchor() throws Exception {
         //create bag ...
         AnchorBag bag = new AnchorBag();

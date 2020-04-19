@@ -10,10 +10,51 @@ package com.anchor.api.data.anchor;
 public class LoanApplication {
     private String loanId, clientId, agentId, anchorId;
     private String date, amount, agentSeed, clientAccount, assetCode, datePaid;
-    private int loanPeriodInMonths;
+    private int loanPeriodInMonths, loanPeriodInWeeks;
     private int startMonth, endMonth;
     private double interestRate;
-    private boolean approved, paid;
+    private boolean approvedByAgent, paid, approvedByClient;
+    private String totalAmountPayable, weeklyPayment, monthlyPayment;
+
+    public boolean isApprovedByClient() {
+        return approvedByClient;
+    }
+
+    public void setApprovedByClient(boolean approvedByClient) {
+        this.approvedByClient = approvedByClient;
+    }
+
+    public int getLoanPeriodInWeeks() {
+        return loanPeriodInWeeks;
+    }
+
+    public void setLoanPeriodInWeeks(int loanPeriodInWeeks) {
+        this.loanPeriodInWeeks = loanPeriodInWeeks;
+    }
+
+    public String getTotalAmountPayable() {
+        return totalAmountPayable;
+    }
+
+    public void setTotalAmountPayable(String totalAmountPayable) {
+        this.totalAmountPayable = totalAmountPayable;
+    }
+
+    public String getWeeklyPayment() {
+        return weeklyPayment;
+    }
+
+    public void setWeeklyPayment(String weeklyPayment) {
+        this.weeklyPayment = weeklyPayment;
+    }
+
+    public String getMonthlyPayment() {
+        return monthlyPayment;
+    }
+
+    public void setMonthlyPayment(String monthlyPayment) {
+        this.monthlyPayment = monthlyPayment;
+    }
 
     public String getDatePaid() {
         return datePaid;
@@ -135,11 +176,11 @@ public class LoanApplication {
         this.interestRate = interestRate;
     }
 
-    public boolean isApproved() {
-        return approved;
+    public boolean isApprovedByAgent() {
+        return approvedByAgent;
     }
 
-    public void setApproved(boolean approved) {
-        this.approved = approved;
+    public void setApprovedByAgent(boolean approvedByAgent) {
+        this.approvedByAgent = approvedByAgent;
     }
 }

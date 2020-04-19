@@ -515,12 +515,28 @@ public class AccountService {
         return mList;
     }
 
-    static class AssetBag {
+    public static class AssetBag {
         String assetCode;
         Asset asset;
 
         public AssetBag(String assetCode, Asset asset) {
             this.assetCode = assetCode;
+            this.asset = asset;
+        }
+
+        public String getAssetCode() {
+            return assetCode;
+        }
+
+        public void setAssetCode(String assetCode) {
+            this.assetCode = assetCode;
+        }
+
+        public Asset getAsset() {
+            return asset;
+        }
+
+        public void setAsset(Asset asset) {
             this.asset = asset;
         }
     }
