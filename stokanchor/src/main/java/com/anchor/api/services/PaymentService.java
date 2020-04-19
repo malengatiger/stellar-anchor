@@ -50,8 +50,8 @@ public class PaymentService {
 
     public SubmitTransactionResponse sendPayment(AgentController.PaymentRequest request) throws Exception {
         LOGGER.info(Emoji.DICE.concat(Emoji.DICE) + "sendPayment amount: ".concat(request.getAmount()).concat(" assetCode: ")
-                .concat(request.getAssetCode()).concat(" destination account: ").concat(request.getDestinationAccount())
-                .concat(" seed: ").concat(request.getSeed()));
+                .concat(request.getAssetCode()).concat("  \uD83C\uDFB2 destination account: ")
+                .concat(request.getDestinationAccount()));
         setServerAndNetwork();
         if (anchor == null)
             anchor = firebaseService.getAnchorByName(anchorName);
@@ -61,9 +61,6 @@ public class PaymentService {
         Asset asset = Asset.createNonNativeAsset(
                 request.getAssetCode(),
                 anchor.getIssuingAccount().getAccountId());
-        LOGGER.info(Emoji.GOLD_BELL.concat(Emoji.GOLD_BELL).concat("Asset for payment: ".concat(G.toJson(asset))));
-        LOGGER.info(Emoji.GOLD_BELL.concat(Emoji.GOLD_BELL)
-                .concat("Source Account Balances: ").concat(G.toJson(sourceAccount.getBalances())));
         Transaction transaction = new Transaction.Builder(sourceAccount, network)
                 .addOperation(new PaymentOperation.Builder(
                         request.getDestinationAccount(), asset, request.getAmount())
@@ -74,11 +71,8 @@ public class PaymentService {
                 .build();
 
         transaction.sign(sourceKeyPair);
-        LOGGER.info(Emoji.PEACH + "Submitting payment transaction to Stellar ...".concat(Emoji.PEACH));
         SubmitTransactionResponse response = server.submitTransaction(transaction);
         if (response.isSuccess()) {
-            LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF.concat(Emoji.LEAF)
-                    .concat("Payment is SUCCESSFUL !! \uD83D\uDC4C\uD83C\uDFFE Bingo!")));
             //save to database
             request.setLedger(response.getLedger());
             request.setDate(new DateTime().toDateTimeISO().toString());

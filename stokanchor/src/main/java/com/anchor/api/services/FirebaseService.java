@@ -205,10 +205,8 @@ public class FirebaseService {
 
         paymentRequest.setSeed(null);
         ApiFuture<DocumentReference> future = fs.collection(Constants.PAYMENT_REQUESTS).add(paymentRequest);
-        LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F PaymentRequest added at path: "
-                .concat(future.get().getPath().concat(" " + G.toJson(paymentRequest))));
 
-        return "\uD83C\uDF4F PaymentRequest added to Database";
+        return "\uD83C\uDF4F PaymentRequest added to Database: ".concat(future.get().getPath());
 
     }
 

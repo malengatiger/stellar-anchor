@@ -1,6 +1,5 @@
 package com.anchor.api.controllers;
 
-import com.anchor.api.data.anchor.Agent;
 import com.anchor.api.data.anchor.Client;
 import com.anchor.api.data.info.Info;
 import com.anchor.api.data.stokvel.Member;
@@ -13,6 +12,7 @@ import com.anchor.api.util.Util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.moandjiezana.toml.Toml;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -89,6 +89,13 @@ public class AnchorController {
         demoDataGenerator.generateAgentFunding();
         return "\uD83D\uDC99 \uD83D\uDC9C GenerateAgentFunding completed ... "
                 + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
+    }
+    @GetMapping(value = "/generateLoanApprovals", produces = MediaType.TEXT_PLAIN_VALUE)
+    public String generateLoanApprovals() throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication /generateLoanApprovals ...");
+        demoDataGenerator.generateLoanApprovals();
+        return "\uD83D\uDC99 \uD83D\uDC9C GenerateLoanApprovals completed ... "
+                + new DateTime().toDateTimeISO().toString() + " \uD83D\uDC99 STATUS: " + status;
     }
 
     @GetMapping(value = "/", produces = MediaType.TEXT_PLAIN_VALUE)

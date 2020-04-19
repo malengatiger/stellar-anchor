@@ -155,11 +155,5 @@ public class CryptoService {
 
         Blob blob = storage.get(BlobId.of(bucketName, objectName.concat("_").concat(accountId)));
         blob.downloadTo(destFilePath);
-
-        LOGGER.info(("\uD83C\uDF3C \uD83C\uDF3C " +
-                "Downloaded Seed File from Cloud Storage: \uD83C\uDF4E "
-                        + objectName.concat("_").concat(accountId)
-                        + " from bucket name \uD83E\uDD66 "
-                        + bucketName));
     }
 }

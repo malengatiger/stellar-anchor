@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
@@ -68,12 +67,23 @@ public class AgentController {
         return message;
     }
 
-    @PostMapping(value = "/approve", produces = MediaType.APPLICATION_JSON_VALUE)
-    public LoanApplication approveApplication(@RequestBody LoanApplication agent) throws Exception {
+    @PostMapping(value = "/approveApplicationByAgent", produces = MediaType.APPLICATION_JSON_VALUE)
+    public LoanApplication approveApplicationByAgent(@RequestBody LoanApplication loanApplication) throws Exception {
         LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AgentController:approve ...");
-        LoanApplication application = agentService.approveApplication(agent);
+        LoanApplication application = agentService.approveApplicationByAgent(loanApplication);
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + G.toJson(application));
         return application;
+    }
+
+    //approveApplicationByClient
+    @PostMapping(value = "/approveApplicationByClient", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String approveApplicationByClient(
+            @RequestParam String loanId) throws Exception {
+        LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS)
+                + "AgentController:approveApplicationByClient ...");
+        String msg =  agentService.approveApplicationByClient(loanId);
+        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + msg);
+        return msg;
     }
 
     @PostMapping(value = "/decline", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -113,7 +123,7 @@ public class AgentController {
     @PostMapping(value = "/approveLoanApplication", produces = MediaType.APPLICATION_JSON_VALUE)
     public LoanApplication approveLoanApplication(@RequestBody LoanApplication loanApplication) throws Exception {
         LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AgentController:approveLoanApplication ...");
-        LoanApplication org = agentService.approveApplication(loanApplication);
+        LoanApplication org = agentService.approveApplicationByAgent(loanApplication);
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + G.toJson(org));
         return org;
     }

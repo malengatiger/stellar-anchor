@@ -14,7 +14,24 @@ public class LoanApplication {
     private int startMonth, endMonth;
     private double interestRate;
     private boolean approvedByAgent, paid, approvedByClient;
-    private String totalAmountPayable, weeklyPayment, monthlyPayment;
+    private String totalAmountPayable, weeklyPayment, monthlyPayment,
+    clientApprovalDate, agentApprovalDate;
+
+    public String getClientApprovalDate() {
+        return clientApprovalDate;
+    }
+
+    public void setClientApprovalDate(String clientApprovalDate) {
+        this.clientApprovalDate = clientApprovalDate;
+    }
+
+    public String getAgentApprovalDate() {
+        return agentApprovalDate;
+    }
+
+    public void setAgentApprovalDate(String agentApprovalDate) {
+        this.agentApprovalDate = agentApprovalDate;
+    }
 
     public boolean isApprovedByClient() {
         return approvedByClient;

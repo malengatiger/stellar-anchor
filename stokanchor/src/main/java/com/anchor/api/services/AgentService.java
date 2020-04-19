@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.io.IOException;
@@ -76,39 +77,49 @@ public class AgentService {
         return firebaseService.getLoanPayments(loanId);
     }
 
-    public LoanApplication approveApplication(LoanApplication application) throws Exception {
+    public String approveApplicationByClient(String loanId) throws Exception {
 
-        LOGGER.info(Emoji.HEART_GREEN.concat(Emoji.HEART_GREEN)
-        .concat("Approve LoanApplication: ".concat(G.toJson(application))));
+        LoanApplication application = firebaseService.getLoanApplication(loanId);
+        if (application == null) {
+            throw new Exception(Emoji.NOT_OK + "LoanApplication not found");
+        }
+
+        application.setApprovedByClient(true);
+        application.setClientApprovalDate(new DateTime().toDateTimeISO().toString());
+        String msg = firebaseService.updateLoanApplication(application);
+        return msg;
+    }
+
+    public LoanApplication approveApplicationByAgent(LoanApplication application) throws Exception {
+
         Agent agent = firebaseService.getAgent(application.getAgentId());
         if (agent == null) {
             throw new Exception("Agent not found");
         }
         //todo - check agent balance for this asset code ...
         String seed = cryptoService.getDecryptedSeed(agent.getStellarAccountId());
-        LOGGER.info(Emoji.HAND1.concat(Emoji.HAND2) + "Agent seed for eventual payment to Client: ".concat(seed));
         if (application.getAgentSeed() != null) {
             if (!seed.equalsIgnoreCase(application.getAgentSeed())) {
                 throw new Exception(Emoji.ERROR.concat(Emoji.ERROR) + "Bad Agent seed rising");
             }
-        } else {
-            throw new Exception("Agent seed missing");
         }
-        LOGGER.info(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD)
-                .concat("Ready to send loan amount to client: ".concat(application.getAmount()
-                .concat(" ").concat(application.getAssetCode())))));
+        if (!application.isApprovedByClient()) {
+            throw new Exception(Emoji.NOT_OK + "LoanApplication not approved by Client");
+        }
+//        LOGGER.info(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD)
+//                .concat("Ready to send loan amount to client: ".concat(application.getAmount()
+//                .concat(" ").concat(application.getAssetCode())))));
         boolean ok = sendPayment(seed, application.getAssetCode(), application.getAmount(),
                 application.getClientAccount());
         application.setPaid(ok);
         if (ok) {
             application.setApprovedByAgent(true);
             application.setDatePaid(new DateTime().toDateTimeISO().toString());
+            application.setAgentApprovalDate(new DateTime().toDateTimeISO().toString());
             String msg = firebaseService.updateLoanApplication(application);
-            LOGGER.info(msg);
             //todo - send email to Client notifying approval and payment
             LOGGER.info(Emoji.HAND2.concat(Emoji.HAND2.concat(Emoji.HAND2).concat(Emoji.LEAF)) +
-                    "Loan application approved and funds transferred to Client "
-                            .concat(G.toJson(application)));
+                    "Loan application approved and funds transferred to Client ");
             return application;
         } else {
             String msg = Emoji.NOT_OK.concat(Emoji.NOT_OK).concat(Emoji.ERROR)
@@ -131,6 +142,7 @@ public class AgentService {
     }
 
     private static DecimalFormat currencyFormat = new DecimalFormat("#.00");
+
     public LoanApplication addLoanApplication(LoanApplication application) throws Exception {
         //todo - check application for correctness prior to adding ...
         if (application.getInterestRate() == 0.0) {
@@ -176,64 +188,34 @@ public class AgentService {
         application.setLoanId(UUID.randomUUID().toString());
         application.setApprovedByAgent(false);
         application.setApprovedByClient(false);
-        String msg = firebaseService.addLoanApplication(application);
-        LOGGER.info(Emoji.HAND1.concat(Emoji.HAND2.concat(Emoji.HAND3)
-        .concat(" APPLICATION after payable calculations: ".concat(G.toJson(application)))));
+        firebaseService.addLoanApplication(application);
         return application;
     }
+
     public static double calculateMonthlyPayment(
             String amount, int loanPeriodInMonths, double interestRate) {
-
-        // Convert interest rate into a decimal
-        // eg. 6.5% = 0.065
-
         interestRate /= 100.0;
-
-        // Monthly interest rate
-        // is the yearly rate divided by 12
-
         double monthlyRate = interestRate / 12.0;
-
-        // The length of the term in months
-        // is the number of years times 12
-
-
-        // Calculate the monthly payment
-        // Typically this formula is provided so
-        // we won't go into the details
-
-        // The Math.pow() method is used calculate values raised to a power
         double loanAmount = Double.parseDouble(amount);
         double monthlyPayment =
                 (loanAmount * monthlyRate) /
                         (1 - Math.pow(1 + monthlyRate, - loanPeriodInMonths));
-        LOGGER.info(Emoji.BLUE_DOT.concat(Emoji.BLUE_DOT)
-        .concat("Monthly Payment Required: " + monthlyPayment));
-
         return monthlyPayment;
     }
+
     public static double calculateWeeklyPayment(
             String amount, int loanPeriodInWeeks, double interestRate) {
 
-        // Convert interest rate into a decimal
-        // eg. 6.5% = 0.065
-
         interestRate /= 100.0;
-
         // Monthly interest rate
         // is the yearly rate divided by 12
 
         double weeklyRate = interestRate / 52.0;
-
         // Calculate the weekly payment
-
         double loanAmount = Double.parseDouble(amount);
         double weeklyPayment =
                 (loanAmount * weeklyRate) /
                         (1 - Math.pow(1 + weeklyRate, - loanPeriodInWeeks));
-        LOGGER.info(Emoji.BLUE_DOT.concat(Emoji.BLUE_DOT)
-                .concat("Weekly Payment Required: " + weeklyPayment));
-
         return weeklyPayment;
     }
 
@@ -453,7 +435,6 @@ public class AgentService {
 
     public boolean sendPayment(String seed, String assetCode, String amount,
                                String destinationAccount) throws Exception {
-        LOGGER.info(Emoji.DICE.concat(Emoji.DICE) + ".... Sending to PaymentService ....");
         Anchor anchor = firebaseService.getAnchorByName(anchorName);
         AgentController.PaymentRequest request = new AgentController.PaymentRequest(
                 seed,
@@ -463,11 +444,6 @@ public class AgentService {
                 anchor.getAnchorId(),
                 destinationAccount, null);
         SubmitTransactionResponse response = paymentService.sendPayment(request);
-        LOGGER.info(Emoji.LEAF + Emoji.RED_APPLE +
-                "Payment was successful?? : " + response.isSuccess() + " " + Emoji.RED_APPLE);
-        if (response.isSuccess()) {
-
-        }
         return response.isSuccess();
     }
 
