@@ -243,7 +243,7 @@ public class AgentController {
 
 
     public static class PaymentRequest {
-        private String seed,
+        private String paymentRequestId, seed,
         assetCode,
         amount,
         date, anchorId,
@@ -252,9 +252,10 @@ public class AgentController {
         public PaymentRequest() {
         }
 
-        public PaymentRequest(String seed, String assetCode, String amount,
-                              String date, String anchorId, String destinationAccount,
-                              String sourceAccount) {
+        public PaymentRequest(String paymentRequestId, String seed, String assetCode,
+                              String amount, String date, String anchorId,
+                              String destinationAccount, String sourceAccount) {
+            this.paymentRequestId = paymentRequestId;
             this.seed = seed;
             this.assetCode = assetCode;
             this.amount = amount;
@@ -262,6 +263,14 @@ public class AgentController {
             this.anchorId = anchorId;
             this.destinationAccount = destinationAccount;
             this.sourceAccount = sourceAccount;
+        }
+
+        public String getPaymentRequestId() {
+            return paymentRequestId;
+        }
+
+        public void setPaymentRequestId(String paymentRequestId) {
+            this.paymentRequestId = paymentRequestId;
         }
 
         public String getSourceAccount() {

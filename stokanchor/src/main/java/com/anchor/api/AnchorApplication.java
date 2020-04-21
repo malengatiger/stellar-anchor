@@ -3,6 +3,7 @@ package com.anchor.api;
 import com.anchor.api.controllers.AnchorController;
 import com.anchor.api.services.AccountService;
 import com.anchor.api.services.FirebaseService;
+import com.anchor.api.util.Emoji;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -12,6 +13,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import java.util.Calendar;
 import java.util.logging.Logger;
 
 
@@ -48,6 +50,11 @@ public class AnchorApplication implements ApplicationListener<ApplicationReadyEv
 
 		LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C onApplicationEvent: DEVELOPMENT STATUS: \uD83C\uDF51 " + status + " \uD83C\uDF51 ");
 		accountService.printStellarHorizonServer();
+
+		Calendar cal = Calendar.getInstance();
+		int res = cal.getActualMaximum(Calendar.DATE);
+		LOGGER.info(Emoji.SKULL.concat(Emoji.SKULL) + "Today's Date = " + cal.getTime());
+		LOGGER.info(Emoji.SKULL.concat(Emoji.SKULL) + "Last Date of the current month = " + res);
 
 		try {
 			firebaseService.initializeFirebase();

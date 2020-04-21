@@ -9,13 +9,21 @@ package com.anchor.api.data.anchor;
  */
 public class LoanApplication {
     private String loanId, clientId, agentId, anchorId;
-    private String date, amount, agentSeed, clientAccount, assetCode, datePaid;
+    private String date, amount, agentSeed, clientAccount, assetCode, lastDatePaid, lastPaymentRequestId;
     private int loanPeriodInMonths, loanPeriodInWeeks;
     private int startMonth, endMonth;
     private double interestRate;
     private boolean approvedByAgent, paid, approvedByClient;
     private String totalAmountPayable, weeklyPayment, monthlyPayment,
     clientApprovalDate, agentApprovalDate;
+
+    public String getLastPaymentRequestId() {
+        return lastPaymentRequestId;
+    }
+
+    public void setLastPaymentRequestId(String lastPaymentRequestId) {
+        this.lastPaymentRequestId = lastPaymentRequestId;
+    }
 
     public String getClientApprovalDate() {
         return clientApprovalDate;
@@ -73,12 +81,12 @@ public class LoanApplication {
         this.monthlyPayment = monthlyPayment;
     }
 
-    public String getDatePaid() {
-        return datePaid;
+    public String getLastDatePaid() {
+        return lastDatePaid;
     }
 
-    public void setDatePaid(String datePaid) {
-        this.datePaid = datePaid;
+    public void setLastDatePaid(String lastDatePaid) {
+        this.lastDatePaid = lastDatePaid;
     }
 
     public boolean isPaid() {

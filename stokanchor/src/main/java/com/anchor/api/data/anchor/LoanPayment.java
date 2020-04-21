@@ -6,11 +6,28 @@ package com.anchor.api.data.anchor;
  *
  */
 public class LoanPayment {
-    private String loanId, clientId, agentId, anchorId;
+    private String loanId, clientId, agentId, anchorId, paymentRequestId;
     private String date, amount, clientSeed, agentAccount, assetCode;
     private boolean completed;
     private boolean onTime;
     private int monthOfLoan, yearOfLoan;
+    private Long ledger;
+
+    public String getPaymentRequestId() {
+        return paymentRequestId;
+    }
+
+    public void setPaymentRequestId(String paymentRequestId) {
+        this.paymentRequestId = paymentRequestId;
+    }
+
+    public Long getLedger() {
+        return ledger;
+    }
+
+    public void setLedger(Long ledger) {
+        this.ledger = ledger;
+    }
 
     public String getAssetCode() {
         return assetCode;

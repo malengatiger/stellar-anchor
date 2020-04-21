@@ -97,6 +97,13 @@ public class AnchorController {
         return "\uD83D\uDC99 \uD83D\uDC9C GenerateLoanApprovals completed ... "
                 + new DateTime().toDateTimeISO().toString() + " \uD83D\uDC99 STATUS: " + status;
     }
+    @GetMapping(value = "/generatePayments", produces = MediaType.TEXT_PLAIN_VALUE)
+    public String generatePayments() throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication /generatePayments ...");
+        demoDataGenerator.generatePayments();
+        return "\uD83D\uDC99 \uD83D\uDC9C GeneratePayments completed ... "
+                + new DateTime().toDateTimeISO().toString() + " \uD83D\uDC99 STATUS: " + status;
+    }
 
     @GetMapping(value = "/", produces = MediaType.TEXT_PLAIN_VALUE)
     public String hello() {

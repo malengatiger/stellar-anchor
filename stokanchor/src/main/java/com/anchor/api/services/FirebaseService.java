@@ -205,8 +205,13 @@ public class FirebaseService {
 
         paymentRequest.setSeed(null);
         ApiFuture<DocumentReference> future = fs.collection(Constants.PAYMENT_REQUESTS).add(paymentRequest);
-
-        return "\uD83C\uDF4F PaymentRequest added to Database: ".concat(future.get().getPath());
+        String msg = Emoji.HAPPY.concat(Emoji.HAPPY.concat(Emoji.HAPPY)) +
+         "\uD83C\uDF4F PaymentRequest added to Database: "
+                 .concat(" amount: ").concat(paymentRequest.getAmount())
+                 .concat("  \uD83C\uDF51 ledger: ").concat(" " + paymentRequest.getLedger() + " ")
+                 .concat(future.get().getPath());
+        LOGGER.info(msg);
+        return msg;
 
     }
 
@@ -219,8 +224,7 @@ public class FirebaseService {
                 .get();
         for (QueryDocumentSnapshot document : future.get().getDocuments()) {
             document.getReference().set(application);
-            String msg = "LoanApplication updated";
-            LOGGER.info(Emoji.WINE.concat(Emoji.WINE).concat(msg));
+            String msg = Emoji.WINE + "LoanApplication updated";
             return msg;
         }
         throw new Exception("LoanApplication not found for update");
@@ -577,6 +581,28 @@ public class FirebaseService {
 
         return agent;
     }
+    public Client getClientById(String clientId) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        Client client;
+        List<Client> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.CLIENTS)
+                .whereEqualTo("clientId", clientId)
+                .limit(1)
+                .get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = gson.toJson(map);
+            Client mInfo = gson.fromJson(object, Client.class);
+            mList.add(mInfo);
+        }
+        if (mList.isEmpty()) {
+            return null;
+        } else {
+            client = mList.get(0);
+        }
+
+        return client;
+    }
 
     public String addAccountResponse(AccountResponse accountResponse) throws Exception {
         LOGGER.info("\uD83C\uDFBD Adding accountResponse to Firestore: ".concat(accountResponse.getAccountId()));
@@ -645,6 +671,16 @@ public class FirebaseService {
         deleteCollection(ref6,1000);
         CollectionReference ref7 = fs.collection(Constants.CLIENTS);
         deleteCollection(ref7,1000);
+        CollectionReference ref8 = fs.collection(Constants.STOKVELS);
+        deleteCollection(ref8,1000);
+        CollectionReference ref9 = fs.collection(Constants.MEMBERS);
+        deleteCollection(ref9,1000);
+        CollectionReference ref10 = fs.collection(Constants.MEMBER_PAYMENTS);
+        deleteCollection(ref10,1000);
+        CollectionReference ref11 = fs.collection(Constants.STOKVEL_PAYMENTS);
+        deleteCollection(ref11,1000);
+        CollectionReference ref12 = fs.collection(Constants.STOKVEL_GOALS);
+        deleteCollection(ref12,1000);
         LOGGER.info(Emoji.PEAR.concat(Emoji.PEAR.concat(Emoji.PEAR)
                 .concat(" DELETED ALL DATA from Firestore .... ").concat(Emoji.RED_TRIANGLE)));
     }

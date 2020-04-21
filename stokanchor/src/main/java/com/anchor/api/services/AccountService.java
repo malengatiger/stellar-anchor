@@ -505,8 +505,8 @@ public class AccountService {
             .concat("Currencies missing from STELLAR TOML file. Please add issuing account after creation ")));
             mList.add(new AssetBag("ZAR", Asset.createNonNativeAsset("ZAR", issuingAccount)));
             mList.add(new AssetBag("USD", Asset.createNonNativeAsset("USD", issuingAccount)));
-            mList.add(new AssetBag("GBP", Asset.createNonNativeAsset("GBP", issuingAccount)));
-            mList.add(new AssetBag("EUR", Asset.createNonNativeAsset("EUR", issuingAccount)));
+//            mList.add(new AssetBag("GBP", Asset.createNonNativeAsset("GBP", issuingAccount)));
+//            mList.add(new AssetBag("EUR", Asset.createNonNativeAsset("EUR", issuingAccount)));
 //            mList.add(new AssetBag("CHF", Asset.createNonNativeAsset("CHF", issuingAccount)));
 //            mList.add(new AssetBag("CNY", Asset.createNonNativeAsset("CNY", issuingAccount)));
             //Currencies in Africa

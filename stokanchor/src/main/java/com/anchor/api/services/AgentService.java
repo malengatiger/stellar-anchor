@@ -15,12 +15,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.List;
 import java.util.UUID;
 
@@ -104,35 +102,38 @@ public class AgentService {
             }
         }
         if (!application.isApprovedByClient()) {
+            LOGGER.info("Check this LoanApplication: apparently not approved by client"
+            .concat(G.toJson(application)));
             throw new Exception(Emoji.NOT_OK + "LoanApplication not approved by Client");
         }
-//        LOGGER.info(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD)
-//                .concat("Ready to send loan amount to client: ".concat(application.getAmount()
-//                .concat(" ").concat(application.getAssetCode())))));
-        boolean ok = sendPayment(seed, application.getAssetCode(), application.getAmount(),
-                application.getClientAccount());
-        application.setPaid(ok);
-        if (ok) {
-            application.setApprovedByAgent(true);
-            application.setDatePaid(new DateTime().toDateTimeISO().toString());
-            application.setAgentApprovalDate(new DateTime().toDateTimeISO().toString());
-            String msg = firebaseService.updateLoanApplication(application);
-            //todo - send email to Client notifying approval and payment
-            LOGGER.info(Emoji.HAND2.concat(Emoji.HAND2.concat(Emoji.HAND2).concat(Emoji.LEAF)) +
-                    "Loan application approved and funds transferred to Client ");
-            return application;
-        } else {
-            String msg = Emoji.NOT_OK.concat(Emoji.NOT_OK).concat(Emoji.ERROR)
-                    .concat("LoanApplication Approval Failed, looks like Payment fell down");
-            LOGGER.info(msg);
-            throw new Exception(msg);
-        }
+        AgentController.PaymentRequest request = new AgentController.PaymentRequest();
+        request.setPaymentRequestId(UUID.randomUUID().toString());
+        request.setSeed(seed);
+        request.setAmount(application.getAmount());
+        request.setAnchorId(application.getAnchorId());
+        request.setAssetCode(application.getAssetCode());
+        request.setDate(new DateTime().toDateTimeISO().toString());
+        request.setDestinationAccount(application.getClientAccount());
+        SubmitTransactionResponse response = paymentService.sendPayment(request);
+
+        application.setPaid(false);
+        application.setApprovedByAgent(true);
+        application.setLastPaymentRequestId(request.getPaymentRequestId());
+        application.setLastDatePaid(new DateTime().toDateTimeISO().toString());
+        application.setAgentApprovalDate(new DateTime().toDateTimeISO().toString());
+
+        firebaseService.updateLoanApplication(application);
+        //todo - send email to Client notifying approval and payment
+        LOGGER.info(Emoji.HAND2.concat(Emoji.HAND2.concat(Emoji.HAND2).concat(Emoji.LEAF)) +
+                "Loan application approved and funds transferred to Client ");
+        return application;
+
     }
 
     public LoanApplication declineApplication(LoanApplication application) throws Exception {
         application.setApprovedByAgent(false);
         application.setPaid(false);
-        application.setDatePaid(null);
+        application.setLastDatePaid(null);
 
         firebaseService.updateLoanApplication(application);
         //todo - send email to Client notifying declination
@@ -163,7 +164,7 @@ public class AgentService {
         if (application.getLoanPeriodInMonths() == 0 && application.getLoanPeriodInWeeks() == 0) {
             throw new Exception("LoanPeriod should be > 0");
         }
-        if (application.getLoanPeriodInMonths() > 0 ) {
+        if (application.getLoanPeriodInMonths() > 0) {
             double monthlyPayment = calculateMonthlyPayment(
                     application.getAmount(),
                     application.getLoanPeriodInMonths(),
@@ -173,7 +174,7 @@ public class AgentService {
             double total = monthlyPayment * application.getLoanPeriodInMonths();
             application.setTotalAmountPayable(currencyFormat.format(total));
         }
-        if (application.getLoanPeriodInWeeks() > 0 ) {
+        if (application.getLoanPeriodInWeeks() > 0) {
             double weeklyPayment = calculateWeeklyPayment(
                     application.getAmount(),
                     application.getLoanPeriodInWeeks(),
@@ -199,7 +200,7 @@ public class AgentService {
         double loanAmount = Double.parseDouble(amount);
         double monthlyPayment =
                 (loanAmount * monthlyRate) /
-                        (1 - Math.pow(1 + monthlyRate, - loanPeriodInMonths));
+                        (1 - Math.pow(1 + monthlyRate, -loanPeriodInMonths));
         return monthlyPayment;
     }
 
@@ -215,13 +216,14 @@ public class AgentService {
         double loanAmount = Double.parseDouble(amount);
         double weeklyPayment =
                 (loanAmount * weeklyRate) /
-                        (1 - Math.pow(1 + weeklyRate, - loanPeriodInWeeks));
+                        (1 - Math.pow(1 + weeklyRate, -loanPeriodInWeeks));
         return weeklyPayment;
     }
 
     /**
      * A Client pays off part or all of the outstanding balance on the loan ...
      * that is, the Client is paying the Agent for the loan
+     *
      * @param loanPayment
      * @return
      * @throws Exception
@@ -246,29 +248,35 @@ public class AgentService {
         if (loanPayment.getAssetCode() == null) {
             throw new Exception("Asset code missing");
         }
-        Anchor anchor = firebaseService.getAnchorByName(anchorName);
-        AgentController.PaymentRequest request = new AgentController.PaymentRequest(
-                loanPayment.getClientSeed(),
-                loanPayment.getAssetCode(),
-                loanPayment.getAmount(),
-                new DateTime().toDateTimeISO().toString(),
-                anchor.getAnchorId(),
-                loanPayment.getAgentAccount(), null);
+        if (loanPayment.getAmount() == null) {
+            throw new Exception("Amount is missing");
+        }
+        AgentController.PaymentRequest request = new AgentController.PaymentRequest();
+        request.setPaymentRequestId(UUID.randomUUID().toString());
+        request.setAmount(loanPayment.getAmount());
+        request.setSeed(loanPayment.getClientSeed());
+        request.setAnchorId(loanPayment.getAnchorId());
+        request.setAssetCode(loanPayment.getAssetCode());
+        request.setDate(new DateTime().toDateTimeISO().toString());
+        request.setDestinationAccount(loanPayment.getAgentAccount());
         SubmitTransactionResponse response = paymentService.sendPayment(request);
 
-        if (response.isSuccess()) {
-            //todo - royalties to Anchor and to Agent ...  🍎 set up ROYALTY REGIME!!
-            loanPayment.setCompleted(true);
-            String res = firebaseService.addLoanPayment(loanPayment);
-            request.setSeed(null);
-            String msg = firebaseService.addPaymentRequest(request);
-            LOGGER.info(res.concat(" " + Emoji.RED_DOT.concat(" ")).concat(msg));
-            return loanPayment;
-        } else {
-            String msg = Emoji.ERROR + "LoanPayment failed";
-            LOGGER.info(msg);
-            throw new Exception(msg);
-        }
+
+        //todo - royalties to Anchor and to Agent ...  🍎 set up ROYALTY REGIME!!
+        LoanApplication app = firebaseService.getLoanApplication(loanPayment.getLoanId());
+        loanPayment.setCompleted(true);
+        loanPayment.setPaymentRequestId(request.getPaymentRequestId());
+
+        String res = firebaseService.addLoanPayment(loanPayment);
+        app.setLastDatePaid(new DateTime().toDateTimeISO().toString());
+        app.setLastPaymentRequestId(request.getPaymentRequestId());
+        String res2 = firebaseService.updateLoanApplication(app);
+
+        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat("...... LoanPayment COMPLETE! "
+                + Emoji.BLUE_DOT.concat(" ")).concat(res).concat(" - ").concat(res2));
+
+        return loanPayment;
+
     }
 
     public Organization addOrganization(Organization organization) throws Exception {
@@ -326,8 +334,6 @@ public class AgentService {
 
         }
         encryptAndSave(client, bag);
-        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF.concat(Emoji.LEAF))+
-                "Client created OK: ".concat(G.toJson(client)));
         return client;
     }
 
@@ -390,19 +396,17 @@ public class AgentService {
         String issuingAccountSeed = cryptoService.getDecryptedSeed(anchor.getIssuingAccount().getAccountId());
 
         LOGGER.info(Emoji.WARNING.concat(Emoji.WARNING) + "createAgent:.... Creating Agent Fiat Asset Balances .... userSeed: "
-        .concat(bag.getSecretSeed()));
+                .concat(bag.getSecretSeed()));
         //todo - what, exactly is limit?
         for (AccountService.AssetBag assetBag : assetBags) {
-            accountService.createTrustLine(anchor.getIssuingAccount().getAccountId(),bag.getSecretSeed(),agent.getFiatLimit(),
+            accountService.createTrustLine(anchor.getIssuingAccount().getAccountId(), bag.getSecretSeed(), agent.getFiatLimit(),
                     assetBag.assetCode);
-            accountService.createAsset(issuingAccountSeed,anchor.getDistributionAccount().getAccountId(),
+            accountService.createAsset(issuingAccountSeed, anchor.getDistributionAccount().getAccountId(),
                     assetBag.assetCode, agent.getFiatBalance());
         }
         //create firebase auth user
         String savedPassword;
         try {
-            LOGGER.info(Emoji.LIGHTNING.concat(Emoji.LIGHTNING.concat(Emoji.LIGHTNING))
-            .concat("Check agent, password seems to be missing .......".concat(G.toJson(agent))));
             agent.setStellarAccountId(bag.getAccountResponse().getAccountId());
             agent.setExternalAccountId("Not Known Yet");
 
@@ -432,20 +436,6 @@ public class AgentService {
 
     @Autowired
     private PaymentService paymentService;
-
-    public boolean sendPayment(String seed, String assetCode, String amount,
-                               String destinationAccount) throws Exception {
-        Anchor anchor = firebaseService.getAnchorByName(anchorName);
-        AgentController.PaymentRequest request = new AgentController.PaymentRequest(
-                seed,
-                assetCode,
-                amount,
-                new DateTime().toDateTimeISO().toString(),
-                anchor.getAnchorId(),
-                destinationAccount, null);
-        SubmitTransactionResponse response = paymentService.sendPayment(request);
-        return response.isSuccess();
-    }
 
     private void sendEmail(Agent agent) throws IOException {
 
