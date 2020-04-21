@@ -17,10 +17,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Logger;
 
 @Service
@@ -158,7 +155,17 @@ public class DemoDataGenerator {
                     .concat(" of " + numberOfPayments + " expected payments ")
                     .concat(" \uD83D\uDC99 dayOfTheMonth: " + lastDate)));
 
-            sendPaymentAndSaveOnFuckingDatabase(application, client, clientSeed, payment);
+            try {
+                sendPaymentAndSaveOnFuckingDatabase(application, client, clientSeed, payment);
+            } catch (Exception e) {
+                LOGGER.info(Emoji.NOT_OK.concat(Emoji.NOT_OK)
+                        + "This MONTHLY payment did not happen: " + e.getMessage());
+                if (e instanceof PaymentService.UnderFundedException) {
+                    LOGGER.info("\n\n\n".concat(Emoji.PIG.concat(Emoji.PIG.concat(Emoji.PIG) +
+                            "Client ".concat(client.getFullName()).concat(" has run out of MONTHLY money.  \uD83C\uDFB2 SUCKS!! .... \uD83D\uDD35 "))));
+                }
+                break;
+            }
             LOGGER.info("\uD83C\uDF51 ########################################################### looping thru monthly payments " +
                     "####################################################################  \uD83C\uDF51 ");
 
@@ -167,12 +174,12 @@ public class DemoDataGenerator {
     }
 
     private void sendPaymentAndSaveOnFuckingDatabase(LoanApplication application, Client client,
-                                                     String clientSeed, LoanPayment payment) {
-        try {
+                                                     String clientSeed, LoanPayment payment) throws Exception {
 
             AgentController.PaymentRequest request = new AgentController.PaymentRequest();
             request.setSeed(clientSeed);
-            request.setAmount(application.getAmount());
+            request.setPaymentRequestId(UUID.randomUUID().toString());
+            request.setAmount(payment.getAmount());
             request.setAnchorId(anchor.getAnchorId());
             request.setAssetCode(application.getAssetCode());
             request.setDate(new DateTime().toDateTimeISO().toString());
@@ -183,18 +190,12 @@ public class DemoDataGenerator {
             payment.setOnTime(true);
 
             payment = agentService.addLoanPayment(payment);
+            payment.setPaymentRequestId(request.getPaymentRequestId());
             LOGGER.info(Emoji.PRETZEL.concat(Emoji.PRETZEL) +
                     "MONTHLY LoanPayment made on Stellar and stored in database; getPaymentRequestId: "
                             .concat(payment.getPaymentRequestId())
                             .concat(Emoji.RED_TRIANGLE));
-        } catch (Exception e) {
-            LOGGER.info(Emoji.NOT_OK.concat(Emoji.NOT_OK)
-                    + "This MONTHLY payment did not happen: " + e.getMessage());
-            if (e instanceof PaymentService.UnderFundedException) {
-                LOGGER.info("\n\n\n".concat(Emoji.PIG.concat(Emoji.PIG.concat(Emoji.PIG) +
-                "Client ".concat(client.getFullName()).concat(" has run out of MONTHLY money.  \uD83C\uDFB2 SUCKS!! .... \uD83D\uDD35 "))));
-            }
-        }
+
     }
 
     private void generateWeeklyPayments(LoanApplication application) throws Exception {
@@ -223,20 +224,30 @@ public class DemoDataGenerator {
                     .concat(" ..... Processing WEEKLY payment #" + (i + 1))
                     .concat(" of " + numberOfPayments + " expected payments")
             ));
-            sendAndSave(application, client, clientSeed, payment);
+            try {
+                sendAndSave(application, client, clientSeed, payment);
+            } catch (Exception e) {
+                LOGGER.info(Emoji.PIG.concat(Emoji.PIG.concat(Emoji.PIG))
+                        .concat("This WEEKLY payment failed ".concat(e.getMessage())));
+                if (e instanceof PaymentService.UnderFundedException) {
+                    LOGGER.info("\n\n\n".concat(Emoji.PIG.concat(Emoji.PIG.concat(Emoji.PIG) +
+                            "Client ".concat(client.getFullName()).concat(" has run out of WEEKLY money.  \uD83C\uDF51 SUCKS!! .... \uD83D\uDD35 "))));
+                }
+                break;
+            }
             LOGGER.info("\uD83C\uDF51 ########################################################### looping thru weekly payments " +
                     "####################################################################  \uD83C\uDF51 ");
-
 
         }
     }
 
-    private void sendAndSave(LoanApplication application, Client client, String clientSeed, LoanPayment payment) {
-        try {
+    private void sendAndSave(LoanApplication application, Client client, String clientSeed, LoanPayment payment) throws Exception {
+
 
             AgentController.PaymentRequest request = new AgentController.PaymentRequest();
             request.setSeed(clientSeed);
-            request.setAmount(application.getAmount());
+            request.setPaymentRequestId(UUID.randomUUID().toString());
+            request.setAmount(payment.getAmount());
             request.setAnchorId(anchor.getAnchorId());
             request.setAssetCode(application.getAssetCode());
             request.setDate(new DateTime().toDateTimeISO().toString());
@@ -246,19 +257,13 @@ public class DemoDataGenerator {
 
             payment.setLedger(response.getLedger());
             payment.setOnTime(true);
+            payment.setPaymentRequestId(request.getPaymentRequestId());
             payment = agentService.addLoanPayment(payment);
             LOGGER.info(Emoji.PRETZEL.concat(Emoji.PRETZEL) +
                     "Weekly LoanPayment made on Stellar and stored in database; getPaymentRequestId: "
                             .concat(payment.getPaymentRequestId())
                             .concat(Emoji.RED_TRIANGLE));
-        } catch (Exception e) {
-            LOGGER.info(Emoji.PIG.concat(Emoji.PIG.concat(Emoji.PIG))
-                    .concat("This WEEKLY payment failed ".concat(e.getMessage())));
-            if (e instanceof PaymentService.UnderFundedException) {
-                LOGGER.info("\n\n\n".concat(Emoji.PIG.concat(Emoji.PIG.concat(Emoji.PIG) +
-                        "Client ".concat(client.getFullName()).concat(" has run out of WEEKLY money.  \uD83C\uDF51 SUCKS!! .... \uD83D\uDD35 "))));
-            }
-        }
+
     }
 
     private void deleteFirebaseArtifacts() throws Exception {
@@ -334,6 +339,7 @@ public class DemoDataGenerator {
                 request.setSeed(seed);
                 AgentController.PaymentRequest paymentRequest = new AgentController.PaymentRequest();
                 paymentRequest.setSeed(seed);
+                paymentRequest.setPaymentRequestId(UUID.randomUUID().toString());
                 paymentRequest.setAnchorId(anchor.getAnchorId());
                 paymentRequest.setAssetCode(assetBag.getAssetCode());
                 paymentRequest.setDate(new DateTime().toDateTimeISO().toString());
@@ -455,8 +461,8 @@ public class DemoDataGenerator {
     }
 
     private double getRandomInterestRate() {
-        int num = rand.nextInt(25);
-        if (num < 10) num = 10;
+        int num = rand.nextInt(10);
+        if (num < 3) num = 8;
         return num * 1.5;
     }
 
