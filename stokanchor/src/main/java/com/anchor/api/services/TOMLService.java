@@ -68,9 +68,6 @@ public class TOMLService {
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat("data: ".concat(data)));
         Path mPath = Files.write(Paths.get(DOWNLOAD_PATH.concat(anchorId)),data.getBytes());
         toml = new Toml().read(mPath.toFile());
-        String anchorName = toml.getString("anchorName");
-        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat("YEBO!! \uD83C\uDF4E \uD83C\uDF4E \uD83C\uDF4E Downloaded TOML for ")
-        .concat(anchorName));
         return toml;
     }
     public static final String DOWNLOAD_PATH = "downloaded_toml", UPLOAD_PATH = "upload_toml";

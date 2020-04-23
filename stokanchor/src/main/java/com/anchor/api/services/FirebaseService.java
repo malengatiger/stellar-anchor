@@ -113,6 +113,7 @@ public class FirebaseService {
 
     public String addLoanApplication(LoanApplication application) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
+        application.setAgentSeed(null);
         ApiFuture<DocumentReference> future = fs.collection(Constants.LOAN_APPLICATIONS).add(application);
         LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F LoanApplication added at path: "
                 + " " + application.getTotalAmountPayable() + " \uD83C\uDF4F rate: "
@@ -217,7 +218,6 @@ public class FirebaseService {
                  .concat(" ").concat(paymentRequest.getDate())
                  .concat("  \uD83C\uDF51 ledger: ").concat(" " + paymentRequest.getLedger() + " ")
                  .concat(future.get().getPath());
-        LOGGER.info(msg);
         return msg;
 
     }
@@ -309,12 +309,14 @@ public class FirebaseService {
         return info;
     }
 
-    public Anchor getAnchorByName(String name) throws Exception {
+    public Anchor getAnchor(String anchorId) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Anchor info;
         List<Anchor> mList = new ArrayList<>();
         ApiFuture<QuerySnapshot> future = fs.collection(Constants.ANCHORS)
-                .whereEqualTo("name", name).get();
+                .whereEqualTo("anchorId", anchorId)
+                .limit(1)
+                .get();
         for (QueryDocumentSnapshot document : future.get().getDocuments()) {
             Map<String, Object> map = document.getData();
             String object = gson.toJson(map);

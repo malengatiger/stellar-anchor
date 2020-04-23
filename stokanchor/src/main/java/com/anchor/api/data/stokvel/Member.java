@@ -6,6 +6,7 @@ import java.util.List;
 
 public class Member {
     private String date, memberId, stellarAccountId, url, fcmToken,
+            anchorId,
             externalAccountId, password, secretSeed;
     private boolean active;
     List<String> stokvelIds;
@@ -13,6 +14,14 @@ public class Member {
 
     public String getSecretSeed() {
         return secretSeed;
+    }
+
+    public String getAnchorId() {
+        return anchorId;
+    }
+
+    public void setAnchorId(String anchorId) {
+        this.anchorId = anchorId;
     }
 
     public void setSecretSeed(String secretSeed) {

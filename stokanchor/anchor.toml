@@ -1,7 +1,14 @@
+################################################## anchor.toml 22/5/2020
+#
 # 🌺 🌺 🌺 🌺 ANCHOR anchor.toml  🌺 🌺 🌺 🌺
+
 VERSION="1.0.0"
+
 # 🎽 Every Anchor creates an instance of this file which is encrypted and uploaded to Cloud Storage
 # 🎽 This file is required to save the basic settings for an Anchor instance ....
+#
+# 🍎 🍎 🍎 An Anchor server implementation is not possible without this file. It is stored securely using cloud
+# 🍎 🍎 🍎 key management services to store, encrypt and decrypt this settings file
 
 sendgrid="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"
 fromMail="bryan313.green@gmail.com"
@@ -9,7 +16,7 @@ limit=900000000000
 fiatLimit=900000000000.0000000
 defaultCurrencies=true
 domain="localhost:5000"
-anchorName="AzaniaAnchor Bank"
+anchorId="e66cc2e5-e4ee-49c7-8ba2-f0ea71a102e7"
 locationId="global"
 projectId="stellar-anchor-333"
 keyRingId="aubsKeyRing"
@@ -26,6 +33,7 @@ stellarUrl="https://horizon-testnet.stellar.org"
 minimumInterestRate=10
 maximumInterestRate=25
 basePassword="pTiger3#Word!isWannamaker#23"
+
 
 # 🛎 🛎 End of Anchor properties
 

@@ -174,8 +174,7 @@ public class AgentController {
 
     @Autowired
     private FirebaseService firebaseService;
-    @Value("${anchorName}")
-    private String anchorName;
+
     @GetMapping(value = "/getAgents", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Agent> getAgents(@RequestParam String anchorId) throws Exception {
         LOGGER.info(Emoji.PEACH.concat(Emoji.PEACH) + "AgentController:getAgents ...");

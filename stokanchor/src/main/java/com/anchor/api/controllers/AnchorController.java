@@ -50,61 +50,6 @@ public class AnchorController {
     @Value("${status}")
     private String status;
 
-    @GetMapping(value = "/generateDemo", produces = MediaType.TEXT_PLAIN_VALUE)
-    public String generateDemo() throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generateDemo ...");
-        demoDataGenerator.startGeneration();
-        return "\uD83D\uDC99 \uD83D\uDC9C GenerateDemoData completed ... "
-                + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
-    }
-    @GetMapping(value = "/generateLoans", produces = MediaType.TEXT_PLAIN_VALUE)
-    public String generateLoans() throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generateLoans ...");
-        demoDataGenerator.generateLoanApplications();
-        return "\uD83D\uDC99 \uD83D\uDC9C GenerateLoans completed ... "
-                + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
-    }
-    @GetMapping(value = "/generateStokvel", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Stokvel generateStokvel() throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generateStokvel ...");
-        Stokvel stokvel = demoDataGenerator.generateStokvel();
-        String msg =  "\uD83D\uDC99 \uD83D\uDC9C GenerateStokvel completed ... "
-                + stokvel.getName() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
-        LOGGER.info(msg);
-        return stokvel;
-    }
-    @GetMapping(value = "/generateStokvelMembers", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Member> generateStokvelMembers(@RequestParam String stokvelId) throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generateStokvelMembers ...");
-        List<Member> stokvel = demoDataGenerator.generateStokvelMembers(stokvelId);
-        String msg =  "\uD83D\uDC99 \uD83D\uDC9C GenerateStokvelMembers completed ... "
-                + stokvel + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
-        LOGGER.info(msg);
-        return stokvel;
-    }
-
-    @GetMapping(value = "/generateAgentFunding", produces = MediaType.TEXT_PLAIN_VALUE)
-    public String generateAgentFunding() throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generateAgentFunding ...");
-        demoDataGenerator.generateAgentFunding();
-        return "\uD83D\uDC99 \uD83D\uDC9C GenerateAgentFunding completed ... "
-                + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
-    }
-    @GetMapping(value = "/generateLoanApprovals", produces = MediaType.TEXT_PLAIN_VALUE)
-    public String generateLoanApprovals() throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generateLoanApprovals ...");
-        demoDataGenerator.generateLoanApprovals();
-        return "\uD83D\uDC99 \uD83D\uDC9C GenerateLoanApprovals completed ... "
-                + new DateTime().toDateTimeISO().toString() + " \uD83D\uDC99 STATUS: " + status;
-    }
-    @GetMapping(value = "/generatePayments", produces = MediaType.TEXT_PLAIN_VALUE)
-    public String generatePayments() throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generatePayments ...");
-        demoDataGenerator.generatePayments();
-        return "\uD83D\uDC99 \uD83D\uDC9C GeneratePayments completed ... "
-                + new DateTime().toDateTimeISO().toString() + " \uD83D\uDC99 STATUS: " + status;
-    }
-
     @GetMapping(value = "/", produces = MediaType.TEXT_PLAIN_VALUE)
     public String hello() {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication / ...");
@@ -177,14 +122,13 @@ public class AnchorController {
         AccountBag bag = new AccountBag(balanceList,response.getAccountId(),response.getSequenceNumber());
         return bag;
     }
-    @Value("${anchorName}")
-    private String anchorName;
+
 
     @GetMapping(value = "/getAnchor", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Anchor getAnchor() throws Exception {
+    public Anchor getAnchor(@RequestParam String anchorId) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorController:getAnchor ..."
-        .concat(anchorName));
-        Anchor response = firebaseService.getAnchorByName(anchorName);
+        .concat(anchorId));
+        Anchor response = firebaseService.getAnchor(anchorId);
         LOGGER.info( "\uD83D\uDC99 \uD83D\uDC9C AnchorController getAnchor returned: "
                 + response.getName() + " \uD83D\uDC99 \uD83D\uDC9C");
 
@@ -197,6 +141,8 @@ public class AnchorController {
     public List<Client> getClients(@RequestParam String anchorId) throws Exception {
         return firebaseService.getAnchorClients(anchorId);
     }
+    @Autowired
+    private TOMLService tomlService;
 
     @PostMapping(value = "/createAnchor", produces = MediaType.APPLICATION_JSON_VALUE)
     public Anchor createAnchor(@RequestBody AnchorBag anchorBag) throws Exception {
@@ -204,11 +150,22 @@ public class AnchorController {
         if (anchorBag.getFundingSeed() == null) {
             throw new Exception("Funding Account Seed missing");
         }
-        Anchor anchor = anchorAccountService.createAnchorAccounts(anchorBag.getAnchor(),
-                anchorBag.getPassword(),anchorBag.getAssetAmount(), anchorBag.getFundingSeed(), anchorBag.getStartingBalance());
+        Anchor anchor = anchorAccountService.createAnchorAccounts(
+                anchorBag.getAnchor(),
+                anchorBag.getPassword(),
+                anchorBag.getAssetAmount(),
+                anchorBag.getFundingSeed(),
+                anchorBag.getStartingBalance());
+
         LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 AnchorAccountService returns Anchor: \uD83C\uDF4E "
                 + anchor.getName() + "  \uD83C\uDF4E anchorId: " + anchor.getAnchorId()
         + "  \uD83C\uDF4E");
+        //todo - upload file toml
+        File file = new File("anchor.toml");
+        LOGGER.info("We have a file? ...".concat(file.getAbsolutePath()));
+        if (file.exists()) {
+            tomlService.encryptAndUploadFile(anchor.getAnchorId(), file);
+        }
         LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F \uD83C\uDF4F ANCHOR CREATED: ".concat(G.toJson(anchor)));
         return anchor;
     }

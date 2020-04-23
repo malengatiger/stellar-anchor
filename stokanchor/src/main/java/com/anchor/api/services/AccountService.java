@@ -88,13 +88,34 @@ public class AccountService {
             LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 Booty from Ms. FriendBot: \uD83C\uDF51 " + body);
         }
     }
+    @Autowired
+    private TOMLService tomlService;
+    private Anchor anchor;
+
+    private void setAnchor(String anchorId) throws Exception {
+        if (anchor != null) {
+            return;
+        }
+        Toml toml = tomlService.getToml(anchorId);
+        if (toml == null) {
+            throw new Exception("anchor.toml has not been found. upload the file from your computer");
+        } else {
+            String id = toml.getString("anchorId");
+            anchor = firebaseService.getAnchor(id);
+            if (anchor == null) {
+                LOGGER.info(Emoji.FIRE.concat(Emoji.FIRE.concat(Emoji.FIRE)
+                .concat("We are fucked! There is no ANCHOR !!!")));
+            }
+        }
+
+
+    }
 
     public AccountResponse getAccount(String seed) throws IOException {
         setServerAndNetwork();
         KeyPair sourceKeyPair = KeyPair.fromSecretSeed(seed);
         AccountResponse sourceAccount = server.accounts().account(sourceKeyPair.getAccountId());
-        LOGGER.info(Emoji.HEART_ORANGE.concat(Emoji.HEART_GREEN.concat(Emoji.HEART_BLUE))
-                +"Account Retrieved: ".concat(sourceAccount.getAccountId()));
+
         return sourceAccount;
     }
 
@@ -148,15 +169,13 @@ public class AccountService {
         }
     }
 
-    public AccountResponseBag createAndFundUserAccount(String startingXLMBalance,
+    public AccountResponseBag createAndFundUserAccount(String anchorId, String startingXLMBalance,
                                                        String startingFiatBalance, String fiatLimit) throws Exception {
         LOGGER.info(Emoji.PEAR.concat(Emoji.PEAR) + "\uD83D\uDC99 ... ... ... ... createAndFundAgentAccount starting " +
                 "....... startingXLMBalance: " + startingXLMBalance + " startingFiatBalance:" + startingFiatBalance
          + " fiatLimit: " + fiatLimit);
         setServerAndNetwork();
-        if (anchor == null) {
-            anchor = firebaseService.getAnchorByName(anchorName);
-        }
+        setAnchor(anchorId);
 
         try {
             String baseSeed = cryptoService.getDecryptedSeed(anchor.getBaseAccount().getAccountId());
@@ -327,67 +346,12 @@ public class AccountService {
         }
     }
 
-    @Value("${anchorName}")
-    private String anchorName;
-    private Anchor anchor;
+
 
     @Autowired
     private CryptoService cryptoService;
 
-    public SubmitTransactionResponse fundAgentAccount(
-                                                      String accountToFund,
-                                                      String amount,
-                                                      String assetCode,
-                                                      String agentId,
-                                                      String limit) throws Exception {
-        LOGGER.info("\uD83C\uDF40 \uD83C\uDF40 .......... fundAgentAccount ........ \uD83C\uDF40 " +
-                " \uD83C\uDF40 code: " + assetCode + " \uD83C\uDF40 amount: " + amount
-                + " accountToFund: " + accountToFund);
-        if (anchor == null) {
-            anchor = firebaseService.getAnchorByName(anchorName);
-        }
 
-        String issuingSeed = cryptoService.getDecryptedSeed(anchor.getIssuingAccount().getAccountId());
-        KeyPair keyPair = KeyPair.fromSecretSeed(issuingSeed);
-
-        List<AssetBag> assets = getDefaultAssets(keyPair.getAccountId());
-        AccountResponse issuingAcct = server.accounts().account(keyPair.getAccountId());
-        Transaction.Builder transactionBuilder = new Transaction.Builder(issuingAcct, network);
-        Asset asset = null;
-        for (AssetBag mAsset : assets) {
-            if (mAsset.toString().equalsIgnoreCase(assetCode)) {
-                asset = mAsset.asset;
-            }
-        }
-        if (asset == null) {
-            throw new Exception(Emoji.NOT_OK + "Asset ".concat(assetCode)
-                    .concat(" not found ").concat(Emoji.NOT_OK));
-        }
-        transactionBuilder.addOperation(new ChangeTrustOperation.Builder(
-                asset, limit)
-                .build());
-
-
-        transactionBuilder.addMemo(Memo.text("Agent Fiat Token"));
-        transactionBuilder.setOperationFee(100);
-        transactionBuilder.setTimeout(360);
-        Transaction transaction = transactionBuilder.build();
-
-        transaction.sign(keyPair);
-        LOGGER.info("\uD83C\uDF40 GetTransactionsResponse has been signed by issuing KeyPair... \uD83C\uDF51 on to submission ... ");
-
-        SubmitTransactionResponse submitTransactionResponse = server.submitTransaction(transaction);
-        if (submitTransactionResponse.isSuccess()) {
-            LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 \uD83D\uDC99  " +
-                    "Stellar issueAsset: ChangeTrustOperation has been executed OK: \uD83C\uDF4E \uD83C\uDF4E " +
-                    "isSuccess: " + submitTransactionResponse.isSuccess());
-
-        } else {
-            LOGGER.warning("ChangeTrustOperation ERROR: \uD83C\uDF45 resultXdr: " + submitTransactionResponse.getResultXdr().get());
-            throw new Exception("ChangeTrustOperation transactionResponse is \uD83C\uDF45 NOT success \uD83C\uDF45");
-        }
-        return submitTransactionResponse;
-    }
 /*
     🍊 🍊 🍊
     Anchors: issuing assets

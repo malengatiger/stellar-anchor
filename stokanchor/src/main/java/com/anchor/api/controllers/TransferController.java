@@ -61,8 +61,6 @@ public class TransferController {
     @Autowired
     private AnchorSep10Challenge anchorSep10Challenge;
 
-    @Value("${anchorName}")
-    private String anchorName;
 
     @Autowired
     private FirebaseService firebaseService;

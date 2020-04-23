@@ -37,8 +37,6 @@ public class StokvelService {
     @Value("${fromMail}")
     private String fromMail;
 
-    @Value("${anchorName}")
-    private String anchorName;
 
     @Value("${agentStartingBalance}")
     private String agentStartingBalance;
@@ -58,13 +56,15 @@ public class StokvelService {
         LOGGER.info(Emoji.YELLOW_BIRD + Emoji.YELLOW_BIRD + Emoji.YELLOW_BIRD +
                 "....... creating Stokvel ....... ");
         if (anchor == null) {
-            anchor = firebaseService.getAnchorByName(anchorName);
+            anchor = firebaseService.getAnchor(stokvel.getAnchorId());
         }
         Stokvel mStokvel = firebaseService.getStokvelByName(stokvel.getName());
         if (mStokvel != null) {
             throw new Exception("Stokvel already exists");
         }
-        AccountResponseBag bag = accountService.createAndFundUserAccount(agentStartingBalance,
+        AccountResponseBag bag = accountService.createAndFundUserAccount(
+                stokvel.getAnchorId(),
+                agentStartingBalance,
                 "0.01", fiatLimit);
         LOGGER.info(Emoji.RED_APPLE + Emoji.RED_APPLE +
                 "Stokvel Stellar account has been created and funded with ... "
@@ -111,7 +111,7 @@ public class StokvelService {
         LOGGER.info(Emoji.BLUE_BIRD + Emoji.BLUE_BIRD + Emoji.BLUE_BIRD +
                 "....... creating Member ....... ");
         if (anchor == null) {
-            anchor = firebaseService.getAnchorByName(anchorName);
+            anchor = firebaseService.getAnchor(member.getAnchorId());
         }
         Member mMember = firebaseService.getMemberByName(member.getKycFields().getFirst_name(), member.getKycFields().getLast_name());
         if (mMember != null) {
@@ -121,7 +121,9 @@ public class StokvelService {
         if (mMember != null) {
             throw new Exception("Member already exists");
         }
-        AccountResponseBag bag = accountService.createAndFundUserAccount(clientStartingBalance,
+        AccountResponseBag bag = accountService.createAndFundUserAccount(
+                member.getAnchorId(),
+                clientStartingBalance,
                 "0.01", fiatLimit);
         LOGGER.info(Emoji.RED_APPLE + Emoji.RED_APPLE +
                 "Member Stellar account has been created and funded with ... "

@@ -92,8 +92,6 @@ public class AnchorAccountService {
         anchor.setCellphone(newAnchor.getCellphone());
         anchor.setAnchorId(UUID.randomUUID().toString());
 
-
-
         AccountResponseBag baseAccount = accountService.createAndFundAnchorAccount(
                 fundingSeed,startingBalance);
         AccountResponseBag distributionAccount = accountService.createAndFundAnchorAccount(
@@ -105,8 +103,6 @@ public class AnchorAccountService {
         base.setAccountId(baseAccount.getAccountResponse().getAccountId());
         base.setName("Base Account");
         base.setDate(new DateTime().toDateTimeISO().toString());
-
-
 
         Account issuing = new Account();
         issuing.setAccountId(issuingAccount.getAccountResponse().getAccountId());
@@ -134,7 +130,6 @@ public class AnchorAccountService {
         try {
             List< AccountService.AssetBag > assets = accountService.getDefaultAssets(
                     issuingAccount.getAccountResponse().getAccountId());
-
             // Create trustlines for all asset types
             for (AccountService.AssetBag assetBag : assets) {
                 SubmitTransactionResponse createTrustResponse = accountService.createTrustLine(
@@ -145,8 +140,6 @@ public class AnchorAccountService {
                 LOGGER.info(Emoji.FLOWER_RED + Emoji.FLOWER_RED + "AnchorAccountService: createTrustLine for asset: " + assetBag.assetCode +
                         ".... "+Emoji.HAPPY+" TrustLine Response isSuccess:  " + createTrustResponse.isSuccess());
             }
-
-            // Create assets for all asset types
 
             for (AccountService.AssetBag assetBag : assets) {
                 LOGGER.info(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD) +
@@ -163,12 +156,12 @@ public class AnchorAccountService {
                 .concat(" asset amount: ").concat(assetAmount));
             }
 
-
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.severe(Emoji.NOT_OK + "Trustline/Asset creation failed" + Emoji.ERROR);
+            throw e;
         }
-        //🥬 🌼
+
         LOGGER.info(Emoji.LEAF + Emoji.LEAF + Emoji.LEAF +
                 "Anchor created and will be added to Firestore: " +
                 " " + anchor.getName());

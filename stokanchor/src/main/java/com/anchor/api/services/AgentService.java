@@ -8,6 +8,7 @@ import com.anchor.api.util.Emoji;
 import com.google.firebase.auth.UserRecord;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.moandjiezana.toml.Toml;
 import com.sendgrid.*;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -47,8 +48,6 @@ public class AgentService {
     @Value("${fromMail}")
     private String fromMail;
 
-    @Value("${anchorName}")
-    private String anchorName;
 
     @Value("${agentStartingBalance}")
     private String agentStartingBalance;
@@ -248,8 +247,7 @@ public class AgentService {
      * @throws Exception
      */
     public LoanPayment addLoanPayment(LoanPayment loanPayment) throws Exception {
-        LOGGER.info("***************** validating loanPayment before processing " +
-                "\uD83C\uDF4F \uD83C\uDF4F ********************** will check balance first");
+
         if (loanPayment.getAnchorId() == null) {
             throw new Exception("Anchor missing");
         }
@@ -275,8 +273,10 @@ public class AgentService {
         AccountResponse accountResponse = accountService.getAccount(loanPayment.getClientSeed());
         AccountResponse.Balance balance = null;
         for (AccountResponse.Balance bal : accountResponse.getBalances()) {
-            if (bal.getAssetCode().equalsIgnoreCase(loanPayment.getAssetCode())) {
-                balance = bal;
+            if (!bal.getAssetType().equalsIgnoreCase("native")) {
+                if (bal.getAssetCode().equalsIgnoreCase(loanPayment.getAssetCode())) {
+                    balance = bal;
+                }
             }
         }
         if (balance == null) {
@@ -289,7 +289,6 @@ public class AgentService {
                     .concat(" \uD83C\uDF4E balance: ".concat(balance.getBalance()
                     .concat(" \uD83C\uDF4E loan amount: ").concat(loanPayment.getAmount())));
             LOGGER.info(msg);
-            LOGGER.info(G.toJson(accountResponse.getBalances()));
             throw new Exception(msg);
         }
         AgentController.PaymentRequest request = new AgentController.PaymentRequest();
@@ -340,11 +339,33 @@ public class AgentService {
         return firebaseService.updateClient(client);
     }
 
+    @Autowired
+    private TOMLService tomlService;
+    private Anchor anchor;
+
+    private void setAnchor(String anchorId) throws Exception {
+        if (anchor != null) {
+            return;
+        }
+        Toml toml = tomlService.getToml(anchorId);
+        if (toml == null) {
+            throw new Exception("anchor.toml has not been found. upload the file from your computer");
+        } else {
+            String id = toml.getString("anchorId");
+            anchor = firebaseService.getAnchor(id);
+            if (anchor == null) {
+                throw new Exception("AgentService:\uD83D\uDE21 \uD83D\uDE21 anchor is missing");
+            }
+        }
+
+
+    }
+
     public com.anchor.api.data.anchor.Client createClient(com.anchor.api.data.anchor.Client client) throws Exception {
 
         LOGGER.info(Emoji.LEMON + Emoji.LEMON +
                 "....... creating Client ....... ");
-        Anchor anchor = firebaseService.getAnchorByName(anchorName);
+        setAnchor(client.getAnchorId());
         Agent agent = firebaseService.getAgent(client.getAgentId());
         if (anchor == null) {
             throw new Exception("Missing anchor");
@@ -355,12 +376,13 @@ public class AgentService {
                 client.getPersonalKYCFields().getLast_name());
 
         if (mClient != null) {
-            LOGGER.info(Emoji.ERROR + "Client already exists for this Anchor: ".concat(anchorName)
+            LOGGER.info(Emoji.ERROR + "Client already exists for this Anchor: ".concat(anchor.getName())
                     .concat(Emoji.ERROR));
             throw new Exception(Emoji.ERROR + "Client already exists for this Anchor");
         }
 
         AccountResponseBag bag = accountService.createAndFundUserAccount(
+                client.getAnchorId(),
                 clientStartingBalance,
                 client.getStartingFiatBalance(), agent.getFiatLimit());
         LOGGER.info(Emoji.HEART_PURPLE + Emoji.HEART_PURPLE +
@@ -414,21 +436,23 @@ public class AgentService {
         //todo - create Stellar account; add to Firestore;
         LOGGER.info(Emoji.YELLOW_STAR + Emoji.YELLOW_STAR + Emoji.YELLOW_STAR +
                 "....... creating Agent ....... ");
-        Anchor anchor = firebaseService.getAnchorByName(anchorName);
+        setAnchor(agent.getAnchorId());
         if (anchor == null) {
-            throw new Exception("Missing anchor");
+            anchor = firebaseService.getAnchor(agent.getAnchorId());
         }
         Agent mAgent = firebaseService.getAgentByNameAndAnchor(
                 anchor.getAnchorId(),
                 agent.getPersonalKYCFields().getFirst_name(),
                 agent.getPersonalKYCFields().getLast_name());
         if (mAgent != null) {
-            LOGGER.info(Emoji.ERROR.concat(anchorName)
+            LOGGER.info(Emoji.ERROR.concat(anchor.getName())
                     .concat(" ").concat(Emoji.ERROR));
             throw new Exception(Emoji.ERROR + "Agent already exists for this Anchor");
         }
 
-        AccountResponseBag bag = accountService.createAndFundUserAccount(agentStartingBalance,
+        AccountResponseBag bag = accountService.createAndFundUserAccount(
+                agent.getAnchorId(),
+                agentStartingBalance,
                 agent.getFiatBalance(), agent.getFiatLimit());
         LOGGER.info(Emoji.RED_APPLE + Emoji.RED_APPLE +
                 "Agent Stellar account has been created and funded with ... "

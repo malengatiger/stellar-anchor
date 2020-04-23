@@ -1,8 +1,6 @@
 package com.anchor.api;
 
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -32,7 +30,7 @@ public class Scheduler {
                 + " " + Emoji.RED_APPLE);
         try {
             FirebaseService firebaseService = context.getBean(FirebaseService.class);
-            Anchor anchor = firebaseService.getAnchorByName(anchorName);
+            Anchor anchor = firebaseService.getAnchor(anchorName);
             List<Agent> list = firebaseService.getAgents(anchor.getAnchorId());
             for (Agent agent : list) {
                 LOGGER.info(Emoji.DICE.concat(Emoji.DICE) + "Agent: ".concat(agent.getFullName()).concat(" ")

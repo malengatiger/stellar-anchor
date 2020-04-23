@@ -9,6 +9,8 @@ build/
 downloaded_seed*
 encrypted_seed*
 *.toml
+downloaded*
+file_*
 
 ### STS ###
 .apt_generated
@@ -46,3 +48,5 @@ src/main/resources/templates/
 firebase.json
 src/main/.DS_Store
 src/main/generated/
+downloaded_toml3f309784-bcda-4b6a-b49c-9dec4419adb3
+file_1587606108286

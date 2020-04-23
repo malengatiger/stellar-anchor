@@ -3,7 +3,9 @@ package com.anchor.api.data.stokvel;
 import com.anchor.api.data.transfer.sep9.OrganizationKYCFields;
 
 public class Stokvel {
-    private String name, date, stokvelId, accountId, password, secretSeed;
+    private String name, date, stokvelId,
+    anchorId,
+    accountId, password, secretSeed;
     private boolean active;
     Member adminMember;
     OrganizationKYCFields kycFields;
@@ -14,6 +16,14 @@ public class Stokvel {
 
     public void setSecretSeed(String secretSeed) {
         this.secretSeed = secretSeed;
+    }
+
+    public String getAnchorId() {
+        return anchorId;
+    }
+
+    public void setAnchorId(String anchorId) {
+        this.anchorId = anchorId;
     }
 
     public String getPassword() {

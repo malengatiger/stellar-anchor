@@ -6,6 +6,7 @@ import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.util.Emoji;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.moandjiezana.toml.Toml;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,8 +47,7 @@ public class PaymentService {
 
     private SubmitTransactionResponse submit(AgentController.PaymentRequest request) throws Exception {
         setServerAndNetwork();
-        if (anchor == null)
-            anchor = firebaseService.getAnchorByName(anchorName);
+        setAnchor(request.getAnchorId());
 
         KeyPair sourceKeyPair = KeyPair.fromSecretSeed(request.getSeed());
         AccountResponse sourceAccount = server.accounts().account(sourceKeyPair.getAccountId());
@@ -144,6 +144,26 @@ public class PaymentService {
             LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F PRODUCTION: ... Stellar Public Server and Network... \uD83C\uDF4F \uD83C\uDF4F \n");
 
         }
+    }
+    @Autowired
+    private TOMLService tomlService;
+    private void setAnchor(String anchorId) throws Exception {
+        if (anchor != null) {
+            return;
+        }
+        Toml toml = tomlService.getToml(anchorId);
+        if (toml == null) {
+            throw new Exception("anchor.toml has not been found. upload the file from your computer");
+        } else {
+            String id = toml.getString("anchorId");
+            anchor = firebaseService.getAnchor(id);
+            if (anchor == null) {
+                LOGGER.info(Emoji.FIRE.concat(Emoji.FIRE.concat(Emoji.FIRE)
+                        .concat("We are fucked! There is no ANCHOR !!!")));
+            }
+        }
+
+
     }
     public static class UnderFundedException extends Exception {
 

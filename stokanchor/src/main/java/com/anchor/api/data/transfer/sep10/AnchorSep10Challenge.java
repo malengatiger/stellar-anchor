@@ -43,9 +43,6 @@ public class AnchorSep10Challenge {
     private Server server;
     private Network network;
 
-    @Value("${anchorName}")
-    private String anchorName;
-
     @Value("${jwtIssuer}")
     private String jwtIssuer;
 
@@ -68,14 +65,14 @@ public class AnchorSep10Challenge {
      */
     public  ChallengeResponse newChallenge(String clientAccountId) throws Exception {
         LOGGER.info(emm + "Executing challenge ... to return XDR transaction to caller ... " + emm);
-        Anchor anchor = firebaseService.getAnchorByName(anchorName);
-        if (anchor == null) {
-            LOGGER.severe("Anchor ".concat(anchorName).concat(" is missing"));
-            throw new Exception(error + " Anchor is missing " + error
-            .concat(anchorName));
-        }
-        LOGGER.info(em1 + "Anchor found on Firestore: "
-                .concat(anchorName));
+//        Anchor anchor = firebaseService.getAnchor(anchorName);
+//        if (anchor == null) {
+//            LOGGER.severe("Anchor ".concat(anchorName).concat(" is missing"));
+//            throw new Exception(error + " Anchor is missing " + error
+//            .concat(anchorName));
+//        }
+//        LOGGER.info(em1 + "Anchor found on Firestore: "
+//                .concat(anchorName));
 
         String seed = cryptoService.getDecryptedSeed(anchor.getBaseAccount().getAccountId());
         LOGGER.info(em1 + " " + em1 +"Decrypted seed: "
@@ -100,16 +97,9 @@ public class AnchorSep10Challenge {
             throw new Exception(error + "Client Account missing ".concat(error));
         }
         LOGGER.info(em2 +" Client has an account on Stellar. We good! Starting ManageDataOperation in transaction ..."
-                +em2+" anchor: " + anchorName);
+                +em2);
 
-        int maxSize = 50;
-        String key = "";
-        if(anchorName.length() > maxSize ){
-            key = anchorName.substring(0, maxSize);
-        } else {
-            key = anchorName;
-        }
-        key += " auth";
+        String key = "A" + System.currentTimeMillis() + " auth";
         Account sourceAccount = new Account(signer.getAccountId(), -1L);
         ManageDataOperation operation = new ManageDataOperation.Builder(key, encodedNonce)
                 .setSourceAccount(clientAccountId)
@@ -213,7 +203,7 @@ public class AnchorSep10Challenge {
         return token;
     }
 
-    private Anchor anchor;
+    //private Anchor anchor;
     /**
      * Reads a SEP 10 challenge transaction and returns the decoded transaction envelope and client account ID contained within.
      * <p>
@@ -231,18 +221,17 @@ public class AnchorSep10Challenge {
      */
     private ChallengeTransaction readChallengeTransaction(String challengeXdr) throws Exception {
         setServerAndNetwork();
-        if (anchor == null) {
-            anchor = firebaseService.getAnchorByName(anchorName);
-        }
-        LOGGER.info(Emoji.FIRE + "readChallengeTransaction: Anchor is ".concat(anchor.getName().concat(" ")).concat(Emoji.FIRE));
-        String serverAccountId = anchor.getBaseAccount().getAccountId();
+//        if (anchor == null) {
+//            anchor = firebaseService.getAnchor(anchorName);
+//        }
+        //String serverAccountId = anchor.getBaseAccount().getAccountId();
         // decode the received input as a base64-urlencoded XDR representation of Stellar transaction envelope
         Transaction transaction = Transaction.fromEnvelopeXdr(challengeXdr, network);
         LOGGER.info(Emoji.HAPPY + Emoji.HAPPY + "readChallengeTransaction: We have a decoded Transaction, Yay! ".concat(Emoji.FIRE));
         // verify that transaction source account is equal to the server's signing key
-        if (!serverAccountId.equals(transaction.getSourceAccount())) {
-            throw new InvalidSep10ChallengeException("Transaction source account is not equal to server's account.");
-        }
+//        if (!serverAccountId.equals(transaction.getSourceAccount())) {
+//            throw new InvalidSep10ChallengeException("Transaction source account is not equal to server's account.");
+//        }
 
         // verify that transaction sequenceNumber is equal to zero
         if (transaction.getSequenceNumber() != 0L) {
@@ -300,15 +289,17 @@ public class AnchorSep10Challenge {
             throw new InvalidSep10ChallengeException("Random nonce before encoding as base64 should be 48 bytes long.");
         }
 
-        if (!verifyTransactionSignature(transaction, serverAccountId)) {
-            throw new InvalidSep10ChallengeException(String.format("Transaction not signed by server: %s.", serverAccountId));
-        }
+//        if (!verifyTransactionSignature(transaction, serverAccountId)) {
+//            throw new InvalidSep10ChallengeException(String.format("Transaction not signed by server: %s.", serverAccountId));
+//        }
         ChallengeTransaction challengeTransaction = new ChallengeTransaction(transaction,clientAccountId);
         String mm = Emoji.PANDA + Emoji.PANDA + Emoji.BLUE_DISC + Emoji.BLUE_DISC;
         LOGGER.info(mm + "readChallengeTransaction completed. "
                 .concat(challengeTransaction.getClientAccountId()));
         return new ChallengeTransaction(transaction, clientAccountId);
     }
+
+    private Anchor anchor;
 
     /**
      * Verifies that for a SEP 10 challenge transaction
@@ -332,7 +323,7 @@ public class AnchorSep10Challenge {
         }
         LOGGER.info(Emoji.FIRE + ".... verify ChallengeTransactionSigners ...".concat(Emoji.FIRE));
         if (anchor == null) {
-             anchor = firebaseService.getAnchorByName(anchorName);
+             anchor = firebaseService.getAnchor("anchorId HERE!");
         }
         String serverAccountId = anchor.getBaseAccount().getAccountId();
         // Read the transaction which validates its structure.
