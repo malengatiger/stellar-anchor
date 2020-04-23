@@ -52,54 +52,54 @@ public class AnchorController {
 
     @GetMapping(value = "/generateDemo", produces = MediaType.TEXT_PLAIN_VALUE)
     public String generateDemo() throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication /generateDemo ...");
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generateDemo ...");
         demoDataGenerator.startGeneration();
         return "\uD83D\uDC99 \uD83D\uDC9C GenerateDemoData completed ... "
                 + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
     }
     @GetMapping(value = "/generateLoans", produces = MediaType.TEXT_PLAIN_VALUE)
     public String generateLoans() throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication /generateLoans ...");
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generateLoans ...");
         demoDataGenerator.generateLoanApplications();
         return "\uD83D\uDC99 \uD83D\uDC9C GenerateLoans completed ... "
                 + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
     }
     @GetMapping(value = "/generateStokvel", produces = MediaType.APPLICATION_JSON_VALUE)
     public Stokvel generateStokvel() throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication /generateStokvel ...");
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generateStokvel ...");
         Stokvel stokvel = demoDataGenerator.generateStokvel();
         String msg =  "\uD83D\uDC99 \uD83D\uDC9C GenerateStokvel completed ... "
-                + G.toJson(stokvel) + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
+                + stokvel.getName() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
         LOGGER.info(msg);
         return stokvel;
     }
     @GetMapping(value = "/generateStokvelMembers", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Member> generateStokvelMembers(@RequestParam String stokvelId) throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication /generateStokvelMembers ...");
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generateStokvelMembers ...");
         List<Member> stokvel = demoDataGenerator.generateStokvelMembers(stokvelId);
         String msg =  "\uD83D\uDC99 \uD83D\uDC9C GenerateStokvelMembers completed ... "
-                + G.toJson(stokvel) + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
+                + stokvel + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
         LOGGER.info(msg);
         return stokvel;
     }
 
     @GetMapping(value = "/generateAgentFunding", produces = MediaType.TEXT_PLAIN_VALUE)
     public String generateAgentFunding() throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication /generateAgentFunding ...");
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generateAgentFunding ...");
         demoDataGenerator.generateAgentFunding();
         return "\uD83D\uDC99 \uD83D\uDC9C GenerateAgentFunding completed ... "
                 + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
     }
     @GetMapping(value = "/generateLoanApprovals", produces = MediaType.TEXT_PLAIN_VALUE)
     public String generateLoanApprovals() throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication /generateLoanApprovals ...");
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generateLoanApprovals ...");
         demoDataGenerator.generateLoanApprovals();
         return "\uD83D\uDC99 \uD83D\uDC9C GenerateLoanApprovals completed ... "
                 + new DateTime().toDateTimeISO().toString() + " \uD83D\uDC99 STATUS: " + status;
     }
     @GetMapping(value = "/generatePayments", produces = MediaType.TEXT_PLAIN_VALUE)
     public String generatePayments() throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication /generatePayments ...");
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generatePayments ...");
         demoDataGenerator.generatePayments();
         return "\uD83D\uDC99 \uD83D\uDC9C GeneratePayments completed ... "
                 + new DateTime().toDateTimeISO().toString() + " \uD83D\uDC99 STATUS: " + status;
@@ -107,8 +107,8 @@ public class AnchorController {
 
     @GetMapping(value = "/", produces = MediaType.TEXT_PLAIN_VALUE)
     public String hello() {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication / ...");
-        return "\uD83D\uDC99 \uD83D\uDC9C AnchorApplication up and running ... "
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication / ...");
+        return "\uD83D\uDC99 \uD83D\uDC9C StellarAnchorApplication up and running ... "
                 + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
     }
 
@@ -152,7 +152,7 @@ public class AnchorController {
     }
     @GetMapping(value = "/ping", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> ping() throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 Pinging AnchorApplication and getting anchors...");
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 Pinging StellarAnchorApplication and getting anchors...");
         List<Anchor> anchors = context.getBean(FirebaseService.class).getAnchors();
         List<String > mList = new ArrayList<>();
         int cnt = 0;
@@ -160,7 +160,7 @@ public class AnchorController {
             cnt++;
             mList.add(anchor.getName());
         }
-        LOGGER.info( "\uD83D\uDC99 \uD83D\uDC9C AnchorApplication pinged at "
+        LOGGER.info( "\uD83D\uDC99 \uD83D\uDC9C StellarAnchorApplication pinged at "
                 + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C anchors found: " + anchors.size());
         return mList;
     }
@@ -176,6 +176,19 @@ public class AnchorController {
         Collections.addAll(balanceList, balances);
         AccountBag bag = new AccountBag(balanceList,response.getAccountId(),response.getSequenceNumber());
         return bag;
+    }
+    @Value("${anchorName}")
+    private String anchorName;
+
+    @GetMapping(value = "/getAnchor", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Anchor getAnchor() throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorController:getAnchor ..."
+        .concat(anchorName));
+        Anchor response = firebaseService.getAnchorByName(anchorName);
+        LOGGER.info( "\uD83D\uDC99 \uD83D\uDC9C AnchorController getAnchor returned: "
+                + response.getName() + " \uD83D\uDC99 \uD83D\uDC9C");
+
+        return response;
     }
 
     @Autowired
@@ -205,7 +218,7 @@ public class AnchorController {
 
     @GetMapping("/createKeyRing")
     public String createKeyRing(@RequestParam String keyRingId) throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication: createKeyRing ... ... ...");
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication: createKeyRing ... ... ...");
         String keyRing = cryptoService.createKeyRing();
         LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 createKeyRing done!: \uD83C\uDF4E "
         .concat(keyRing));
@@ -213,7 +226,7 @@ public class AnchorController {
     }
     @GetMapping("/createCryptoKey")
     public String createCryptoKey() throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorApplication: createCryptoKey ... ... ...");
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication: createCryptoKey ... ... ...");
         String cryptoKey = cryptoService.createCryptoKey();
         LOGGER.info("\uD83E\uDD66 \uD83E\uDD66 \uD83E\uDD66 createCryptoKey done!: \uD83C\uDF4E "
                 .concat(cryptoKey));

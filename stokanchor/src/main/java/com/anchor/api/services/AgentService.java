@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.io.IOException;
@@ -54,6 +55,12 @@ public class AgentService {
 
     @Value("${clientStartingBalance}")
     private String clientStartingBalance;
+
+    @Value("${minimumInterestRate}")
+    private String minimumInterestRate;
+
+    @Value("${maximumInterestRate}")
+    private String maximumInterestRate;
 
     public String removeClient(String clientId) throws Exception {
         return null;
@@ -102,10 +109,11 @@ public class AgentService {
             }
         }
         if (!application.isApprovedByClient()) {
-            LOGGER.info("Check this LoanApplication: apparently not approved by client"
-            .concat(G.toJson(application)));
+            LOGGER.info("Check this LoanApplication: apparently not approved by client");
             throw new Exception(Emoji.NOT_OK + "LoanApplication not approved by Client");
         }
+
+
         AgentController.PaymentRequest request = new AgentController.PaymentRequest();
         request.setPaymentRequestId(UUID.randomUUID().toString());
         request.setSeed(seed);
@@ -164,6 +172,17 @@ public class AgentService {
         if (application.getLoanPeriodInMonths() == 0 && application.getLoanPeriodInWeeks() == 0) {
             throw new Exception("LoanPeriod should be > 0");
         }
+
+        double min = Double.parseDouble(minimumInterestRate);
+        double max = Double.parseDouble(maximumInterestRate);
+
+        if (application.getInterestRate() < min) {
+            throw new Exception("\uD83D\uDE21 Interest Rate must be at least ".concat(minimumInterestRate));
+        }
+        if (application.getInterestRate() > max) {
+            throw new Exception("\uD83D\uDE21 Interest Rate must be less than ".concat(maximumInterestRate));
+        }
+
         if (application.getLoanPeriodInMonths() > 0) {
             double monthlyPayment = calculateMonthlyPayment(
                     application.getAmount(),
@@ -229,7 +248,8 @@ public class AgentService {
      * @throws Exception
      */
     public LoanPayment addLoanPayment(LoanPayment loanPayment) throws Exception {
-
+        LOGGER.info("***************** validating loanPayment before processing " +
+                "\uD83C\uDF4F \uD83C\uDF4F ********************** will check balance first");
         if (loanPayment.getAnchorId() == null) {
             throw new Exception("Anchor missing");
         }
@@ -251,6 +271,27 @@ public class AgentService {
         if (loanPayment.getAmount() == null) {
             throw new Exception("Amount is missing");
         }
+        //todo - check account balance for this asset before attempting payment
+        AccountResponse accountResponse = accountService.getAccount(loanPayment.getClientSeed());
+        AccountResponse.Balance balance = null;
+        for (AccountResponse.Balance bal : accountResponse.getBalances()) {
+            if (bal.getAssetCode().equalsIgnoreCase(loanPayment.getAssetCode())) {
+                balance = bal;
+            }
+        }
+        if (balance == null) {
+            throw new Exception("Asset Balance is missing");
+        }
+        double loanAmt = Double.parseDouble(loanPayment.getAmount());
+        double balanceAmt = Double.parseDouble(balance.getBalance());
+        if (loanAmt > balanceAmt) {
+            String msg = "Not enough money in account to cover necessary amount ".concat(Emoji.PIG)
+                    .concat(" \uD83C\uDF4E balance: ".concat(balance.getBalance()
+                    .concat(" \uD83C\uDF4E loan amount: ").concat(loanPayment.getAmount())));
+            LOGGER.info(msg);
+            LOGGER.info(G.toJson(accountResponse.getBalances()));
+            throw new Exception(msg);
+        }
         AgentController.PaymentRequest request = new AgentController.PaymentRequest();
         request.setPaymentRequestId(UUID.randomUUID().toString());
         request.setAmount(loanPayment.getAmount());
@@ -259,23 +300,28 @@ public class AgentService {
         request.setAssetCode(loanPayment.getAssetCode());
         request.setDate(new DateTime().toDateTimeISO().toString());
         request.setDestinationAccount(loanPayment.getAgentAccount());
+
         SubmitTransactionResponse response = paymentService.sendPayment(request);
+        if (response.isSuccess()) {
+            //todo - royalties to Anchor and to Agent ...  🍎 set up ROYALTY REGIME!!
+            loanPayment.setCompleted(true);
+            loanPayment.setPaymentRequestId(request.getPaymentRequestId());
+            String res = firebaseService.addLoanPayment(loanPayment);
+
+            LoanApplication app = firebaseService.getLoanApplication(loanPayment.getLoanId());
+            app.setLastDatePaid(new DateTime().toDateTimeISO().toString());
+            app.setLastPaymentRequestId(request.getPaymentRequestId());
+            String res2 = firebaseService.updateLoanApplication(app);
+
+            LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat("...... LoanPayment COMPLETE! "
+                    + Emoji.BLUE_DOT.concat(" messages: ")).concat(res).concat(" - ").concat(res2));
+
+            return loanPayment;
+        } else {
+            throw new Exception("LoanPayment failed");
+        }
 
 
-        //todo - royalties to Anchor and to Agent ...  🍎 set up ROYALTY REGIME!!
-        LoanApplication app = firebaseService.getLoanApplication(loanPayment.getLoanId());
-        loanPayment.setCompleted(true);
-        loanPayment.setPaymentRequestId(request.getPaymentRequestId());
-
-        String res = firebaseService.addLoanPayment(loanPayment);
-        app.setLastDatePaid(new DateTime().toDateTimeISO().toString());
-        app.setLastPaymentRequestId(request.getPaymentRequestId());
-        String res2 = firebaseService.updateLoanApplication(app);
-
-        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat("...... LoanPayment COMPLETE! "
-                + Emoji.BLUE_DOT.concat(" ")).concat(res).concat(" - ").concat(res2));
-
-        return loanPayment;
 
     }
 
@@ -355,7 +401,7 @@ public class AgentService {
         client.setPassword(savePassword);
         client.setSecretSeed(bag.getSecretSeed());
         LOGGER.info((Emoji.BLUE_DOT + Emoji.BLUE_DOT +
-                "Client has been added to Firestore ").concat(G.toJson(client)));
+                "Client has been added to Firestore ").concat(client.getFullName()));
     }
 
     public String updateAgent(Agent agent) throws Exception {
@@ -420,7 +466,7 @@ public class AgentService {
             firebaseService.addAgent(agent);
             sendEmail(agent);
             LOGGER.info((Emoji.LEAF + Emoji.LEAF +
-                    "Agent has been added to Firestore without seed or password ").concat(G.toJson(agent)));
+                    "Agent has been added to Firestore without seed or password ").concat(agent.getFullName()));
             agent.setPassword(savedPassword);
             agent.setSecretSeed(bag.getSecretSeed());
         } catch (Exception e) {

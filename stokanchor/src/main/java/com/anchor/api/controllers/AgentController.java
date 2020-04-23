@@ -5,6 +5,7 @@ import com.anchor.api.services.*;
 import com.anchor.api.util.Emoji;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.moandjiezana.toml.Toml;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +13,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(maxAge = 3600)
 @RestController
@@ -71,7 +78,8 @@ public class AgentController {
     public LoanApplication approveApplicationByAgent(@RequestBody LoanApplication loanApplication) throws Exception {
         LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AgentController:approve ...");
         LoanApplication application = agentService.approveApplicationByAgent(loanApplication);
-        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + G.toJson(application));
+        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + application.getAmount() + " "
+        + application.getAssetCode());
         return application;
     }
 
@@ -90,7 +98,8 @@ public class AgentController {
     public LoanApplication declineApplication(@RequestBody LoanApplication agent) throws Exception {
         LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AgentController:decline ...");
         LoanApplication application = agentService.declineApplication(agent);
-        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + G.toJson(application));
+        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + application.getAmount() + " "
+                + application.getAssetCode());
         return application;
     }
 
@@ -98,7 +107,8 @@ public class AgentController {
     public LoanPayment makeLoanPayment(@RequestBody LoanPayment loanPayment) throws Exception {
         LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AgentController:makeLoanPayment ...");
         LoanPayment payment = agentService.addLoanPayment(loanPayment);
-        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + G.toJson(payment));
+        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + loanPayment.getAmount() + " "
+                + loanPayment.getAssetCode());
         return payment;
     }
 
@@ -158,7 +168,7 @@ public class AgentController {
     public List<LoanPayment> getLoanPayments(@RequestParam String loanId) throws Exception {
         LOGGER.info(Emoji.PEACH.concat(Emoji.PEACH) + "AgentController:getLoanPayments ...");
         List<LoanPayment> loanPayments = agentService.getLoanPayments(loanId);
-        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + G.toJson(loanPayments));
+        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + " payments found:" + loanPayments.size());
         return loanPayments;
     }
 
@@ -172,8 +182,7 @@ public class AgentController {
 
         List<Agent> agents = firebaseService.getAgents(anchorId);
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat(
-                ("Found " + agents.size() + " agents for this Anchor "))
-                + G.toJson(agents));
+                ("Found " + agents.size() + " agents for this Anchor ")));
         return agents;
     }
     @GetMapping(value = "/getPaymentRequests", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -183,7 +192,7 @@ public class AgentController {
         List<PaymentRequest> requests = firebaseService.getPaymentRequests(anchorId);
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat(
                 ("Found " + requests.size() + " PaymentRequests for this Anchor "))
-                + G.toJson(requests));
+               );
         return requests;
     }
     @GetMapping(value = "/getAgentClients", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -191,7 +200,7 @@ public class AgentController {
         LOGGER.info(Emoji.PEACH.concat(Emoji.PEACH) + "AgentController:getAgentClients ...");
         List<Client> agentClients = agentService.getAgentClients(agentId);
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat(
-                ("Found " + agentClients.size() + " clients for this Agent ")) + G.toJson(agentClients));
+                ("Found " + agentClients.size() + " clients for this Agent ")));
         return agentClients;
     }
 
@@ -200,7 +209,7 @@ public class AgentController {
         LOGGER.info(Emoji.PEACH.concat(Emoji.PEACH) + "AgentController:getAgentLoans ...");
         List<LoanApplication> agentLoans = agentService.getAgentLoans(agentId);
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat
-                (" found " + agentLoans.size() + " ") + G.toJson(agentLoans));
+                (" found " + agentLoans.size() + " ") );
         return agentLoans;
     }
 
@@ -208,7 +217,7 @@ public class AgentController {
     public String removeClient(@RequestParam String clientId) throws Exception {
         LOGGER.info(Emoji.PEACH.concat(Emoji.PEACH) + "AgentController:removeClient ...");
         String message = agentService.removeClient(clientId);
-        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + G.toJson(message));
+        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + message);
         return message;
     }
 
@@ -228,7 +237,7 @@ public class AgentController {
 
         Client mClient = agentService.createClient(client);
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + "Agent returns Client with brand new Stellar account: \uD83C\uDF4E "
-                + G.toJson(mClient));
+                + mClient.getFullName());
         return mClient;
 
     }
@@ -241,20 +250,48 @@ public class AgentController {
         return mClient;
     }
 
+    @Autowired
+    private TOMLService tomlService;
+    @PostMapping(value = "/uploadTOML", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public byte[] uploadTOML(@RequestParam("anchorId") String anchorId,
+                             @RequestParam("file") MultipartFile multipartFile) throws Exception {
+
+        LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AnchorController:uploadTOML...");
+        byte[] bytes = multipartFile.getBytes();
+        File mFile = new File("file_" + System.currentTimeMillis());
+        Path path = Paths.get(mFile.getAbsolutePath());
+        Files.write(path, bytes);
+        LOGGER.info("....... multipart TOML file received: \uD83C\uDFBD "
+                .concat(" length: " + mFile.length() + " bytes"));
+        tomlService.encryptAndUploadFile(anchorId,mFile);
+        LOGGER.info("\uD83C\uDFBD \uD83C\uDFBD \uD83C\uDFBD Returned from upload .... OK!" );
+        return bytes;
+    }
+    @GetMapping(value = "/getTOML", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> getTOML(@RequestParam("anchorId") String anchorId) throws Exception {
+
+        LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AnchorController:getTOML...");
+        Toml toml = tomlService.getToml(anchorId);
+        LOGGER.info("\uD83C\uDFBD \uD83C\uDFBD \uD83C\uDFBD Returned TOML from download .... "
+                .concat(" databaseUrl: ")
+        .concat(toml.getString("databaseUrl")));
+        return toml.toMap();
+    }
+
 
     public static class PaymentRequest {
         private String paymentRequestId, seed,
         assetCode,
         amount,
         date, anchorId,
-        destinationAccount, sourceAccount;
+        destinationAccount, sourceAccount, loanId;
         private Long ledger;
         public PaymentRequest() {
         }
 
         public PaymentRequest(String paymentRequestId, String seed, String assetCode,
-                              String amount, String date, String anchorId,
-                              String destinationAccount, String sourceAccount) {
+                              String amount, String date, String anchorId, String destinationAccount,
+                              String sourceAccount) {
             this.paymentRequestId = paymentRequestId;
             this.seed = seed;
             this.assetCode = assetCode;
@@ -263,6 +300,14 @@ public class AgentController {
             this.anchorId = anchorId;
             this.destinationAccount = destinationAccount;
             this.sourceAccount = sourceAccount;
+        }
+
+        public String getLoanId() {
+            return loanId;
+        }
+
+        public void setLoanId(String loanId) {
+            this.loanId = loanId;
         }
 
         public String getPaymentRequestId() {

@@ -46,11 +46,7 @@ public class AccountService {
         setServerAndNetwork();
         try {
             RootResponse serverResponse = server.root();
-            LOGGER.info("\uD83E\uDD8B \uD83E\uDD8B \uD83C\uDF3C HorizonVersion: ".concat(serverResponse.getHorizonVersion()
-                    .concat(" \uD83E\uDD8B NetworkPassphrase: ").concat(serverResponse.getNetworkPassphrase()
-                            .concat(" \uD83E\uDD8B StellarCoreVersion: ").concat(serverResponse.getStellarCoreVersion()
-                                    .concat(" \uD83E\uDD8B CurrentProtocolVersion: ").concat("" + serverResponse.getCurrentProtocolVersion())))));
-            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C \uD83C\uDF3C Connected to Stellar Horizon Server \uD83E\uDD8B \uD83E\uDD8B ".concat(G.toJson(serverResponse)
+            LOGGER.info("\uD83E\uDD8B \uD83E\uDD8B \uD83C\uDF3C Stellar Horizon Server: ".concat(G.toJson(serverResponse)
                     .concat(" \uD83C\uDF3C \uD83C\uDF3C ")));
         } catch (IOException e) {
             e.printStackTrace();
@@ -94,12 +90,11 @@ public class AccountService {
     }
 
     public AccountResponse getAccount(String seed) throws IOException {
-        LOGGER.info("\uD83E\uDD6C getting account");
         setServerAndNetwork();
         KeyPair sourceKeyPair = KeyPair.fromSecretSeed(seed);
         AccountResponse sourceAccount = server.accounts().account(sourceKeyPair.getAccountId());
         LOGGER.info(Emoji.HEART_ORANGE.concat(Emoji.HEART_GREEN.concat(Emoji.HEART_BLUE))
-                +"Account Retrieved: ".concat(G.toJson(sourceAccount)));
+                +"Account Retrieved: ".concat(sourceAccount.getAccountId()));
         return sourceAccount;
     }
 
@@ -384,15 +379,8 @@ public class AccountService {
         SubmitTransactionResponse submitTransactionResponse = server.submitTransaction(transaction);
         if (submitTransactionResponse.isSuccess()) {
             LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 \uD83D\uDC99  " +
-                    "Stellar issueAsset: ChangeTrustOperation has been executed OK: \uD83C\uDF4E \uD83C\uDF4E isSuccess: " + submitTransactionResponse.isSuccess());
-            //todo - remove check ...
-            AccountResponse finalResp = server.accounts().account(keyPair.getAccountId());
-            try {
-                LOGGER.info("\uD83D\uDC99 \uD83D\uDC99 \uD83D\uDC99 Distribution account after trust operations, " +
-                        "\uD83C\uDF4E check assets and balances \uD83C\uDF4E " + G.toJson(finalResp) + " \uD83C\uDF4E \uD83C\uDF4E \uD83C\uDF4E ");
-            } catch (Exception e) {
-                //ignore
-            }
+                    "Stellar issueAsset: ChangeTrustOperation has been executed OK: \uD83C\uDF4E \uD83C\uDF4E " +
+                    "isSuccess: " + submitTransactionResponse.isSuccess());
 
         } else {
             LOGGER.warning("ChangeTrustOperation ERROR: \uD83C\uDF45 resultXdr: " + submitTransactionResponse.getResultXdr().get());

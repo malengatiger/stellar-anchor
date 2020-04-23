@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.Calendar;
@@ -19,13 +20,14 @@ import java.util.logging.Logger;
 
 @SpringBootApplication
 @EnableScheduling
-public class AnchorApplication implements ApplicationListener<ApplicationReadyEvent> {
-	public static final Logger LOGGER = Logger.getLogger(AnchorApplication.class.getSimpleName());
+//@PropertySource(value={"classpath:application.properties"})
+public class StellarAnchorApplication implements ApplicationListener<ApplicationReadyEvent> {
+	public static final Logger LOGGER = Logger.getLogger(StellarAnchorApplication.class.getSimpleName());
 
 	public static void main(String[] args) {
-		LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51 AnchorApplication starting ...");
-		SpringApplication.run(AnchorApplication.class, args);
-		LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C AnchorApplication started ..." +
+		LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51 StellarAnchorApplication starting ...");
+		SpringApplication.run(StellarAnchorApplication.class, args);
+		LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C StellarAnchorApplication started ..." +
 				" \uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C");
 	}
 

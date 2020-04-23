@@ -68,9 +68,9 @@ public class PaymentService {
 
         transaction.sign(sourceKeyPair);
         SubmitTransactionResponse response = server.submitTransaction(transaction);
-        LOGGER.info(Emoji.LIGHTNING.concat(Emoji.LIGHTNING.concat(Emoji.LIGHTNING).concat(
-                "submission of PaymentOperation to Stellar returned with isSuccess: "
-        .concat(" \uD83C\uDF4F \uD83C\uDF4F " + response.isSuccess()).concat(" \uD83C\uDF4F \uD83C\uDF4F "))));
+//        LOGGER.info(Emoji.LIGHTNING.concat(Emoji.LIGHTNING.concat(Emoji.LIGHTNING).concat(
+//                "submission of PaymentOperation to Stellar returned with isSuccess: "
+//        .concat(" \uD83C\uDF4F \uD83C\uDF4F " + response.isSuccess()).concat(" \uD83C\uDF4F \uD83C\uDF4F "))));
         return response;
     }
     public SubmitTransactionResponse sendPayment(AgentController.PaymentRequest paymentRequest) throws Exception {
@@ -82,8 +82,10 @@ public class PaymentService {
             String msg = Emoji.OK.concat(Emoji.HAND2.concat(Emoji.HAND2))
                     + "Payment Succeeded; \uD83D\uDD35  amount: "
                     .concat(paymentRequest.getAmount()).concat(" assetCode: ")
-                    .concat(paymentRequest.getAssetCode().concat(" sourceAccount: ")
-                            .concat(sourceKeyPair.getAccountId()).concat(" ... log to database ... ").concat(Emoji.HAPPY));
+                    .concat(paymentRequest.getAssetCode()
+                            .concat(" ").concat(paymentRequest.getDate())
+                            .concat(" sourceAccount: ")
+                            .concat(sourceKeyPair.getAccountId()).concat(" ").concat(Emoji.HAPPY));
             LOGGER.info(msg);
             paymentRequest.setLedger(transactionResponse.getLedger());
             paymentRequest.setDate(new DateTime().toDateTimeISO().toString());
@@ -94,6 +96,7 @@ public class PaymentService {
         } else {
             String err = Emoji.NOT_OK.concat(Emoji.ERROR) + "Payment Failed; \uD83D\uDD35  amount: "
                     .concat(paymentRequest.getAmount()).concat(" assetCode: ")
+                    .concat(" ").concat(paymentRequest.getDate())
                     .concat(paymentRequest.getAssetCode().concat(" sourceAccount: ")
                     .concat(sourceKeyPair.getAccountId()));
             LOGGER.info(Emoji.NOT_OK.concat(Emoji.NOT_OK).concat(err));

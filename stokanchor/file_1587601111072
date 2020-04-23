@@ -1,0 +1,31 @@
+# 🌺 🌺 🌺 🌺 ANCHOR anchor.toml  🌺 🌺 🌺 🌺
+VERSION="1.0.0"
+# 🎽 Every Anchor creates an instance of this file which is encrypted and uploaded to Cloud Storage
+# 🎽 This file is required to save the basic settings for an Anchor instance ....
+
+sendgrid="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"
+fromMail="bryan313.green@gmail.com"
+limit=900000000000
+fiatLimit=900000000000.0000000
+defaultCurrencies=true
+domain="localhost:5000"
+anchorName="AzaniaAnchor Bank"
+locationId="global"
+projectId="stellar-anchor-333"
+keyRingId="aubsKeyRing"
+cryptoKeyId="aubsCryptoKey"
+bucketName="stellar-anchor-333.appspot.com"
+objectName="accountSeed"
+agentStartingBalance=100
+clientStartingBalance=100
+anchorStartingBalance=100
+jwtIssuer="http://localhost:5000/"
+jwtKey="oeRaYY7Wo24sDqKSX3IM9ASGmdGPmkTd9jo1QTy4b7P9Ze5_9hKolVX8xNrQDcNRfVEdTZNOuOyqEGhXEbdJI-ZQ19k_o9MI0y3eZN2lp9jow55FfXMiINEdt1XR85VipRLSOkT6kSpzs2x-jbLDiz9iFVzkd81YKxMgPA7VfZeQUm4n-mOmnWMaVX30zGFU4L3oPBctYKkl4dYfqYWqRNfrgPJVi5DGFjywgxx0ASEiJHtV72paI3fDR2XwlSkyhhmY-ICjCRmsJN4fX1pdoL8a18-aQrvyu4j0Os6dVPYIoPvvY0SAZtWYKHfM15g7A3HD4cVREf9cUsprCRK93w"
+databaseUrl="https://stellar-anchor-333.firebaseio.com/"
+stellarUrl="https://horizon-testnet.stellar.org"
+minimumInterestRate=10
+maximumInterestRate=25
+basePassword="pTiger3#Word!isWannamaker#23"
+
+# 🛎 🛎 End of Anchor properties
+

@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 
 @Service
 public class CryptoService {
@@ -83,14 +82,15 @@ public class CryptoService {
     }
 
     /** Encrypts the given plaintext using the specified crypto key. */
-    public byte[] encrypt(String accountId, String stringToEncrypt)
+    public byte[] encrypt(String id, String stringToEncrypt)
             throws IOException {
+
         byte[] stringToEncryptBytes = stringToEncrypt.getBytes();
         try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {
             String resourceName = CryptoKeyPathName.format(projectId, locationId, keyRingId, cryptoKeyId);
             EncryptResponse response = client.encrypt(resourceName, ByteString.copyFrom(stringToEncryptBytes));
-            writeFile(accountId,response.getCiphertext().toByteArray());
-            uploadSeedFile(accountId);
+            writeFile(id,response.getCiphertext().toByteArray());
+            uploadFile(id);
 
             return response.getCiphertext().toByteArray();
         }
@@ -120,26 +120,26 @@ public class CryptoService {
         Files.write(path, encryptedSeed);
 
     }
-    public byte[] readFile(String accountId)
+    public byte[] readFile(String id)
             throws IOException {
 
-        Path path = Paths.get(DOWNLOAD_PATH.concat(accountId));
+        Path path = Paths.get(DOWNLOAD_PATH.concat(id));
         byte[] read = Files.readAllBytes(path);
         Files.delete(path);
         return read;
     }
 
-    public void uploadSeedFile(String accountId) throws IOException {
+    public void uploadFile(String id) throws IOException {
         Storage storage = StorageOptions.newBuilder().setProjectId(projectId)
                 .build().getService();
-        BlobId blobId = BlobId.of(bucketName, objectName.concat("_").concat(accountId));
+        BlobId blobId = BlobId.of(bucketName, objectName.concat("_").concat(id));
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
 
-        storage.create(blobInfo, Files.readAllBytes(Paths.get(FILE_PATH.concat(accountId))));
-        Files.delete(Paths.get(FILE_PATH.concat(accountId)));
+        storage.create(blobInfo, Files.readAllBytes(Paths.get(FILE_PATH.concat(id))));
+        Files.delete(Paths.get(FILE_PATH.concat(id)));
         LOGGER.info(
                 "... \uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 Yebo!! \uD83C\uDF4E " +
-                        "File " + FILE_PATH.concat(accountId) + " uploaded to \uD83C\uDF3C " +
+                        "Encrypted Seed File " + FILE_PATH.concat(id) + " uploaded to \uD83C\uDF3C " +
                         "bucket " + bucketName + " \uD83C\uDF3C as " + objectName);
     }
     public static final String DOWNLOAD_PATH = "downloaded_seed";

@@ -114,14 +114,20 @@ public class FirebaseService {
     public String addLoanApplication(LoanApplication application) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         ApiFuture<DocumentReference> future = fs.collection(Constants.LOAN_APPLICATIONS).add(application);
-        LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F LoanApplication added at path: ".concat(future.get().getPath()));
+        LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F LoanApplication added at path: "
+                + " " + application.getTotalAmountPayable() + " \uD83C\uDF4F rate: "
+                + application.getInterestRate() + " % "
+                .concat(future.get().getPath()));
         return "\uD83C\uDF4F LoanApplication added";
     }
 
     public String addLoanPayment(LoanPayment loanPayment) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         ApiFuture<DocumentReference> future = fs.collection(Constants.LOAN_PAYMENTS).add(loanPayment);
-        LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F LoanPayment added at path: ".concat(future.get().getPath()));
+        LOGGER.info(("\uD83C\uDF4F \uD83C\uDF4F \uD83C\uDF4F LoanPayment amount: " +
+                loanPayment.getAmount() + " " + loanPayment.getAssetCode() +
+                "" + loanPayment.getDate() +
+                " added at path: ").concat(future.get().getPath()));
         return "\uD83C\uDF4F LoanPayment added";
     }
 
@@ -206,8 +212,9 @@ public class FirebaseService {
         paymentRequest.setSeed(null);
         ApiFuture<DocumentReference> future = fs.collection(Constants.PAYMENT_REQUESTS).add(paymentRequest);
         String msg = Emoji.HAPPY.concat(Emoji.HAPPY.concat(Emoji.HAPPY)) +
-         "\uD83C\uDF4F PaymentRequest added to Database: "
+         "PaymentRequest added to Database: "
                  .concat(" amount: ").concat(paymentRequest.getAmount())
+                 .concat(" ").concat(paymentRequest.getDate())
                  .concat("  \uD83C\uDF51 ledger: ").concat(" " + paymentRequest.getLedger() + " ")
                  .concat(future.get().getPath());
         LOGGER.info(msg);

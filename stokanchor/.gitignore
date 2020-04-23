@@ -8,6 +8,7 @@ build/
 ### dev files
 downloaded_seed*
 encrypted_seed*
+*.toml
 
 ### STS ###
 .apt_generated

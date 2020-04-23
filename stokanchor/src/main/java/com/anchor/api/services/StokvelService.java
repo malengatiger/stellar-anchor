@@ -95,7 +95,7 @@ public class StokvelService {
             firebaseService.addStokvel(stokvel);
             //todo - sendEmail(stokvel ....);
             LOGGER.info((Emoji.LEAF + Emoji.LEAF +
-                    "Stokvel has been added to Firestore without seed or password ").concat(G.toJson(stokvel)));
+                    "Stokvel has been added to Firestore without seed or password ").concat(stokvel.getName()));
             stokvel.setPassword(savedPassword);
             stokvel.setSecretSeed(bag.getSecretSeed());
         } catch (Exception e) {
@@ -153,7 +153,7 @@ public class StokvelService {
             firebaseService.addMember(member);
             //sendEmail(agent);
             LOGGER.info((Emoji.LEAF + Emoji.LEAF +
-                    "Member has been added to Firestore without seed or password ").concat(G.toJson(member)));
+                    "Member has been added to Firestore without seed or password ").concat(member.getFullName()));
             member.setPassword(savedPassword);
             member.setSecretSeed(bag.getSecretSeed());
         } catch (Exception e) {

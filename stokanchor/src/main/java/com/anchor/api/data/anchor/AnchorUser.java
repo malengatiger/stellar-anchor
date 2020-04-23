@@ -1,12 +1,7 @@
 package com.anchor.api.data.anchor;
 
-import com.anchor.api.data.account.Account;
-
-import java.util.ArrayList;
-import java.util.List;
-
 public class AnchorUser {
-    String firstName, middleName, lastName, email, cellphone, anchorId, userId, IdNumber;
+    String firstName, middleName, lastName, email, cellphone, anchorId, userId, idNumber;
     boolean active;
     String date;
 
@@ -19,7 +14,7 @@ public class AnchorUser {
     }
 
     public String getIdNumber() {
-        return IdNumber;
+        return idNumber;
     }
     public String getFullName() {
         String name = firstName + " " + lastName;
@@ -27,7 +22,7 @@ public class AnchorUser {
     }
 
     public void setIdNumber(String idNumber) {
-        IdNumber = idNumber;
+        this.idNumber = idNumber;
     }
 
     public boolean isActive() {
