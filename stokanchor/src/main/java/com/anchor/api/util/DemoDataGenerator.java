@@ -31,8 +31,8 @@ public class DemoDataGenerator {
         LOGGER.info(Emoji.RED_CAR.concat(Emoji.RED_CAR) + "Demo data DemoDataGenerator ready and able!");
     }
 
-    public static final String FUNDING_ACCOUNT = "GDGFXBGCEPO7W6RKFH6H6U44W52DAOSUYX453TNTDXPGBLJYEMHPAV7L",
-            FUNDING_SEED = "SBKKVNFIJAJRGMSVQJTL46YIEUS24IEG4P3LY2I6PQZJ4EBJHEFI2NXO";
+    public static final String FUNDING_ACCOUNT = "GAGAJ2CFIYCE2VJDA7PZGVFYAC3EFHUI7M3RFSFXB47TBSHHQF3X4Y3D",
+            FUNDING_SEED = "SDHJPRWY4345IPVD7H2CH7VKFMBELW2ZYFPSRAVDYDSCU6ZD5EYCBFUH";
     @Autowired
     private ApplicationContext context;
     @Autowired
@@ -97,28 +97,28 @@ public class DemoDataGenerator {
         generateAgentFunding(anchor.getAnchorId());
         generateLoanApplications(anchor.getAnchorId());
 
-        LOGGER.info("\n\n\n".concat(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.PRETZEL)
-                .concat(Emoji.PANDA.concat(Emoji.PANDA))
-                .concat(" ......... LoanApplication approvals " +
-                        "and payments to clients ...  \uD83C\uDF3C \uD83C\uDF3C "))));
-        generateLoanApprovals(anchor.getAnchorId());
-
-        LOGGER.info("\n\n\n".concat(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.PRETZEL)
-                .concat(Emoji.BUTTERFLY.concat(Emoji.BUTTERFLY))
-                .concat(" ......... starting LoanPayment settling ... Clients paying back the loans " +
-                        " \uD83C\uDF3C \uD83C\uDF3C "))));
-        generatePayments(anchor.getAnchorId());
+//        LOGGER.info("\n\n\n".concat(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.PRETZEL)
+//                .concat(Emoji.PANDA.concat(Emoji.PANDA))
+//                .concat(" ......... LoanApplication approvals " +
+//                        "and payments to clients ...  \uD83C\uDF3C \uD83C\uDF3C "))));
+//        generateLoanApprovals(anchor.getAnchorId());
+//
+//        LOGGER.info("\n\n\n".concat(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.PRETZEL)
+//                .concat(Emoji.BUTTERFLY.concat(Emoji.BUTTERFLY))
+//                .concat(" ......... starting LoanPayment settling ... Clients paying back the loans " +
+//                        " \uD83C\uDF3C \uD83C\uDF3C "))));
+//        generatePayments(anchor.getAnchorId());
 
         //for testing
         //todo - retrieve data for overall status of anchor ...
         // ... (anchor, agent, client dashboard basics here ....)
 
         //stokvel shit
-        LOGGER.info("\n\n\n".concat(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.PRETZEL)
-                .concat(" ......... starting STOKVEL data generation ....  \uD83C\uDF3C \uD83C\uDF3C ")
-                .concat(Emoji.WARNING))));
-        Stokvel stokvel = generateStokvel(anchor.getAnchorId());
-        generateStokvelMembers(stokvel.getStokvelId(), anchor.getAnchorId());
+//        LOGGER.info("\n\n\n".concat(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.PRETZEL)
+//                .concat(" ......... starting STOKVEL data generation ....  \uD83C\uDF3C \uD83C\uDF3C ")
+//                .concat(Emoji.WARNING))));
+//        Stokvel stokvel = generateStokvel(anchor.getAnchorId());
+//        generateStokvelMembers(stokvel.getStokvelId(), anchor.getAnchorId());
 
     }
 
@@ -143,10 +143,16 @@ public class DemoDataGenerator {
                 .concat(Emoji.HAND2.concat(Emoji.HAND2))))));
         setAnchor(anchorId);
         List<Agent> agents = firebaseService.getAgents(anchorId);
+        DateTime now = new DateTime();
+        long day = 1000 * 60 * 60 * 24;
         for (Agent agent : agents) {
             List<LoanApplication> list = firebaseService.getAgentLoans(agent.getAgentId());
             Collections.sort(list, Comparator.comparing(LoanApplication::getDate));
             for (LoanApplication application : list) {
+                DateTime mDate = DateTime.parse(application.getLastDatePaid());
+                if (now.getMillis() - mDate.getMillis() < day ) {
+                    continue;
+                }
                 if (application.isApprovedByAgent() && application.isApprovedByClient()) {
                     if (!application.isPaid()) {
                         if (application.getLoanPeriodInMonths() > 0) {
@@ -249,6 +255,8 @@ public class DemoDataGenerator {
 
     private void generateWeeklyPayments(LoanApplication application) throws Exception {
 
+
+
         int numberOfPayments = application.getLoanPeriodInWeeks();
         Agent agent = firebaseService.getAgent(application.getAgentId());
         Client client = firebaseService.getClientById(application.getClientId());
@@ -287,7 +295,7 @@ public class DemoDataGenerator {
 
     private boolean isWithinBalance(LoanPayment loanPayment) throws Exception {
         //todo - check account balance for this asset before attempting payment
-        AccountResponse accountResponse = accountService.getAccount(loanPayment.getClientSeed());
+        AccountResponse accountResponse = accountService.getAccountUsingSeed(loanPayment.getClientSeed());
         AccountResponse.Balance balance = null;
         try {
             for (AccountResponse.Balance bal : accountResponse.getBalances()) {
@@ -390,12 +398,14 @@ public class DemoDataGenerator {
         for (Agent agent : agents) {
             List<LoanApplication> loanApplications = firebaseService.getAgentLoans(agent.getAgentId());
             for (LoanApplication loanApplication : loanApplications) {
-                agentService.approveApplicationByClient(loanApplication.getLoanId());
-                cnt++;
+                if (!loanApplication.isApprovedByClient()) {
+                    agentService.approveApplicationByClient(loanApplication.getLoanId());
+                    cnt++;
+                }
             }
         }
         LOGGER.info(Emoji.BLUE_DOT.concat(Emoji.BLUE_DOT.concat(Emoji.BLUE_DOT))
-                .concat(" Clients have completed " + cnt + " loan approvals"));
+                .concat(" .... Clients have completed " + cnt + " loan approvals"));
         int cnt2 = 0;
         for (Agent agent : agents) {
             List<LoanApplication> loanApplications = firebaseService.getAgentLoans(agent.getAgentId());
@@ -403,15 +413,17 @@ public class DemoDataGenerator {
                 String seed = cryptoService.getDecryptedSeed(agent.getStellarAccountId());
                 loanApplication.setAgentSeed(seed);
                 try {
-                    agentService.approveApplicationByAgent(loanApplication);
-                    cnt2++;
+                    if (!loanApplication.isApprovedByAgent()) {
+                        agentService.approveApplicationByAgent(loanApplication);
+                        cnt2++;
+                    }
                 } catch (Exception e) {
                     LOGGER.info(Emoji.NOT_OK + "Bad shit, IGNORED ... : ".concat(e.getMessage()));
                 }
             }
         }
         LOGGER.info(Emoji.BLUE_DOT.concat(Emoji.BLUE_DOT.concat(Emoji.BLUE_DOT))
-                .concat(" Agents have completed " + cnt2 + " loan approvals"));
+                .concat(" .... Agents have completed " + cnt2 + " loan approvals"));
     }
 
     public void generateAgentFunding(String anchorId) throws Exception {
@@ -592,7 +604,7 @@ public class DemoDataGenerator {
 
         Anchor mAnchor = new Anchor();
         mAnchor.setName(anchorName);
-        mAnchor.setEmail("anchor_".concat("" + new DateTime().getMillis()).concat("@anchorahoy.com"));
+        mAnchor.setEmail("a_".concat("" + new DateTime().getMillis()).concat("@anchor.com"));
         mAnchor.setCellphone("+27911447786");
         mAnchor.setDate(new DateTime().toDateTimeISO().toString());
 
@@ -610,19 +622,20 @@ public class DemoDataGenerator {
     private List<Agent> agents = new ArrayList<>();
 
     private void addAgents() throws Exception {
-//        Agent agent1 = buildAgent();
-//        agent1.getPersonalKYCFields().setFirst_name("Tiger");
-//        agent1.getPersonalKYCFields().setLast_name("MLB 23");
-//        agents.add(agentService.createAgent(agent1));
-//        LOGGER.info(Emoji.ALIEN.concat(Emoji.ALIEN.concat(Emoji.LEAF))
-//                .concat("Agent created OK: ".concat(G.toJson(agent1))));
+        Agent agent1 = buildAgent();
+        agent1.getPersonalKYCFields().setFirst_name("Tiger");
+        agent1.getPersonalKYCFields().setLast_name("Wannamaker");
+        agents.add(agentService.createAgent(agent1));
+        LOGGER.info(Emoji.ALIEN.concat(Emoji.ALIEN.concat(Emoji.LEAF))
+                .concat("Agent Wannamaker created OK: ".concat(G.toJson(agent1))));
 
         Agent agent3 = buildAgent();
         agent3.getPersonalKYCFields().setFirst_name("Kgabzela");
         agent3.getPersonalKYCFields().setLast_name("Marule-Smythe");
         agents.add(agentService.createAgent(agent3));
         LOGGER.info(Emoji.ALIEN.concat(Emoji.ALIEN.concat(Emoji.LEAF))
-                .concat(agent3.getFullName() + " - \uD83D\uDC26 Agent created OK: ".concat(agent3.getFullName())));
+                .concat(agent3.getFullName() + " - \uD83D\uDC26 Agent Marule-Smythe created OK: "
+                        .concat(agent3.getFullName())));
     }
 
     private void addAgentClients() throws Exception {
@@ -636,7 +649,8 @@ public class DemoDataGenerator {
                 c1.getPersonalKYCFields().setFirst_name(firstNames.get(index1));
                 c1.getPersonalKYCFields().setLast_name(lastNames.get(index2));
                 Client result = agentService.createClient(c1);
-                LOGGER.info(Emoji.LEMON.concat(Emoji.LEMON).concat("Client created: ").concat(result.getFullName()));
+                LOGGER.info(Emoji.LEMON.concat(Emoji.LEMON).concat("..........Client created: ")
+                        .concat(result.getFullName()));
             }
         }
     }
@@ -651,7 +665,7 @@ public class DemoDataGenerator {
         c.setStartingFiatBalance("0.01");
         PersonalKYCFields fields = new PersonalKYCFields();
         fields.setMobile_number("+27998001212");
-        fields.setEmail_address("client_" + System.currentTimeMillis() + "@modernanchor.com");
+        fields.setEmail_address("c" + System.currentTimeMillis() + "@anchor.com");
         c.setPersonalKYCFields(fields);
         return c;
     }
@@ -669,7 +683,7 @@ public class DemoDataGenerator {
         agent1.setPassword(basePassword);
         PersonalKYCFields fields = new PersonalKYCFields();
         fields.setMobile_number("+27998001212");
-        fields.setEmail_address("agent_" + System.currentTimeMillis() + "@modernanchor.com");
+        fields.setEmail_address("a" + System.currentTimeMillis() + "@anchor.com");
         agent1.setPersonalKYCFields(fields);
         return agent1;
     }

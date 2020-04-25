@@ -52,6 +52,16 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.springframework.security/spring-security-jwt
 	implementation group: 'org.springframework.security', name: 'spring-security-jwt', version: '1.1.0.RELEASE'
 
+	// https://mvnrepository.com/artifact/com.graphql-java-kickstart/graphql-spring-boot-starter
+	implementation group: 'com.graphql-java-kickstart', name: 'graphql-spring-boot-starter', version: '7.0.1'
+
+	// https://mvnrepository.com/artifact/com.graphql-java/graphql-java-tools
+	implementation group: 'com.graphql-java', name: 'graphql-java-tools', version: '5.2.4'
+
+	// https://mvnrepository.com/artifact/com.graphql-java/graphiql-spring-boot-starter
+	implementation group: 'com.graphql-java', name: 'graphiql-spring-boot-starter', version: '5.0.2'
+
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'

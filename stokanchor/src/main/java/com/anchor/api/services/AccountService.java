@@ -111,10 +111,18 @@ public class AccountService {
 
     }
 
-    public AccountResponse getAccount(String seed) throws IOException {
+    public AccountResponse getAccountUsingSeed(String seed) throws IOException {
         setServerAndNetwork();
         KeyPair sourceKeyPair = KeyPair.fromSecretSeed(seed);
         AccountResponse sourceAccount = server.accounts().account(sourceKeyPair.getAccountId());
+
+        return sourceAccount;
+    }
+    //todo - ensure auth as anchor user for this call
+    public AccountResponse getAccountUsingAccount(String accountId) throws IOException {
+        setServerAndNetwork();
+        AccountResponse sourceAccount = server.accounts()
+                .account(accountId);
 
         return sourceAccount;
     }
@@ -154,9 +162,16 @@ public class AccountService {
                 LOGGER.warning(Emoji.NOT_OK + "CreateAccountOperation ERROR: \uD83C\uDF45 resultXdr: "
                         + submitTransactionResponse.getResultXdr().get());
                 if (submitTransactionResponse.getResultXdr().get()
-                        .equalsIgnoreCase("AAAAAAAAAGT/////AAAAAQAAAAAAAAAA/////gAAAAA=")) {
+                        .equalsIgnoreCase(TX_UNDER_FUNDED)) {
+                    LOGGER.info("\uD83C\uDF45 \uD83C\uDF45 transaction is UNDER FUNDED");
                     throw new AccountUnderfundedException(sourceAccount.getAccountId()
                     .concat(" is UNDER FUNDED"));
+                }
+                if (submitTransactionResponse.getResultXdr().get()
+                        .equalsIgnoreCase(TX_MALFORMED)) {
+                    LOGGER.info("\uD83C\uDF45 \uD83C\uDF45 transaction is MALFORMED");
+                    throw new AccountUnderfundedException(sourceAccount.getAccountId()
+                            .concat(" transaction is MALFORMED"));
                 }
 
                 throw new Exception("CreateAccountOperation transactionResponse is NOT success");
@@ -169,6 +184,8 @@ public class AccountService {
         }
     }
 
+    private static final String TX_MALFORMED = "AAAAAAAAAGT/////AAAAAQAAAAAAAAAA/////wAAAAA=",
+            TX_UNDER_FUNDED = "AAAAAAAAAGT/////AAAAAQAAAAAAAAAA/////gAAAAA=";
     public AccountResponseBag createAndFundUserAccount(String anchorId, String startingXLMBalance,
                                                        String startingFiatBalance, String fiatLimit) throws Exception {
         LOGGER.info(Emoji.PEAR.concat(Emoji.PEAR) + "\uD83D\uDC99 ... ... ... ... createAndFundAgentAccount starting " +
@@ -457,8 +474,8 @@ public class AccountService {
             .concat("Currencies missing from STELLAR TOML file. Please add issuing account after creation ")));
             mList.add(new AssetBag("ZAR", Asset.createNonNativeAsset("ZAR", issuingAccount)));
             mList.add(new AssetBag("USD", Asset.createNonNativeAsset("USD", issuingAccount)));
-//            mList.add(new AssetBag("GBP", Asset.createNonNativeAsset("GBP", issuingAccount)));
-//            mList.add(new AssetBag("EUR", Asset.createNonNativeAsset("EUR", issuingAccount)));
+            mList.add(new AssetBag("GBP", Asset.createNonNativeAsset("GBP", issuingAccount)));
+            mList.add(new AssetBag("EUR", Asset.createNonNativeAsset("EUR", issuingAccount)));
 //            mList.add(new AssetBag("CHF", Asset.createNonNativeAsset("CHF", issuingAccount)));
 //            mList.add(new AssetBag("CNY", Asset.createNonNativeAsset("CNY", issuingAccount)));
             //Currencies in Africa

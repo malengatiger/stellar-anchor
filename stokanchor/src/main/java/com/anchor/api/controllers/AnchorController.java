@@ -2,8 +2,6 @@ package com.anchor.api.controllers;
 
 import com.anchor.api.data.anchor.Client;
 import com.anchor.api.data.info.Info;
-import com.anchor.api.data.stokvel.Member;
-import com.anchor.api.data.stokvel.Stokvel;
 import com.anchor.api.services.*;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.data.anchor.AnchorBag;
@@ -12,7 +10,6 @@ import com.anchor.api.util.Util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.moandjiezana.toml.Toml;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -110,16 +107,28 @@ public class AnchorController {
         return mList;
     }
 
-    @GetMapping(value = "/getAccount", produces = MediaType.APPLICATION_JSON_VALUE)
-    public AccountBag getAccount(@RequestParam String seed) throws Exception {
-        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorController:getAccount ...");
-        AccountResponse response = accountService.getAccount(seed);
+    @GetMapping(value = "/getAccountUsingSeed", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Balances getAccountUsingSeed(@RequestParam String seed) throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorController:getAccountUsingSeed ...");
+        AccountResponse response = accountService.getAccountUsingSeed(seed);
         LOGGER.info( "\uD83D\uDC99 \uD83D\uDC9C AnchorController getAccount returned: "
                 + response.getAccountId() + " \uD83D\uDC99 \uD83D\uDC9C");
         AccountResponse.Balance[] balances = response.getBalances();
         List<AccountResponse.Balance> balanceList = new ArrayList<>();
         Collections.addAll(balanceList, balances);
-        AccountBag bag = new AccountBag(balanceList,response.getAccountId(),response.getSequenceNumber());
+        Balances bag = new Balances(balanceList,response.getAccountId(),response.getSequenceNumber());
+        return bag;
+    }
+    @GetMapping(value = "/getAccountUsingAccountId", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Balances getAccountUsingAccountId(@RequestParam String accountId) throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 AnchorController:getAccountUsingAccountId ...");
+        AccountResponse response = accountService.getAccountUsingAccount(accountId);
+        LOGGER.info( "\uD83D\uDC99 \uD83D\uDC9C AnchorController getAccount returned: "
+                + response.getAccountId() + " \uD83D\uDC99 \uD83D\uDC9C");
+        AccountResponse.Balance[] balances = response.getBalances();
+        List<AccountResponse.Balance> balanceList = new ArrayList<>();
+        Collections.addAll(balanceList, balances);
+        Balances bag = new Balances(balanceList,response.getAccountId(),response.getSequenceNumber());
         return bag;
     }
 
@@ -196,12 +205,12 @@ public class AnchorController {
         return Util.createTestInfo();
     }
 
-    class AccountBag {
+    class Balances {
         List<AccountResponse.Balance> balances;
         String account;
         private Long sequenceNumber;
 
-        public AccountBag(List<AccountResponse.Balance> balances, String account, Long sequenceNumber) {
+        public Balances(List<AccountResponse.Balance> balances, String account, Long sequenceNumber) {
             this.balances = balances;
             this.account = account;
             this.sequenceNumber = sequenceNumber;

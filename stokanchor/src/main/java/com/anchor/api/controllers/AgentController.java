@@ -263,6 +263,7 @@ public class AgentController {
         LOGGER.info("....... multipart TOML file received: \uD83C\uDFBD "
                 .concat(" length: " + mFile.length() + " bytes"));
         tomlService.encryptAndUploadFile(anchorId,mFile);
+        Files.delete(path);
         LOGGER.info("\uD83C\uDFBD \uD83C\uDFBD \uD83C\uDFBD Returned from upload .... OK!" );
         return bytes;
     }

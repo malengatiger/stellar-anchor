@@ -270,7 +270,7 @@ public class AgentService {
             throw new Exception("Amount is missing");
         }
         //todo - check account balance for this asset before attempting payment
-        AccountResponse accountResponse = accountService.getAccount(loanPayment.getClientSeed());
+        AccountResponse accountResponse = accountService.getAccountUsingSeed(loanPayment.getClientSeed());
         AccountResponse.Balance balance = null;
         for (AccountResponse.Balance bal : accountResponse.getBalances()) {
             if (!bal.getAssetType().equalsIgnoreCase("native")) {
