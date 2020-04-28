@@ -4,16 +4,16 @@ public  class PaymentRequest {
     private String paymentRequestId, seed,
             assetCode,
             amount,
-            date, anchorId,
-            destinationAccount, sourceAccount, loanId;
+            date, anchorId, 
+            destinationAccount, sourceAccount, loanId, agentId, clientId;
     private Long ledger;
 
     public PaymentRequest() {
     }
 
-    public PaymentRequest(String paymentRequestId, String seed, String assetCode,
-                          String amount, String date, String anchorId, String destinationAccount,
-                          String sourceAccount) {
+    public PaymentRequest(final String paymentRequestId, final String seed, final String assetCode, final String amount,
+            final String date, final String anchorId, final String destinationAccount, final String sourceAccount,
+            final String agentId, final String clientId) {
         this.paymentRequestId = paymentRequestId;
         this.seed = seed;
         this.assetCode = assetCode;
@@ -22,13 +22,31 @@ public  class PaymentRequest {
         this.anchorId = anchorId;
         this.destinationAccount = destinationAccount;
         this.sourceAccount = sourceAccount;
+        this.agentId = agentId;
+        this.clientId = clientId;
+    }
+
+    public String getAgentId() {
+        return agentId;
+    }
+
+    public void setAgentId(final String agentId) {
+        this.agentId = agentId;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(final String clientId) {
+        this.clientId = clientId;
     }
 
     public String getLoanId() {
         return loanId;
     }
 
-    public void setLoanId(String loanId) {
+    public void setLoanId(final String loanId) {
         this.loanId = loanId;
     }
 
@@ -36,7 +54,7 @@ public  class PaymentRequest {
         return paymentRequestId;
     }
 
-    public void setPaymentRequestId(String paymentRequestId) {
+    public void setPaymentRequestId(final String paymentRequestId) {
         this.paymentRequestId = paymentRequestId;
     }
 
@@ -44,7 +62,7 @@ public  class PaymentRequest {
         return sourceAccount;
     }
 
-    public void setSourceAccount(String sourceAccount) {
+    public void setSourceAccount(final String sourceAccount) {
         this.sourceAccount = sourceAccount;
     }
 
@@ -52,7 +70,7 @@ public  class PaymentRequest {
         return anchorId;
     }
 
-    public void setAnchorId(String anchorId) {
+    public void setAnchorId(final String anchorId) {
         this.anchorId = anchorId;
     }
 
@@ -60,7 +78,7 @@ public  class PaymentRequest {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(final String date) {
         this.date = date;
     }
 
@@ -68,7 +86,7 @@ public  class PaymentRequest {
         return ledger;
     }
 
-    public void setLedger(Long ledger) {
+    public void setLedger(final Long ledger) {
         this.ledger = ledger;
     }
 
@@ -76,7 +94,7 @@ public  class PaymentRequest {
         return seed;
     }
 
-    public void setSeed(String seed) {
+    public void setSeed(final String seed) {
         this.seed = seed;
     }
 
@@ -84,7 +102,7 @@ public  class PaymentRequest {
         return assetCode;
     }
 
-    public void setAssetCode(String assetCode) {
+    public void setAssetCode(final String assetCode) {
         this.assetCode = assetCode;
     }
 
@@ -92,7 +110,7 @@ public  class PaymentRequest {
         return amount;
     }
 
-    public void setAmount(String amount) {
+    public void setAmount(final String amount) {
         this.amount = amount;
     }
 
@@ -100,7 +118,7 @@ public  class PaymentRequest {
         return destinationAccount;
     }
 
-    public void setDestinationAccount(String destinationAccount) {
+    public void setDestinationAccount(final String destinationAccount) {
         this.destinationAccount = destinationAccount;
     }
 }

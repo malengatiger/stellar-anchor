@@ -1,7 +1,18 @@
 package com.anchor.api.services;
 
 
-import com.anchor.api.controllers.AgentController;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import com.anchor.api.data.PaymentRequest;
 import com.anchor.api.data.account.AccountResponseBag;
 import com.anchor.api.data.anchor.Agent;
@@ -11,25 +22,28 @@ import com.anchor.api.util.Emoji;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.moandjiezana.toml.Toml;
+
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
-import org.stellar.sdk.*;
+import org.stellar.sdk.Asset;
+import org.stellar.sdk.ChangeTrustOperation;
+import org.stellar.sdk.CreateAccountOperation;
+import org.stellar.sdk.KeyPair;
+import org.stellar.sdk.Memo;
+import org.stellar.sdk.Network;
+import org.stellar.sdk.PaymentOperation;
+import org.stellar.sdk.Server;
+import org.stellar.sdk.SetOptionsOperation;
+import org.stellar.sdk.Transaction;
 import org.stellar.sdk.requests.EventListener;
 import org.stellar.sdk.responses.AccountResponse;
 import org.stellar.sdk.responses.RootResponse;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
-import shadow.com.google.common.base.Optional;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import shadow.com.google.common.base.Optional;
 
 @Service
 public class AccountService {
@@ -321,6 +335,7 @@ public class AccountService {
                 + assetBags.size() + " FIAT assets to be paid; destinationAccount: "
                 .concat(destinationKeyPair.getAccountId()).concat(" sourceAccount: ").concat(sourceKeyPair.getAccountId())
                 .concat(Emoji.FIRE).concat(Emoji.FIRE)).concat(" ----- check AMOUNT: ").concat(amount));
+        
         setServerAndNetwork();
         AccountResponse sourceAccount = server.accounts().account(sourceKeyPair.getAccountId());
         Transaction.Builder paymentTxBuilder = new Transaction.Builder(sourceAccount, network);

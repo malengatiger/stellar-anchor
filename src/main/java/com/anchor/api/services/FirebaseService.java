@@ -114,6 +114,8 @@ public class FirebaseService implements DatabaseServiceInterface{
 
         return agent;
     }
+   
+
 
     @Override
     public String addLoanApplication(LoanApplication application) throws Exception {
@@ -225,6 +227,22 @@ public class FirebaseService implements DatabaseServiceInterface{
     @Override
     public String addPaymentRequest(PaymentRequest paymentRequest) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
+
+        //todo - find account holders - 
+        Agent agent = getAgentByAccount(paymentRequest.getSourceAccount());
+        if (agent == null) {
+            agent = getAgentByAccount(paymentRequest.getDestinationAccount());
+        }
+        Client client = getClientByAccount(paymentRequest.getSourceAccount());
+        if (client == null) {
+            client = getClientByAccount(paymentRequest.getDestinationAccount());
+        }
+        if (agent != null) {
+            paymentRequest.setAgentId(agent.getAgentId());
+        }
+        if (client != null) {
+            paymentRequest.setClientId(client.getClientId());
+        }
 
         paymentRequest.setSeed(null);
         ApiFuture<DocumentReference> future = fs.collection(Constants.PAYMENT_REQUESTS).add(paymentRequest);
@@ -744,4 +762,53 @@ public class FirebaseService implements DatabaseServiceInterface{
             LOGGER.info(Emoji.NOT_OK.concat(Emoji.ERROR) + "Error deleting collection : " + e.getMessage());
         }
     }
+
+	@Override
+	public Agent getAgentByAccount(String accountId) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        Agent agent;
+        List<Agent> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.AGENTS)
+                .whereEqualTo("stellarAccountId", accountId)
+                .limit(1)
+                .get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = G.toJson(map);
+            Agent mInfo = G.fromJson(object, Agent.class);
+            mList.add(mInfo);
+        }
+        if (mList.isEmpty()) {
+            return null;
+        } else {
+            agent = mList.get(0);
+        }
+
+        return agent;
+	
+	}
+
+	@Override
+	public Client getClientByAccount(String accountId) throws Exception {
+		Firestore fs = FirestoreClient.getFirestore();
+        Client client;
+        List<Client> mList = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = fs.collection(Constants.CLIENTS)
+                .whereEqualTo("account", accountId)
+                .limit(1)
+                .get();
+        for (QueryDocumentSnapshot document : future.get().getDocuments()) {
+            Map<String, Object> map = document.getData();
+            String object = G.toJson(map);
+            Client mInfo = G.fromJson(object, Client.class);
+            mList.add(mInfo);
+        }
+        if (mList.isEmpty()) {
+            return null;
+        } else {
+            client = mList.get(0);
+        }
+
+        return client;
+	}
 }

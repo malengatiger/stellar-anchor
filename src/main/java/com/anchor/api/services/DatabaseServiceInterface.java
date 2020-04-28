@@ -48,4 +48,6 @@ public interface DatabaseServiceInterface {
     public String addAccountResponse(AccountResponse accountResponse) throws Exception;
     public String addOperationResponse(OperationResponse operationResponse) throws Exception;
     public String addTransactionResponse(TransactionResponse transactionResponse) throws Exception;
+    public Agent getAgentByAccount(String accountId) throws Exception;
+    public Client getClientByAccount(String accountId) throws Exception;
 }

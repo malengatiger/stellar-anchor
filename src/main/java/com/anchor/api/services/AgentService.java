@@ -124,16 +124,18 @@ public class AgentService {
         request.setDestinationAccount(application.getClientAccount());
         SubmitTransactionResponse response = paymentService.sendPayment(request);
 
-        application.setPaid(false);
-        application.setApprovedByAgent(true);
-        application.setLastPaymentRequestId(request.getPaymentRequestId());
-        application.setLastDatePaid(new DateTime().toDateTimeISO().toString());
-        application.setAgentApprovalDate(new DateTime().toDateTimeISO().toString());
+        if (response.isSuccess()) {
+            application.setPaid(false);
+            application.setApprovedByAgent(true);
+            application.setLastPaymentRequestId(request.getPaymentRequestId());
+            application.setLastDatePaid(new DateTime().toDateTimeISO().toString());
+            application.setAgentApprovalDate(new DateTime().toDateTimeISO().toString());
 
-        firebaseService.updateLoanApplication(application);
-        //todo - send email to Client notifying approval and payment
-        LOGGER.info(Emoji.HAND2.concat(Emoji.HAND2.concat(Emoji.HAND2).concat(Emoji.LEAF)) +
-                "Loan application approved and funds transferred to Client ");
+            firebaseService.updateLoanApplication(application);
+            //todo - send email to Client notifying approval and payment
+            LOGGER.info(Emoji.HAND2.concat(Emoji.HAND2.concat(Emoji.HAND2).concat(Emoji.LEAF)) +
+                    "Loan application approved and funds transferred to Client ");
+        }
         return application;
 
     }
