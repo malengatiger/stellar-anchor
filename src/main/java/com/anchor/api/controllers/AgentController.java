@@ -142,14 +142,14 @@ public class AgentController {
     @Autowired
     private PaymentService paymentService;
 
-    @PostMapping(value = "/sendPayment", produces = MediaType.APPLICATION_JSON_VALUE)
-    public boolean sendPayment(@RequestBody PaymentRequest paymentRequest) throws Exception {
-        SubmitTransactionResponse response = paymentService.sendPayment(paymentRequest);
-        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat("Payment sent? ")
-                .concat("" + response.isSuccess()));
+    // @PostMapping(value = "/sendPayment", produces = MediaType.APPLICATION_JSON_VALUE)
+    // public boolean sendPayment(@RequestBody PaymentRequest paymentRequest) throws Exception {
+    //     PaymentRequest response = paymentService.sendPayment(paymentRequest);
+    //     LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat("Payment sent? ")
+    //             .concat("" + response.isSuccess()));
 
-        return response.isSuccess();
-    }
+    //     return true;
+    // }
 
     @PostMapping(value = "/declineLoanApplication", produces = MediaType.APPLICATION_JSON_VALUE)
     public LoanApplication declineLoanApplication(@RequestBody LoanApplication loanApplication) throws Exception {

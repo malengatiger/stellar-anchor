@@ -2,7 +2,9 @@ package com.anchor.api.services;
 
 
 import com.anchor.api.controllers.AgentController;
+import com.anchor.api.data.AgentFundingRequest;
 import com.anchor.api.data.PaymentRequest;
+import com.anchor.api.data.anchor.Agent;
 import com.anchor.api.data.anchor.Anchor;
 import com.anchor.api.util.Emoji;
 import com.google.gson.Gson;
@@ -68,13 +70,9 @@ public class PaymentService {
                 .build();
 
         transaction.sign(sourceKeyPair);
-        SubmitTransactionResponse response = server.submitTransaction(transaction);
-//        LOGGER.info(Emoji.LIGHTNING.concat(Emoji.LIGHTNING.concat(Emoji.LIGHTNING).concat(
-//                "submission of PaymentOperation to Stellar returned with isSuccess: "
-//        .concat(" \uD83C\uDF4F \uD83C\uDF4F " + response.isSuccess()).concat(" \uD83C\uDF4F \uD83C\uDF4F "))));
-        return response;
+        return server.submitTransaction(transaction);
     }
-    public SubmitTransactionResponse sendPayment(PaymentRequest paymentRequest) throws Exception {
+    public PaymentRequest sendPayment(PaymentRequest paymentRequest) throws Exception {
 
         SubmitTransactionResponse transactionResponse = submit(paymentRequest);
         KeyPair sourceKeyPair = KeyPair.fromSecretSeed(paymentRequest.getSeed());
@@ -119,8 +117,75 @@ public class PaymentService {
             throw new Exception(Emoji.NOT_OK.concat(err).concat(
                     " xdr: ".concat(transactionResponse.getResultXdr().get())));
         }
-        return transactionResponse;
+        return paymentRequest;
 
+    }
+
+    @Autowired
+    private CryptoService cryptoService;
+
+    public AgentFundingRequest fundAgent(AgentFundingRequest request) throws Exception {
+        setServerAndNetwork();
+        if (anchor == null) {
+            setAnchor(request.getAnchorId());
+        }
+        Agent agent = firebaseService.getAgent(request.getAgentId());
+        String seed = cryptoService.getDecryptedSeed(anchor.getDistributionAccount().getAccountId());
+
+        KeyPair sourceKeyPair = KeyPair.fromSecretSeed(seed);
+        AccountResponse sourceAccount = server.accounts().account(sourceKeyPair.getAccountId());
+        Asset asset = Asset.createNonNativeAsset(
+                request.getAssetCode(),
+                anchor.getIssuingAccount().getAccountId());
+        Transaction transaction = new Transaction.Builder(sourceAccount, network)
+                .addOperation(new PaymentOperation.Builder(
+                        agent.getStellarAccountId(), asset, request.getAmount())
+                        .build())
+                .addMemo(Memo.text("Payment Tx"))
+                .setTimeout(180)
+                .setOperationFee(100)
+                .build();
+
+        transaction.sign(sourceKeyPair);
+        SubmitTransactionResponse transactionResponse = server.submitTransaction(transaction);
+
+        if (transactionResponse.isSuccess()) {
+            //save to database
+            String msg = Emoji.OK.concat(Emoji.HAND2.concat(Emoji.HAND2))
+                    + "Payment Succeeded; \uD83D\uDD35  amount: "
+                    .concat(request.getAmount()).concat(" assetCode: ")
+                    .concat(request.getAssetCode()
+                            .concat(" ").concat(request.getDate())
+                            .concat(" sourceAccount: ")
+                            .concat(sourceKeyPair.getAccountId()).concat(" ").concat(Emoji.HAPPY));
+            LOGGER.info(msg);
+            firebaseService.addAgentFundingRequest(request);
+        } else {
+            String err = Emoji.NOT_OK.concat(Emoji.ERROR) + "Payment Failed; \uD83D\uDD35  amount: "
+                    .concat(request.getAmount()).concat(" assetCode: ")
+                    .concat(" ").concat(request.getDate())
+                    .concat(request.getAssetCode().concat(" sourceAccount: ")
+                            .concat(sourceKeyPair.getAccountId()));
+            LOGGER.info(Emoji.NOT_OK.concat(Emoji.NOT_OK).concat(err));
+            LOGGER.info(Emoji.NOT_OK.concat(Emoji.NOT_OK).concat(" xdr: ")
+                    .concat(transactionResponse.getResultXdr().get()));
+
+            if (transactionResponse.getResultXdr().get().contains(TX_PAYMENT_NO_TRUST_ERROR)) {
+                String msg = "Payment No Trust Error";
+                LOGGER.info(Emoji.PIG.concat(Emoji.PIG) + msg.concat(" ")
+                        .concat(Emoji.PIG).concat(Emoji.PIG));
+                throw new PaymentNoTrustException(Emoji.NOT_OK.concat(msg));
+            }
+            if (transactionResponse.getResultXdr().get().contains(TX_PAYMENT_UNDERFUNDED)) {
+                String msg = "Payment Underfunded Error";
+                LOGGER.info(Emoji.RED_DOT.concat(Emoji.RED_DOT) + msg.concat(" ")
+                        .concat(Emoji.PIG).concat(Emoji.PIG));
+                throw new UnderFundedException(Emoji.NOT_OK.concat(msg));
+            }
+            throw new Exception(Emoji.NOT_OK.concat(err).concat(
+                    " xdr: ".concat(transactionResponse.getResultXdr().get())));
+        }
+        return request;
     }
 
     public static final String TX_PAYMENT_NO_TRUST_ERROR = "AAAAAAAAAGT/////AAAAAQAAAAAAAAAB////+gAAAAA=",

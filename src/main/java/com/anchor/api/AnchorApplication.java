@@ -10,13 +10,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.Banner;
+import org.springframework.boot.ImageBanner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.Calendar;
 
 @SpringBootApplication
@@ -25,10 +30,29 @@ public class AnchorApplication implements ApplicationListener<ApplicationReadyEv
 	public static final Logger LOGGER = LoggerFactory.getLogger(AnchorApplication.class.getSimpleName());
 	private static final Gson G = new GsonBuilder().setPrettyPrinting().create();
 	public static void main(String[] args) {
-		LOGGER.info("\uD83C\uDF51 \uD83C\uDF51 \uD83C\uDF51 AnchorApplication starting ...");
-		SpringApplication.run(AnchorApplication.class, args);
-		LOGGER.info("\uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C AnchorApplication started ..." +
-				" \uD83E\uDD6C \uD83E\uDD6C \uD83E\uDD6C");
+		LOGGER.info(Emoji.PANDA.concat(Emoji.PANDA).concat(Emoji.PANDA) +
+				" AnchorApplication starting ...");
+		SpringApplication app = new SpringApplication(AnchorApplication.class);
+		app.setLogStartupInfo(true);
+		app.setBanner(new Banner() {
+			@Override
+			public void printBanner (Environment environment,
+									 Class<?> sourceClass,
+									 PrintStream out) {
+				//LOGGER.info(G.toJson(environment.getActiveProfiles()));
+				out.println(getBanner());
+			}
+		});
+
+		app.run(args);
+		LOGGER.info(Emoji.PANDA.concat(Emoji.PANDA).concat(Emoji.PANDA) + " AnchorApplication started ...");
+	}
+	private static String getBanner() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("###############################################\n");
+		sb.append("#### "+Emoji.HEART_BLUE+"ANCHOR BANK NETWORK SERVICES "+Emoji.HEART_BLUE+"   ####\n");
+		sb.append("###############################################\n");
+		return sb.toString();
 	}
 	@Autowired
 	private FirebaseService firebaseService;

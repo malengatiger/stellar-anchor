@@ -2,6 +2,7 @@ package com.anchor.api.services;
 
 import com.anchor.api.AnchorApplication;
 import com.anchor.api.controllers.AgentController;
+import com.anchor.api.data.AgentFundingRequest;
 import com.anchor.api.data.PaymentRequest;
 import com.anchor.api.data.anchor.*;
 import com.anchor.api.data.info.Info;
@@ -225,7 +226,7 @@ public class FirebaseService implements DatabaseServiceInterface{
     }
 
     @Override
-    public String addPaymentRequest(PaymentRequest paymentRequest) throws Exception {
+    public PaymentRequest addPaymentRequest(PaymentRequest paymentRequest) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
 
         //todo - find account holders - 
@@ -252,8 +253,14 @@ public class FirebaseService implements DatabaseServiceInterface{
                         .concat(" ").concat(paymentRequest.getDate())
                         .concat("  \uD83C\uDF51 ledger: ").concat(" " + paymentRequest.getLedger() + " ")
                         .concat(future.get().getPath());
-        return msg;
+        LOGGER.info(msg);
+        return paymentRequest;
 
+    }
+
+    @Override
+    public AgentFundingRequest addAgentFundingRequest(AgentFundingRequest agentFundingRequest) throws Exception {
+        return null;
     }
 
     @Override

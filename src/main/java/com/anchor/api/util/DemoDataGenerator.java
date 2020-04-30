@@ -47,7 +47,6 @@ public class DemoDataGenerator {
     @Value("${status}")
     private String status;
 
-
     @Value("${basePassword}")
     private String basePassword;
 
@@ -79,47 +78,48 @@ public class DemoDataGenerator {
         LOGGER.info("\uD83C\uDFBD \uD83C\uDFBD Do We Have A File? ...".concat(file.getAbsolutePath()));
         if (file.exists()) {
             tomlService.encryptAndUploadFile(anchor.getAnchorId(), file);
-            LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E \uD83C\uDF4E anchor.toml has been encrypted and uploaded via KMS \n" +
-                    "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ANCHOR TOML uploaded OK!\n");
+            LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E \uD83C\uDF4E anchor.toml has been encrypted and uploaded via KMS \n"
+                    + "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ANCHOR TOML uploaded OK!\n");
         }
-        LOGGER.info(Emoji.HEART_BLUE + "Start Data Generation "
-                .concat(Emoji.HEART_BLUE.concat(Emoji.HEART_BLUE)));
+        LOGGER.info(Emoji.HEART_BLUE + "Start Data Generation ".concat(Emoji.HEART_BLUE.concat(Emoji.HEART_BLUE)));
         //
 
-        //add data
+        // add data
 
         addAgents();
         addAgentClients();
 
-        LOGGER.info("\n\n\n".concat(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.PRETZEL)
-                .concat(Emoji.ALIEN.concat(Emoji.ALIEN))
-                .concat(" ......... starting Agent funding, LoanApplications generation " +
-                        " \uD83C\uDF3C \uD83C\uDF3C "))));
+        LOGGER.info("\n\n\n"
+                .concat(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.PRETZEL).concat(Emoji.ALIEN.concat(Emoji.ALIEN))
+                        .concat(" ......... starting Agent funding, LoanApplications generation "
+                                + " \uD83C\uDF3C \uD83C\uDF3C "))));
         generateAgentFunding(anchor.getAnchorId());
         generateLoanApplications(anchor.getAnchorId());
 
-//        LOGGER.info("\n\n\n".concat(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.PRETZEL)
-//                .concat(Emoji.PANDA.concat(Emoji.PANDA))
-//                .concat(" ......... LoanApplication approvals " +
-//                        "and payments to clients ...  \uD83C\uDF3C \uD83C\uDF3C "))));
-//        generateLoanApprovals(anchor.getAnchorId());
-//
-//        LOGGER.info("\n\n\n".concat(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.PRETZEL)
-//                .concat(Emoji.BUTTERFLY.concat(Emoji.BUTTERFLY))
-//                .concat(" ......... starting LoanPayment settling ... Clients paying back the loans " +
-//                        " \uD83C\uDF3C \uD83C\uDF3C "))));
-//        generatePayments(anchor.getAnchorId());
+        // LOGGER.info("\n\n\n".concat(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.PRETZEL)
+        // .concat(Emoji.PANDA.concat(Emoji.PANDA))
+        // .concat(" ......... LoanApplication approvals " +
+        // "and payments to clients ... \uD83C\uDF3C \uD83C\uDF3C "))));
+        // generateLoanApprovals(anchor.getAnchorId());
+        //
+        // LOGGER.info("\n\n\n".concat(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.PRETZEL)
+        // .concat(Emoji.BUTTERFLY.concat(Emoji.BUTTERFLY))
+        // .concat(" ......... starting LoanPayment settling ... Clients paying back the
+        // loans " +
+        // " \uD83C\uDF3C \uD83C\uDF3C "))));
+        // generatePayments(anchor.getAnchorId());
 
-        //for testing
-        //todo - retrieve data for overall status of anchor ...
+        // for testing
+        // todo - retrieve data for overall status of anchor ...
         // ... (anchor, agent, client dashboard basics here ....)
 
-        //stokvel shit
-//        LOGGER.info("\n\n\n".concat(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.PRETZEL)
-//                .concat(" ......... starting STOKVEL data generation ....  \uD83C\uDF3C \uD83C\uDF3C ")
-//                .concat(Emoji.WARNING))));
-//        Stokvel stokvel = generateStokvel(anchor.getAnchorId());
-//        generateStokvelMembers(stokvel.getStokvelId(), anchor.getAnchorId());
+        // stokvel shit
+        // LOGGER.info("\n\n\n".concat(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.PRETZEL)
+        // .concat(" ......... starting STOKVEL data generation .... \uD83C\uDF3C
+        // \uD83C\uDF3C ")
+        // .concat(Emoji.WARNING))));
+        // Stokvel stokvel = generateStokvel(anchor.getAnchorId());
+        // generateStokvelMembers(stokvel.getStokvelId(), anchor.getAnchorId());
 
     }
 
@@ -134,7 +134,6 @@ public class DemoDataGenerator {
             String name = toml.getString("anchorId");
             anchor = firebaseService.getAnchor(name);
         }
-
 
     }
 
@@ -151,7 +150,7 @@ public class DemoDataGenerator {
             Collections.sort(list, Comparator.comparing(LoanApplication::getDate));
             for (LoanApplication application : list) {
                 DateTime mDate = DateTime.parse(application.getLastDatePaid());
-                if (now.getMillis() - mDate.getMillis() < day ) {
+                if (now.getMillis() - mDate.getMillis() < day) {
                     continue;
                 }
                 if (application.isApprovedByAgent() && application.isApprovedByClient()) {
@@ -170,8 +169,8 @@ public class DemoDataGenerator {
     }
 
     private void generateMonthlyPayments(LoanApplication application) throws Exception {
-//        List<LoanPayment> payments = firebaseService.getLoanPayments(
-//                application.getLoanId());
+        // List<LoanPayment> payments = firebaseService.getLoanPayments(
+        // application.getLoanId());
         int numberOfPayments = application.getLoanPeriodInMonths();
         Agent agent = firebaseService.getAgent(application.getAgentId());
         Client client = firebaseService.getClientById(application.getClientId());
@@ -188,7 +187,7 @@ public class DemoDataGenerator {
             payment.setAssetCode(application.getAssetCode());
             payment.setAmount(application.getMonthlyPayment());
             payment.setLoanId(application.getLoanId());
-            //calculate next monthly date
+            // calculate next monthly date
             DateTime dateTime1 = DateTime.parse(application.getDate());
             cal.set(dateTime1.getYear(), dateTime1.getMonthOfYear(), dateTime1.getDayOfMonth());
             int lastDate = cal.getActualMaximum(Calendar.DATE);
@@ -199,11 +198,12 @@ public class DemoDataGenerator {
                 sendPaymentAndSaveOnFuckingDatabase(application, client, clientSeed, payment);
             } catch (Exception e) {
                 e.printStackTrace();
-                LOGGER.info(Emoji.NOT_OK.concat(Emoji.NOT_OK)
-                        + "This MONTHLY payment did not happen: " + e.getMessage() == null ? "" : e.getMessage());
+                LOGGER.info(Emoji.NOT_OK.concat(Emoji.NOT_OK) + "This MONTHLY payment did not happen: "
+                        + e.getMessage() == null ? "" : e.getMessage());
                 if (e instanceof PaymentService.UnderFundedException) {
-                    LOGGER.info("\n\n\n".concat(Emoji.PIG.concat(Emoji.PIG.concat(Emoji.PIG) +
-                            "Client ".concat(client.getFullName()).concat(" has run out of MONTHLY money.  \uD83C\uDFB2 SUCKS!! .... \uD83D\uDD35 "))));
+                    LOGGER.info("\n\n\n".concat(Emoji.PIG
+                            .concat(Emoji.PIG.concat(Emoji.PIG) + "Client ".concat(client.getFullName()).concat(
+                                    " has run out of MONTHLY money.  \uD83C\uDFB2 SUCKS!! .... \uD83D\uDD35 "))));
                 }
                 break;
             }
@@ -211,8 +211,8 @@ public class DemoDataGenerator {
         }
     }
 
-    private void sendPaymentAndSaveOnFuckingDatabase(LoanApplication application, Client client,
-                                                     String clientSeed, LoanPayment payment) throws Exception {
+    private void sendPaymentAndSaveOnFuckingDatabase(LoanApplication application, Client client, String clientSeed,
+            LoanPayment payment) throws Exception {
 
         if (!isWithinBalance(payment)) {
             return;
@@ -226,37 +226,31 @@ public class DemoDataGenerator {
         request.setDate(new DateTime().toDateTimeISO().toString());
         request.setDestinationAccount(payment.getAgentAccount());
 
-        SubmitTransactionResponse response = paymentService.sendPayment(request);
-        if (response.isSuccess()) {
-            payment.setLedger(response.getLedger());
-            payment.setOnTime(true);
-            try {
-                payment = agentService.addLoanPayment(payment);
-                payment.setPaymentRequestId(request.getPaymentRequestId());
-                LOGGER.info(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.HAPPY)) +
-                        "MONTHLY LoanPayment made on Stellar and stored in database; getPaymentRequestId: "
-                                .concat(payment.getPaymentRequestId())
-                                .concat(" " + Emoji.RED_TRIANGLE.concat(Emoji.RED_TRIANGLE)));
-            } catch (Exception e) {
-                //ignore
-                if (e.getMessage() == null) {
-                    LOGGER.info(Emoji.ERROR.concat("Unknown error"));
-                    e.printStackTrace();
-                } else {
-                    LOGGER.info(Emoji.ERROR.concat(e.getMessage()));
-                }
+        PaymentRequest response = paymentService.sendPayment(request);
 
+        payment.setLedger(response.getLedger());
+        payment.setOnTime(true);
+        try {
+            payment = agentService.addLoanPayment(payment);
+            payment.setPaymentRequestId(request.getPaymentRequestId());
+            LOGGER.info(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.HAPPY))
+                    + "MONTHLY LoanPayment made on Stellar and stored in database; getPaymentRequestId: "
+                            .concat(payment.getPaymentRequestId())
+                            .concat(" " + Emoji.RED_TRIANGLE.concat(Emoji.RED_TRIANGLE)));
+        } catch (Exception e) {
+            // ignore
+            if (e.getMessage() == null) {
+                LOGGER.info(Emoji.ERROR.concat("Unknown error"));
+                e.printStackTrace();
+            } else {
+                LOGGER.info(Emoji.ERROR.concat(e.getMessage()));
             }
-        } else {
-            LOGGER.info("LoanPayment fucked. what the ? ".concat(Emoji.NOT_OK));
-            throw new Exception("Payment failed");
+
         }
 
     }
 
     private void generateWeeklyPayments(LoanApplication application) throws Exception {
-
-
 
         int numberOfPayments = application.getLoanPeriodInWeeks();
         Agent agent = firebaseService.getAgent(application.getAgentId());
@@ -272,7 +266,7 @@ public class DemoDataGenerator {
             payment.setAssetCode(application.getAssetCode());
             payment.setAmount(application.getWeeklyPayment());
             payment.setLoanId(application.getLoanId());
-            //calculate next weekly date
+            // calculate next weekly date
             DateTime dateTime1 = DateTime.parse(application.getDate());
             DateTime dateTime = dateTime1.plusDays((i + 1) * 7);
             payment.setDate(dateTime.toDateTimeISO().toString());
@@ -284,18 +278,18 @@ public class DemoDataGenerator {
                 LOGGER.info(Emoji.PIG.concat(Emoji.PIG.concat(Emoji.PIG))
                         .concat("This WEEKLY payment failed ".concat(e.getMessage() == null ? "" : e.getMessage())));
                 if (e instanceof PaymentService.UnderFundedException) {
-                    LOGGER.info("\n\n\n".concat(Emoji.PIG.concat(Emoji.PIG.concat(Emoji.PIG) +
-                            "Client ".concat(client.getFullName()).concat(" has run out of WEEKLY money.  \uD83C\uDF51 SUCKS!! .... \uD83D\uDD35 "))));
+                    LOGGER.info("\n\n\n".concat(Emoji.PIG
+                            .concat(Emoji.PIG.concat(Emoji.PIG) + "Client ".concat(client.getFullName()).concat(
+                                    " has run out of WEEKLY money.  \uD83C\uDF51 SUCKS!! .... \uD83D\uDD35 "))));
                 }
                 break;
             }
-
 
         }
     }
 
     private boolean isWithinBalance(LoanPayment loanPayment) throws Exception {
-        //todo - check account balance for this asset before attempting payment
+        // todo - check account balance for this asset before attempting payment
         AccountResponse accountResponse = accountService.getAccountUsingSeed(loanPayment.getClientSeed());
         AccountResponse.Balance balance = null;
         try {
@@ -317,8 +311,8 @@ public class DemoDataGenerator {
         double balanceAmt = Double.parseDouble(balance.getBalance());
         if (loanAmt > balanceAmt) {
             String msg = "Not enough money in account to cover necessary amount ".concat(Emoji.PIG)
-                    .concat(" \uD83C\uDF4E balance: ".concat(balance.getBalance()
-                            .concat(" \uD83C\uDF4E loan amount: ").concat(loanPayment.getAmount())));
+                    .concat(" \uD83C\uDF4E balance: ".concat(balance.getBalance().concat(" \uD83C\uDF4E loan amount: ")
+                            .concat(loanPayment.getAmount())));
             LOGGER.info(msg);
             return false;
         } else {
@@ -327,8 +321,8 @@ public class DemoDataGenerator {
         }
     }
 
-    private void sendAndSave(LoanApplication application, Client client, String clientSeed, LoanPayment payment) throws Exception {
-
+    private void sendAndSave(LoanApplication application, Client client, String clientSeed, LoanPayment payment)
+            throws Exception {
 
         if (!isWithinBalance(payment)) {
             return;
@@ -342,44 +336,35 @@ public class DemoDataGenerator {
         request.setDate(new DateTime().toDateTimeISO().toString());
         //
         request.setDestinationAccount(payment.getAgentAccount());
-        SubmitTransactionResponse response = paymentService.sendPayment(request);
+        paymentService.sendPayment(request);
 
-        if (response.isSuccess()) {
-            payment.setLedger(response.getLedger());
-            payment.setOnTime(true);
-            payment.setPaymentRequestId(request.getPaymentRequestId());
+        payment.setOnTime(true);
+        payment.setPaymentRequestId(request.getPaymentRequestId());
 
-            try {
-                payment = agentService.addLoanPayment(payment);
-                LOGGER.info(Emoji.PRETZEL.concat(Emoji.PRETZEL) +
-                        "Weekly LoanPayment made on Stellar and stored in database; getPaymentRequestId: "
-                                .concat(payment.getPaymentRequestId())
-                                .concat(Emoji.RED_TRIANGLE));
-            } catch (Exception e) {
-                //ignore
-                if (e.getMessage() == null) {
-                    LOGGER.info(Emoji.ERROR.concat("Unknown LoanPayment error"));
-                    e.printStackTrace();
-                } else {
-                    LOGGER.info(Emoji.ERROR.concat(e.getMessage()));
-                }
-
+        try {
+            payment = agentService.addLoanPayment(payment);
+            LOGGER.info(Emoji.PRETZEL.concat(Emoji.PRETZEL)
+                    + "Weekly LoanPayment made on Stellar and stored in database; getPaymentRequestId: "
+                            .concat(payment.getPaymentRequestId()).concat(Emoji.RED_TRIANGLE));
+        } catch (Exception e) {
+            // ignore
+            if (e.getMessage() == null) {
+                LOGGER.info(Emoji.ERROR.concat("Unknown LoanPayment error"));
+                e.printStackTrace();
+            } else {
+                LOGGER.info(Emoji.ERROR.concat(e.getMessage()));
             }
 
-        } else {
-            LOGGER.info("Weekly Payment is fucked!");
         }
 
     }
 
     private void deleteFirebaseArtifacts() throws Exception {
-        //delete users and collections
+        // delete users and collections
         firebaseService.deleteAuthUsers();
-        LOGGER.info(Emoji.SOCCER_BALL.concat(Emoji.SOCCER_BALL)
-                + "Firebase auth users have been cleaned out");
+        LOGGER.info(Emoji.SOCCER_BALL.concat(Emoji.SOCCER_BALL) + "Firebase auth users have been cleaned out");
         firebaseService.deleteCollections();
-        LOGGER.info(Emoji.BASKET_BALL.concat(Emoji.BASKET_BALL)
-                + "Firestore collections have been cleaned out");
+        LOGGER.info(Emoji.BASKET_BALL.concat(Emoji.BASKET_BALL) + "Firestore collections have been cleaned out");
     }
 
     @Autowired
@@ -428,12 +413,12 @@ public class DemoDataGenerator {
     }
 
     public void generateAgentFunding(String anchorId) throws Exception {
-        LOGGER.info(Emoji.PEAR.concat(Emoji.PEAR.concat(Emoji.PEACH)) +
-                "...... Generating agent funds ...".concat(Emoji.PEAR.concat(Emoji.PEAR)));
+        LOGGER.info(Emoji.PEAR.concat(Emoji.PEAR.concat(Emoji.PEACH))
+                + "...... Generating agent funds ...".concat(Emoji.PEAR.concat(Emoji.PEAR)));
         setAnchor(anchorId);
         agents = firebaseService.getAgents(anchor.getAnchorId());
-        List<AccountService.AssetBag> assetBags = accountService.getDefaultAssets(
-                anchor.getIssuingAccount().getAccountId());
+        List<AccountService.AssetBag> assetBags = accountService
+                .getDefaultAssets(anchor.getIssuingAccount().getAccountId());
         String seed = cryptoService.getDecryptedSeed(anchor.getDistributionAccount().getAccountId());
         int cnt = 0;
         for (Agent agent : agents) {
@@ -447,19 +432,16 @@ public class DemoDataGenerator {
                 paymentRequest.setDestinationAccount(agent.getStellarAccountId());
                 paymentRequest.setAmount(getRandomAgentAmount());
                 try {
-                    SubmitTransactionResponse response = paymentService.sendPayment(paymentRequest);
-                    if (response.isSuccess()) {
-                        cnt++;
-                    }
+                    paymentService.sendPayment(paymentRequest);
+                    cnt++;
                 } catch (Exception e) {
                     e.printStackTrace();
                     LOGGER.info("Agent funding failed; ignored for this purpose: ");
                 }
             }
         }
-        LOGGER.info(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD)
-                .concat(" Agent Funding complete ...............  \uD83C\uDF51 " +
-                        "total funding transactions: " + cnt)));
+        LOGGER.info(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD).concat(
+                " Agent Funding complete ...............  \uD83C\uDF51 " + "total funding transactions: " + cnt)));
     }
 
     public Stokvel generateStokvel(String anchorId) throws Exception {
@@ -474,8 +456,8 @@ public class DemoDataGenerator {
         fields.setEmail("stokvel_".concat("" + System.currentTimeMillis()).concat("@modernachor.com"));
         stokvel.setKycFields(fields);
         stokvel = stokvelService.createStokvel(stokvel);
-        LOGGER.info(Emoji.LEMON.concat(Emoji.LEMON.concat(Emoji.LEMON)
-                .concat("Stokvel generated: ".concat(stokvel.getName()))));
+        LOGGER.info(Emoji.LEMON
+                .concat(Emoji.LEMON.concat(Emoji.LEMON).concat("Stokvel generated: ".concat(stokvel.getName()))));
         return stokvel;
     }
 
@@ -507,17 +489,21 @@ public class DemoDataGenerator {
             LOGGER.info(Emoji.RED_CAR.concat(Emoji.RED_CAR.concat(Emoji.RED_CAR)
                     .concat("Member #" + cnt + " generated: ".concat(m.getFullName()))));
         }
-        LOGGER.info(Emoji.RED_CAR.concat(Emoji.RED_CAR.concat(Emoji.RED_CAR)
-                .concat("Members generated: ".concat("" + list.size()))));
+        LOGGER.info(Emoji.RED_CAR
+                .concat(Emoji.RED_CAR.concat(Emoji.RED_CAR).concat("Members generated: ".concat("" + list.size()))));
         return list;
     }
 
     private String getRandomAgentAmount() {
         int num = rand.nextInt(1000);
-        if (num < 250) return "" + (250 * 1000) + ".00";
-        if (num > 249 && num < 500) return "" + (500 * 1000) + ".00";
-        if (num > 499 && num < 900) return "" + (1000 * 1000) + ".00";
-        if (num > 899) return "" + (2500 * 1000) + ".00";
+        if (num < 250)
+            return "" + (250 * 1000) + ".00";
+        if (num > 249 && num < 500)
+            return "" + (500 * 1000) + ".00";
+        if (num > 499 && num < 900)
+            return "" + (1000 * 1000) + ".00";
+        if (num > 899)
+            return "" + (2500 * 1000) + ".00";
         int total = num * 100000;
         return "" + total + ".00";
     }
@@ -526,7 +512,8 @@ public class DemoDataGenerator {
 
         setAnchor(anchorId);
         List<Client> clients = firebaseService.getAnchorClients(anchor.getAnchorId());
-        List<AccountService.AssetBag> assetBags = accountService.getDefaultAssets(anchor.getIssuingAccount().getAccountId());
+        List<AccountService.AssetBag> assetBags = accountService
+                .getDefaultAssets(anchor.getIssuingAccount().getAccountId());
         LOGGER.info(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD)
                 .concat(" Generating LoanApplications ............... total clients: " + clients.size())));
         int cnt = 0;
@@ -548,17 +535,18 @@ public class DemoDataGenerator {
                 app.setClientId(client.getClientId());
                 app.setDate(new DateTime().toDateTimeISO().toString());
                 try {
-                    LOGGER.info(Emoji.PANDA.concat(Emoji.PANDA).concat(Emoji.PANDA)
-                            .concat("Generate LoanApplication for: ")
-                            .concat(client.getFullName()).concat("  \uD83C\uDF51 asset: ")
-                            .concat(assetBag.getAssetCode()).concat(" \uD83D\uDC26 interest rate: " + app.getInterestRate()
-                                    + " % ".concat("  \uD83C\uDFB2 ")));
+                    LOGGER.info(
+                            Emoji.PANDA.concat(Emoji.PANDA).concat(Emoji.PANDA).concat("Generate LoanApplication for: ")
+                                    .concat(client.getFullName()).concat("  \uD83C\uDF51 asset: ")
+                                    .concat(assetBag.getAssetCode()).concat(" \uD83D\uDC26 interest rate: "
+                                            + app.getInterestRate() + " % ".concat("  \uD83C\uDFB2 ")));
                     agentService.addLoanApplication(app);
                     cnt++;
                 } catch (Exception e) {
-                    LOGGER.info(("..... \uD83D\uDE21 \uD83D\uDE21 \uD83D\uDE21 \uD83D\uDE21 " +
-                            "Interest Rate: " + app.getInterestRate() +
-                            " \uD83D\uDE21 LoanApplication failed; ignored for this purpose: ").concat(e.getMessage()));
+                    LOGGER.info(("..... \uD83D\uDE21 \uD83D\uDE21 \uD83D\uDE21 \uD83D\uDE21 " + "Interest Rate: "
+                            + app.getInterestRate()
+                            + " \uD83D\uDE21 LoanApplication failed; ignored for this purpose: ")
+                                    .concat(e.getMessage()));
                 }
             }
         }
@@ -569,26 +557,30 @@ public class DemoDataGenerator {
 
     private int getLoanPeriodInMonths() {
         int num = rand.nextInt(6);
-        if (num == 0) return 3;
+        if (num == 0)
+            return 3;
         return num;
     }
 
     private int getLoanPeriodInWeeks() {
         int num = rand.nextInt(4);
-        if (num == 0) return 2;
+        if (num == 0)
+            return 2;
         return num;
     }
 
     private String getRandomAmount() {
         int num = rand.nextInt(100);
-        if (num < 3) num = 10;
+        if (num < 3)
+            num = 10;
         int total = num * 100;
         return "" + total + ".00";
     }
 
     private double getRandomInterestRate() {
         int num = rand.nextInt(20);
-        if (num < 5) num = 8;
+        if (num < 5)
+            num = 8;
         return num * 1.5;
     }
 
@@ -596,7 +588,7 @@ public class DemoDataGenerator {
     private TOMLService tomlService;
 
     private Anchor addAnchor(String anchorName) throws Exception {
-        //create bag ...
+        // create bag ...
         AnchorBag bag = new AnchorBag();
         bag.setFundingSeed(FUNDING_SEED);
         bag.setAssetAmount("99999999000");
@@ -614,7 +606,6 @@ public class DemoDataGenerator {
                 bag.getFundingSeed(), bag.getStartingBalance());
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF.concat(Emoji.LEAF))
                 .concat("Anchor created OK: ".concat(mAnchor.getName())));
-
 
         return anchor;
 
@@ -634,9 +625,8 @@ public class DemoDataGenerator {
         agent3.getPersonalKYCFields().setFirst_name("Kgabzela");
         agent3.getPersonalKYCFields().setLast_name("Marule-Smythe");
         agents.add(agentService.createAgent(agent3));
-        LOGGER.info(Emoji.ALIEN.concat(Emoji.ALIEN.concat(Emoji.LEAF))
-                .concat(agent3.getFullName() + " - \uD83D\uDC26 Agent Marule-Smythe created OK: "
-                        .concat(agent3.getFullName())));
+        LOGGER.info(Emoji.ALIEN.concat(Emoji.ALIEN.concat(Emoji.LEAF)).concat(agent3.getFullName()
+                + " - \uD83D\uDC26 Agent Marule-Smythe created OK: ".concat(agent3.getFullName())));
     }
 
     private void addAgentClients() throws Exception {

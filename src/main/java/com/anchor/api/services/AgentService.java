@@ -49,7 +49,6 @@ public class AgentService {
     @Value("${fromMail}")
     private String fromMail;
 
-
     @Value("${agentStartingBalance}")
     private String agentStartingBalance;
 
@@ -101,7 +100,7 @@ public class AgentService {
         if (agent == null) {
             throw new Exception("Agent not found");
         }
-        //todo - check agent balance for this asset code ...
+        // todo - check agent balance for this asset code ...
         String seed = cryptoService.getDecryptedSeed(agent.getStellarAccountId());
         if (application.getAgentSeed() != null) {
             if (!seed.equalsIgnoreCase(application.getAgentSeed())) {
@@ -113,7 +112,6 @@ public class AgentService {
             throw new Exception(Emoji.NOT_OK + "LoanApplication not approved by Client");
         }
 
-
         PaymentRequest request = new PaymentRequest();
         request.setPaymentRequestId(UUID.randomUUID().toString());
         request.setSeed(seed);
@@ -122,20 +120,19 @@ public class AgentService {
         request.setAssetCode(application.getAssetCode());
         request.setDate(new DateTime().toDateTimeISO().toString());
         request.setDestinationAccount(application.getClientAccount());
-        SubmitTransactionResponse response = paymentService.sendPayment(request);
+        PaymentRequest response = paymentService.sendPayment(request);
 
-        if (response.isSuccess()) {
-            application.setPaid(false);
-            application.setApprovedByAgent(true);
-            application.setLastPaymentRequestId(request.getPaymentRequestId());
-            application.setLastDatePaid(new DateTime().toDateTimeISO().toString());
-            application.setAgentApprovalDate(new DateTime().toDateTimeISO().toString());
+        application.setPaid(false);
+        application.setApprovedByAgent(true);
+        application.setLastPaymentRequestId(request.getPaymentRequestId());
+        application.setLastDatePaid(new DateTime().toDateTimeISO().toString());
+        application.setAgentApprovalDate(new DateTime().toDateTimeISO().toString());
 
-            firebaseService.updateLoanApplication(application);
-            //todo - send email to Client notifying approval and payment
-            LOGGER.info(Emoji.HAND2.concat(Emoji.HAND2.concat(Emoji.HAND2).concat(Emoji.LEAF)) +
-                    "Loan application approved and funds transferred to Client ");
-        }
+        firebaseService.updateLoanApplication(application);
+        // todo - send email to Client notifying approval and payment
+        LOGGER.info(Emoji.HAND2.concat(Emoji.HAND2.concat(Emoji.HAND2).concat(Emoji.LEAF))
+                + "Loan application approved and funds transferred to Client ");
+
         return application;
 
     }
@@ -146,16 +143,15 @@ public class AgentService {
         application.setLastDatePaid(null);
 
         firebaseService.updateLoanApplication(application);
-        //todo - send email to Client notifying declination
+        // todo - send email to Client notifying declination
         return application;
-
 
     }
 
     private static DecimalFormat currencyFormat = new DecimalFormat("#.00");
 
     public LoanApplication addLoanApplication(LoanApplication application) throws Exception {
-        //todo - check application for correctness prior to adding ...
+        // todo - check application for correctness prior to adding ...
         if (application.getInterestRate() == 0.0) {
             throw new Exception("Interest Rate is missing");
         }
@@ -186,19 +182,15 @@ public class AgentService {
         }
 
         if (application.getLoanPeriodInMonths() > 0) {
-            double monthlyPayment = calculateMonthlyPayment(
-                    application.getAmount(),
-                    application.getLoanPeriodInMonths(),
-                    application.getInterestRate());
+            double monthlyPayment = calculateMonthlyPayment(application.getAmount(),
+                    application.getLoanPeriodInMonths(), application.getInterestRate());
 
             application.setMonthlyPayment(currencyFormat.format(monthlyPayment));
             double total = monthlyPayment * application.getLoanPeriodInMonths();
             application.setTotalAmountPayable(currencyFormat.format(total));
         }
         if (application.getLoanPeriodInWeeks() > 0) {
-            double weeklyPayment = calculateWeeklyPayment(
-                    application.getAmount(),
-                    application.getLoanPeriodInWeeks(),
+            double weeklyPayment = calculateWeeklyPayment(application.getAmount(), application.getLoanPeriodInWeeks(),
                     application.getInterestRate());
 
             application.setWeeklyPayment(currencyFormat.format(weeklyPayment));
@@ -214,19 +206,15 @@ public class AgentService {
         return application;
     }
 
-    public static double calculateMonthlyPayment(
-            String amount, int loanPeriodInMonths, double interestRate) {
+    public static double calculateMonthlyPayment(String amount, int loanPeriodInMonths, double interestRate) {
         interestRate /= 100.0;
         double monthlyRate = interestRate / 12.0;
         double loanAmount = Double.parseDouble(amount);
-        double monthlyPayment =
-                (loanAmount * monthlyRate) /
-                        (1 - Math.pow(1 + monthlyRate, -loanPeriodInMonths));
+        double monthlyPayment = (loanAmount * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -loanPeriodInMonths));
         return monthlyPayment;
     }
 
-    public static double calculateWeeklyPayment(
-            String amount, int loanPeriodInWeeks, double interestRate) {
+    public static double calculateWeeklyPayment(String amount, int loanPeriodInWeeks, double interestRate) {
 
         interestRate /= 100.0;
         // Monthly interest rate
@@ -235,15 +223,13 @@ public class AgentService {
         double weeklyRate = interestRate / 52.0;
         // Calculate the weekly payment
         double loanAmount = Double.parseDouble(amount);
-        double weeklyPayment =
-                (loanAmount * weeklyRate) /
-                        (1 - Math.pow(1 + weeklyRate, -loanPeriodInWeeks));
+        double weeklyPayment = (loanAmount * weeklyRate) / (1 - Math.pow(1 + weeklyRate, -loanPeriodInWeeks));
         return weeklyPayment;
     }
 
     /**
-     * A Client pays off part or all of the outstanding balance on the loan ...
-     * that is, the Client is paying the Agent for the loan
+     * A Client pays off part or all of the outstanding balance on the loan ... that
+     * is, the Client is paying the Agent for the loan
      *
      * @param loanPayment
      * @return
@@ -272,7 +258,7 @@ public class AgentService {
         if (loanPayment.getAmount() == null) {
             throw new Exception("Amount is missing");
         }
-        //todo - check account balance for this asset before attempting payment
+        // todo - check account balance for this asset before attempting payment
         AccountResponse accountResponse = accountService.getAccountUsingSeed(loanPayment.getClientSeed());
         AccountResponse.Balance balance = null;
         for (AccountResponse.Balance bal : accountResponse.getBalances()) {
@@ -289,8 +275,8 @@ public class AgentService {
         double balanceAmt = Double.parseDouble(balance.getBalance());
         if (loanAmt > balanceAmt) {
             String msg = "Not enough money in account to cover necessary amount ".concat(Emoji.PIG)
-                    .concat(" \uD83C\uDF4E balance: ".concat(balance.getBalance()
-                    .concat(" \uD83C\uDF4E loan amount: ").concat(loanPayment.getAmount())));
+                    .concat(" \uD83C\uDF4E balance: ".concat(balance.getBalance().concat(" \uD83C\uDF4E loan amount: ")
+                            .concat(loanPayment.getAmount())));
             LOGGER.info(msg);
             throw new Exception(msg);
         }
@@ -303,32 +289,28 @@ public class AgentService {
         request.setDate(new DateTime().toDateTimeISO().toString());
         request.setDestinationAccount(loanPayment.getAgentAccount());
 
-        SubmitTransactionResponse response = paymentService.sendPayment(request);
-        if (response.isSuccess()) {
-            //todo - royalties to Anchor and to Agent ...  🍎 set up ROYALTY REGIME!!
-            loanPayment.setCompleted(true);
-            loanPayment.setPaymentRequestId(request.getPaymentRequestId());
-            String res = firebaseService.addLoanPayment(loanPayment);
+        PaymentRequest response = paymentService.sendPayment(request);
 
-            LoanApplication app = firebaseService.getLoanApplication(loanPayment.getLoanId());
-            app.setLastDatePaid(new DateTime().toDateTimeISO().toString());
-            app.setLastPaymentRequestId(request.getPaymentRequestId());
-            String res2 = firebaseService.updateLoanApplication(app);
+        // todo - royalties to Anchor and to Agent ... 🍎 set up ROYALTY REGIME!!
+        loanPayment.setCompleted(true);
+        loanPayment.setPaymentRequestId(request.getPaymentRequestId());
+        String res = firebaseService.addLoanPayment(loanPayment);
 
-            LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF).concat("...... LoanPayment COMPLETE! "
-                    + Emoji.BLUE_DOT.concat(" messages: ")).concat(res).concat(" - ").concat(res2));
+        LoanApplication app = firebaseService.getLoanApplication(loanPayment.getLoanId());
+        app.setLastDatePaid(new DateTime().toDateTimeISO().toString());
+        app.setLastPaymentRequestId(request.getPaymentRequestId());
+        String res2 = firebaseService.updateLoanApplication(app);
 
-            return loanPayment;
-        } else {
-            throw new Exception("LoanPayment failed");
-        }
+        LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF)
+                .concat("...... LoanPayment COMPLETE! " + Emoji.BLUE_DOT.concat(" messages: ")).concat(res)
+                .concat(" - ").concat(res2));
 
-
+        return loanPayment;
 
     }
 
     public Organization addOrganization(Organization organization) throws Exception {
-        //todo - check organization for correctness prior to adding ...
+        // todo - check organization for correctness prior to adding ...
         organization.setOrganizationId(UUID.randomUUID().toString());
         organization.setDateRegistered(new DateTime().toDateTimeISO().toString());
         organization.setDateUpdated(new DateTime().toDateTimeISO().toString());
@@ -361,47 +343,38 @@ public class AgentService {
             }
         }
 
-
     }
 
     public Client createClient(Client client) throws Exception {
 
-        LOGGER.info(Emoji.LEMON + Emoji.LEMON +
-                "....... creating Client ....... ");
+        LOGGER.info(Emoji.LEMON + Emoji.LEMON + "....... creating Client ....... ");
         setAnchor(client.getAnchorId());
         Agent agent = firebaseService.getAgent(client.getAgentId());
         if (anchor == null) {
             throw new Exception("Missing anchor");
         }
-        Client mClient = firebaseService.getClientByNameAndAnchor(
-                anchor.getAnchorId(),
-                client.getPersonalKYCFields().getFirst_name(),
-                client.getPersonalKYCFields().getLast_name());
+        Client mClient = firebaseService.getClientByNameAndAnchor(anchor.getAnchorId(),
+                client.getPersonalKYCFields().getFirst_name(), client.getPersonalKYCFields().getLast_name());
 
         if (mClient != null) {
-            LOGGER.info(Emoji.ERROR + "Client already exists for this Anchor: ".concat(anchor.getName())
-                    .concat(Emoji.ERROR));
+            LOGGER.info(Emoji.ERROR
+                    + "Client already exists for this Anchor: ".concat(anchor.getName()).concat(Emoji.ERROR));
             throw new Exception(Emoji.ERROR + "Client already exists for this Anchor");
         }
 
-        AccountResponseBag bag = accountService.createAndFundUserAccount(
-                client.getAnchorId(),
-                clientStartingBalance,
+        AccountResponseBag bag = accountService.createAndFundUserAccount(client.getAnchorId(), clientStartingBalance,
                 client.getStartingFiatBalance(), agent.getFiatLimit());
-        LOGGER.info(Emoji.HEART_PURPLE + Emoji.HEART_PURPLE +
-                "Client Stellar account has been created and funded with ... "
+        LOGGER.info(
+                Emoji.HEART_PURPLE + Emoji.HEART_PURPLE + "Client Stellar account has been created and funded with ... "
                         .concat(clientStartingBalance).concat(" XLM"));
 
-        List<AccountService.AssetBag> assetBags = accountService.getDefaultAssets(
-                anchor.getIssuingAccount().getAccountId());
-        LOGGER.info(Emoji.WARNING.concat(Emoji.WARNING) + "createClient:.... Creating Client Fiat Trustlines .... userSeed: "
-                .concat(bag.getSecretSeed()));
+        List<AccountService.AssetBag> assetBags = accountService
+                .getDefaultAssets(anchor.getIssuingAccount().getAccountId());
+        LOGGER.info(Emoji.WARNING.concat(Emoji.WARNING)
+                + "createClient:.... Creating Client Fiat Trustlines .... userSeed: ".concat(bag.getSecretSeed()));
         for (AccountService.AssetBag assetBag : assetBags) {
-            accountService.createTrustLine(
-                    anchor.getIssuingAccount().getAccountId(),
-                    bag.getSecretSeed(),
-                    agent.getFiatLimit(),
-                    assetBag.assetCode);
+            accountService.createTrustLine(anchor.getIssuingAccount().getAccountId(), bag.getSecretSeed(),
+                    agent.getFiatLimit(), assetBag.assetCode);
 
         }
         encryptAndSave(client, bag);
@@ -409,13 +382,13 @@ public class AgentService {
     }
 
     private void encryptAndSave(Client client, AccountResponseBag bag) throws Exception {
-        //create firebase auth user
+        // create firebase auth user
         UserRecord record = firebaseService.createUser(client.getFullName(),
                 client.getPersonalKYCFields().getEmail_address(), client.getPassword());
         client.setClientId(record.getUid());
         client.setDateRegistered(new DateTime().toDateTimeISO().toString());
         client.setDateUpdated(new DateTime().toDateTimeISO().toString());
-        //handle seed encryption
+        // handle seed encryption
         cryptoService.encrypt(bag.getAccountResponse().getAccountId(), bag.getSecretSeed());
         client.setAccount(bag.getAccountResponse().getAccountId());
         client.setExternalAccountId("Not Known Yet");
@@ -425,8 +398,8 @@ public class AgentService {
         sendEmail(client);
         client.setPassword(savePassword);
         client.setSecretSeed(bag.getSecretSeed());
-        LOGGER.info((Emoji.BLUE_DOT + Emoji.BLUE_DOT +
-                "Client has been added to Firestore ").concat(client.getFullName()));
+        LOGGER.info(
+                (Emoji.BLUE_DOT + Emoji.BLUE_DOT + "Client has been added to Firestore ").concat(client.getFullName()));
     }
 
     public String updateAgent(Agent agent) throws Exception {
@@ -436,48 +409,41 @@ public class AgentService {
     }
 
     public Agent createAgent(Agent agent) throws Exception {
-        //todo - create Stellar account; add to Firestore;
-        LOGGER.info(Emoji.YELLOW_STAR + Emoji.YELLOW_STAR + Emoji.YELLOW_STAR +
-                "....... creating Agent ....... ");
+        // todo - create Stellar account; add to Firestore;
+        LOGGER.info(Emoji.YELLOW_STAR + Emoji.YELLOW_STAR + Emoji.YELLOW_STAR + "....... creating Agent ....... ");
         setAnchor(agent.getAnchorId());
         if (anchor == null) {
             anchor = firebaseService.getAnchor(agent.getAnchorId());
         }
-        Agent mAgent = firebaseService.getAgentByNameAndAnchor(
-                anchor.getAnchorId(),
-                agent.getPersonalKYCFields().getFirst_name(),
-                agent.getPersonalKYCFields().getLast_name());
+        Agent mAgent = firebaseService.getAgentByNameAndAnchor(anchor.getAnchorId(),
+                agent.getPersonalKYCFields().getFirst_name(), agent.getPersonalKYCFields().getLast_name());
         if (mAgent != null) {
-            LOGGER.info(Emoji.ERROR.concat(anchor.getName())
-                    .concat(" ").concat(Emoji.ERROR));
+            LOGGER.info(Emoji.ERROR.concat(anchor.getName()).concat(" ").concat(Emoji.ERROR));
             throw new Exception(Emoji.ERROR + "Agent already exists for this Anchor");
         }
 
-        AccountResponseBag bag = accountService.createAndFundUserAccount(
-                agent.getAnchorId(),
-                agentStartingBalance,
+        AccountResponseBag bag = accountService.createAndFundUserAccount(agent.getAnchorId(), agentStartingBalance,
                 agent.getFiatBalance(), agent.getFiatLimit());
-        LOGGER.info(Emoji.RED_APPLE + Emoji.RED_APPLE +
-                "Agent Stellar account has been created and funded with ... "
-                        .concat(agentStartingBalance).concat(" XLM; secretSeed: ".concat(bag.getSecretSeed())));
+        LOGGER.info(Emoji.RED_APPLE + Emoji.RED_APPLE + "Agent Stellar account has been created and funded with ... "
+                .concat(agentStartingBalance).concat(" XLM; secretSeed: ".concat(bag.getSecretSeed())));
         cryptoService.encrypt(bag.getAccountResponse().getAccountId(), bag.getSecretSeed());
 
-        //todo - create trustlines and pay from anchor distribution account
-        List<AccountService.AssetBag> assetBags = accountService.getDefaultAssets(
-                anchor.getIssuingAccount().getAccountId());
+        // todo - create trustlines and pay from anchor distribution account
+        List<AccountService.AssetBag> assetBags = accountService
+                .getDefaultAssets(anchor.getIssuingAccount().getAccountId());
 
         String issuingAccountSeed = cryptoService.getDecryptedSeed(anchor.getIssuingAccount().getAccountId());
 
-        LOGGER.info(Emoji.WARNING.concat(Emoji.WARNING) + "createAgent:.... Creating Agent Fiat Asset Balances .... userSeed: "
-                .concat(bag.getSecretSeed()));
-        //todo - what, exactly is limit?
+        LOGGER.info(Emoji.WARNING.concat(Emoji.WARNING)
+                + "createAgent:.... Creating Agent Fiat Asset Balances .... userSeed: ".concat(bag.getSecretSeed()));
+        // todo - what, exactly is limit?
         for (AccountService.AssetBag assetBag : assetBags) {
-            accountService.createTrustLine(anchor.getIssuingAccount().getAccountId(), bag.getSecretSeed(), agent.getFiatLimit(),
-                    assetBag.assetCode);
+            accountService.createTrustLine(anchor.getIssuingAccount().getAccountId(), bag.getSecretSeed(),
+                    agent.getFiatLimit(), assetBag.assetCode);
             accountService.createAsset(issuingAccountSeed, anchor.getDistributionAccount().getAccountId(),
                     assetBag.assetCode, agent.getFiatBalance());
         }
-        //create firebase auth user
+        // create firebase auth user
         String savedPassword;
         try {
             agent.setStellarAccountId(bag.getAccountResponse().getAccountId());
@@ -492,17 +458,15 @@ public class AgentService {
             agent.setPassword(null);
             firebaseService.addAgent(agent);
             sendEmail(agent);
-            LOGGER.info((Emoji.LEAF + Emoji.LEAF +
-                    "Agent has been added to Firestore without seed or password ").concat(agent.getFullName()));
+            LOGGER.info((Emoji.LEAF + Emoji.LEAF + "Agent has been added to Firestore without seed or password ")
+                    .concat(agent.getFullName()));
             agent.setPassword(savedPassword);
             agent.setSecretSeed(bag.getSecretSeed());
         } catch (Exception e) {
-            String msg = Emoji.NOT_OK.concat(Emoji.ERROR)
-                    .concat("Firebase error: ".concat(e.getMessage()));
+            String msg = Emoji.NOT_OK.concat(Emoji.ERROR).concat("Firebase error: ".concat(e.getMessage()));
             LOGGER.info(msg);
             throw new Exception(msg);
         }
-
 
         return agent;
     }
@@ -515,7 +479,7 @@ public class AgentService {
         LOGGER.info(Emoji.PLANE + Emoji.PLANE + "Sending registration email to user: "
                 + agent.getPersonalKYCFields().getEmail_address());
 
-        //todo - finish registration email composition, links and all, html etc.
+        // todo - finish registration email composition, links and all, html etc.
         StringBuilder sb = new StringBuilder();
         sb.append("Hi Anchor Admin,\n");
         sb.append("Welcome to The Anchor Network\n");
@@ -530,7 +494,7 @@ public class AgentService {
         Email to = new Email(agent.getPersonalKYCFields().getEmail_address());
         Content content = new Content("text/plain", sb.toString());
         Mail mail = new Mail(from, subject, to, content);
-// 🌼
+        // 🌼
         LOGGER.info(Emoji.FLOWER_YELLOW + Emoji.FLOWER_YELLOW + "SendGrid apiKey: " + sendgridAPIKey);
         SendGrid sg = new SendGrid(sendgridAPIKey);
         Request request = new Request();
@@ -539,12 +503,11 @@ public class AgentService {
             request.setEndpoint("mail/send");
             request.setBody(mail.build());
             Response response = sg.api(request);
-            LOGGER.info(Emoji.BLUE_DISC + Emoji.BLUE_DISC +
-                    "Registration email sent to Anchor user: "
-                    + Emoji.BLUE_THINGY + agent.getFullName() + Emoji.PANDA +
-                    " status code: " + response.getStatusCode());
-            LOGGER.info(Emoji.FLOWER_YELLOW + Emoji.FLOWER_YELLOW + "SendGrid: " +
-                    " response headers: " + response.getHeaders());
+            LOGGER.info(
+                    Emoji.BLUE_DISC + Emoji.BLUE_DISC + "Registration email sent to Anchor user: " + Emoji.BLUE_THINGY
+                            + agent.getFullName() + Emoji.PANDA + " status code: " + response.getStatusCode());
+            LOGGER.info(Emoji.FLOWER_YELLOW + Emoji.FLOWER_YELLOW + "SendGrid: " + " response headers: "
+                    + response.getHeaders());
 
         } catch (IOException ex) {
             throw ex;
@@ -557,7 +520,7 @@ public class AgentService {
         LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C Sending registration email to user: "
                 + agent.getPersonalKYCFields().getEmail_address());
 
-        //todo - finish registration email composition, links and all, html etc.
+        // todo - finish registration email composition, links and all, html etc.
         StringBuilder sb = new StringBuilder();
         sb.append("Hi Anchor Admin,\n");
         sb.append("Welcome to The Anchor Network\n");
@@ -581,10 +544,9 @@ public class AgentService {
             request.setEndpoint("mail/send");
             request.setBody(mail.build());
             Response response = sg.api(request);
-            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C Registration email sent to Anchor user: \uD83E\uDD66  " + agent.getFullName() +
-                    " \uD83E\uDD66 status code: " + response.getStatusCode());
-            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C SendGrid: " +
-                    " response headers: " + response.getHeaders());
+            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C Registration email sent to Anchor user: \uD83E\uDD66  "
+                    + agent.getFullName() + " \uD83E\uDD66 status code: " + response.getStatusCode());
+            LOGGER.info("\uD83C\uDF3C \uD83C\uDF3C SendGrid: " + " response headers: " + response.getHeaders());
 
         } catch (IOException ex) {
             throw ex;
