@@ -332,6 +332,7 @@ public class AgentService {
         if (anchor != null) {
             return;
         }
+        LOGGER.info(".......... Anchor about to be set from toml file: ".concat(anchorId));
         Toml toml = tomlService.getToml(anchorId);
         if (toml == null) {
             throw new Exception("anchor.toml has not been found. upload the file from your computer");
@@ -339,6 +340,7 @@ public class AgentService {
             String id = toml.getString("anchorId");
             anchor = firebaseService.getAnchor(id);
             if (anchor == null) {
+                LOGGER.info(Emoji.NOT_OK.concat(Emoji.ERROR).concat("setAnchor: Anchor is missing"));
                 throw new Exception("AgentService:\uD83D\uDE21 \uD83D\uDE21 anchor is missing");
             }
         }

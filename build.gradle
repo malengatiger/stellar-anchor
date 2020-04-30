@@ -57,6 +57,10 @@ dependencies {
 //	implementation 'com.google.cloud:google-cloud-pubsub:1.104.1'
 //	 https://mvnrepository.com/artifact/org.springframework.security/spring-security-jwt
 	implementation group: 'org.springframework.security', name: 'spring-security-jwt', version: '1.1.0.RELEASE'
+
+	// https://mvnrepository.com/artifact/black.door/hate
+	implementation group: 'black.door', name: 'hate', version: 'v1r4t5'
+
 }
 
 dependencyManagement {

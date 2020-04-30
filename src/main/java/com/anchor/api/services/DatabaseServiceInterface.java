@@ -1,5 +1,6 @@
 package com.anchor.api.services;
 
+import com.anchor.api.controllers.AnchorController;
 import com.anchor.api.data.AgentFundingRequest;
 import com.anchor.api.data.PaymentRequest;
 import com.anchor.api.data.anchor.*;
@@ -25,6 +26,7 @@ public interface DatabaseServiceInterface {
     public String addAgent(Agent agent) throws Exception;
     public String addStokvel(Stokvel agent) throws Exception;
     public String addMember(Member member) throws Exception;
+    public String addBalances(AnchorController.Balances balances) throws Exception;
     public PaymentRequest addPaymentRequest(PaymentRequest paymentRequest) throws Exception;
     public AgentFundingRequest addAgentFundingRequest(AgentFundingRequest agentFundingRequest) throws Exception;
     public String updateLoanApplication(LoanApplication application) throws Exception;

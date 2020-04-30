@@ -2,12 +2,10 @@ package com.anchor.api.controllers;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.logging.Logger;
 
 import com.anchor.api.data.AgentFundingRequest;
@@ -30,6 +28,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.moandjiezana.toml.Toml;
 
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -40,6 +39,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.stellar.sdk.responses.AccountResponse;
 
 import shadow.org.apache.commons.io.IOUtils;
@@ -75,6 +75,49 @@ public class AnchorController {
                 + new Date().toString() + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
     }
 
+    @Autowired
+    private TOMLService tomlService;
+
+    /**
+     * Upload the Anchor properties in anchor.toml nee stellar. This file has private properties
+     * that the Anchor needs for proper operation
+     * @param anchorId anchor identifier
+     * @param multipartFile  toml file with anchor properties
+     * @return byte[] - bytes from the file
+     * @throws Exception upload failed
+     */
+    @PostMapping(value = "/uploadTOML", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public byte[] uploadTOML(@RequestParam("anchorId") String anchorId,
+                             @RequestParam("file") MultipartFile multipartFile) throws Exception {
+
+        LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AnchorController:uploadTOML...");
+        byte[] bytes = multipartFile.getBytes();
+        File mFile = new File("file_" + System.currentTimeMillis());
+        Path path = Paths.get(mFile.getAbsolutePath());
+        Files.write(path, bytes);
+        LOGGER.info("....... multipart TOML file received: \uD83C\uDFBD "
+                .concat(" length: " + mFile.length() + " bytes"));
+        tomlService.encryptAndUploadFile(anchorId, mFile);
+        Files.delete(path);
+        LOGGER.info("\uD83C\uDFBD \uD83C\uDFBD \uD83C\uDFBD Returned from upload .... OK!");
+        return bytes;
+    }
+
+    /*
+        Get the Anchor's properties from anchor.toml
+     */
+    @GetMapping(value = "/getTOML", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> getTOML(@RequestParam("anchorId") String anchorId) throws Exception {
+
+        LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AnchorController:getTOML...");
+        Toml toml = tomlService.getToml(anchorId);
+        LOGGER.info("\uD83C\uDFBD \uD83C\uDFBD \uD83C\uDFBD Returned TOML from download .... "
+                .concat(" databaseUrl: ")
+                .concat(toml.getString("databaseUrl")));
+        return toml.toMap();
+    }
+
+
     @GetMapping(value = "/.well-known/stellar.toml", produces = MediaType.TEXT_PLAIN_VALUE)
     public byte[] getStellarToml() throws Exception {
         LOGGER.info(em + " get stellar.toml file and return to caller...");
@@ -94,6 +137,7 @@ public class AnchorController {
             LOGGER.info(em + "  stellar.toml : File NOT found. this is where .toml needs to go;  \uD83C\uDF45 ");
             throw new Exception("stellar.toml not found");
         }
+
     }
     @GetMapping(value = "/.stellar.toml", produces = MediaType.TEXT_PLAIN_VALUE)
     public byte[] getStellarTomlToo() throws Exception {
@@ -137,8 +181,12 @@ public class AnchorController {
         AccountResponse.Balance[] balances = response.getBalances();
         List<AccountResponse.Balance> balanceList = new ArrayList<>();
         Collections.addAll(balanceList, balances);
-        Balances bag = new Balances(balanceList,response.getAccountId(),response.getSequenceNumber());
-        return bag;
+
+        Balances mBalances = new Balances(balanceList,response.getAccountId(),response.getSequenceNumber(),
+                new DateTime().toDateTimeISO().toString());
+        firebaseService.addBalances(mBalances);
+        LOGGER.info(Emoji.PEPPER.concat(Emoji.PEPPER) + "Returning balances " + G.toJson(mBalances));
+        return mBalances;
     }
 
    
@@ -151,9 +199,11 @@ public class AnchorController {
         AccountResponse.Balance[] balances = response.getBalances();
         List<AccountResponse.Balance> balanceList = new ArrayList<>();
         Collections.addAll(balanceList, balances);
-        Balances bag = new Balances(balanceList,response.getAccountId(),response.getSequenceNumber());
-        LOGGER.info(Emoji.PEPPER.concat(Emoji.PEPPER) + "Returning balances " + G.toJson(bag));
-        return bag;
+        Balances mBalances = new Balances(balanceList,response.getAccountId(),response.getSequenceNumber(),
+                new DateTime().toDateTimeISO().toString());
+        firebaseService.addBalances(mBalances);
+        LOGGER.info(Emoji.PEPPER.concat(Emoji.PEPPER) + "Returning balances " + G.toJson(mBalances));
+        return mBalances;
     }
 
 
@@ -174,9 +224,6 @@ public class AnchorController {
     public List<Client> getClients(@RequestParam String anchorId) throws Exception {
         return firebaseService.getAnchorClients(anchorId);
     }
-
-    @Autowired
-    private TOMLService tomlService;
 
     @PostMapping(value = "/createAnchor", produces = MediaType.APPLICATION_JSON_VALUE)
     public Anchor createAnchor(@RequestBody AnchorBag anchorBag) throws Exception {
@@ -210,12 +257,13 @@ public class AnchorController {
     private PaymentService paymentService;
 
     @PostMapping(value = "/fundAgent", produces = MediaType.APPLICATION_JSON_VALUE)
-    public String fundAgent(AgentFundingRequest fundingRequest) throws Exception {
-        LOGGER.info(em + "AnchorController: fundAgent requested .... ");
-        paymentService.fundAgent(fundingRequest);
-        String msg = Emoji.LEAF + "Agent Funding complete";
+    public AgentFundingRequest fundAgent(@RequestBody AgentFundingRequest fundingRequest) throws Exception {
+        LOGGER.info(em + "AnchorController: fundAgent requested .... " + G.toJson(fundingRequest));
+        fundingRequest.setAgentFundingRequestId(UUID.randomUUID().toString());
+        fundingRequest = paymentService.fundAgent(fundingRequest);
+        String msg = Emoji.LEAF + "Agent Funding complete: " + fundingRequest.getAgentFundingRequestId();
         LOGGER.info(Emoji.LEAF.concat(msg));
-        return msg;
+        return fundingRequest;
     }
 
     @GetMapping("/createKeyRing")
@@ -249,14 +297,23 @@ public class AnchorController {
         return Util.createTestInfo();
     }
     private static final String em ="\uD83C\uDF4E \uD83C\uDF4E \uD83C\uDF4E \uD83C\uDF4E ";
-    class Balances {
+    public class Balances {
         List<AccountResponse.Balance> balances;
-        String account;
+        String account, date;
         private Long sequenceNumber;
 
-        public Balances(List<AccountResponse.Balance> balances, String account, Long sequenceNumber) {
+        public String getDate() {
+            return date;
+        }
+
+        public void setDate(String date) {
+            this.date = date;
+        }
+
+        public Balances(List<AccountResponse.Balance> balances, String account, Long sequenceNumber, String date) {
             this.balances = balances;
             this.account = account;
+            this.date = date;
             this.sequenceNumber = sequenceNumber;
         }
 

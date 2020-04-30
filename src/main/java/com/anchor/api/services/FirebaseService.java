@@ -2,6 +2,7 @@ package com.anchor.api.services;
 
 import com.anchor.api.AnchorApplication;
 import com.anchor.api.controllers.AgentController;
+import com.anchor.api.controllers.AnchorController;
 import com.anchor.api.data.AgentFundingRequest;
 import com.anchor.api.data.PaymentRequest;
 import com.anchor.api.data.anchor.*;
@@ -32,15 +33,17 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class FirebaseService implements DatabaseServiceInterface{
+public class FirebaseService implements DatabaseServiceInterface {
     public static final Logger LOGGER = LoggerFactory.getLogger(FirebaseService.class.getSimpleName());
     private static final Gson G = new GsonBuilder().setPrettyPrinting().create();
+
     public FirebaseService() {
         LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F FirebaseService constructed \uD83C\uDF4F");
     }
 
     @Value("${databaseUrl}")
     private String databaseUrl;
+
     @Override
     public void initializeDatabase() throws Exception {
         LOGGER.info("\uD83C\uDFBD \uD83C\uDFBD \uD83C\uDFBD \uD83C\uDFBD  FirebaseService initializeDatabase ... \uD83C\uDF4F" +
@@ -76,7 +79,7 @@ public class FirebaseService implements DatabaseServiceInterface{
     }
 
     @Override
-    public List<Anchor> getAnchors() throws Exception  {
+    public List<Anchor> getAnchors() throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         List<Anchor> mList = new ArrayList<>();
         ApiFuture<QuerySnapshot> future = fs.collection(Constants.ANCHORS).get();
@@ -115,7 +118,6 @@ public class FirebaseService implements DatabaseServiceInterface{
 
         return agent;
     }
-   
 
 
     @Override
@@ -211,7 +213,7 @@ public class FirebaseService implements DatabaseServiceInterface{
     @Override
     public String addMember(Member member) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
-        Member current = getMemberByName(member.getKycFields().getFirst_name(),member.getKycFields().getLast_name());
+        Member current = getMemberByName(member.getKycFields().getFirst_name(), member.getKycFields().getLast_name());
         if (current == null) {
             current = getMemberByEmail(member.getKycFields().getEmail_address());
             if (current != null) {
@@ -223,6 +225,15 @@ public class FirebaseService implements DatabaseServiceInterface{
         } else {
             throw new Exception("Member already exists ");
         }
+    }
+
+    @Override
+    public String addBalances(AnchorController.Balances balances) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
+        ApiFuture<DocumentReference> future = fs.collection(Constants.BALANCES).add(balances);
+        LOGGER.info("\uD83C\uDF4F \uD83C\uDF4F Balances added at path: ".concat(future.get().getPath()));
+        return "\uD83C\uDF4F Balances added";
+
     }
 
     @Override
@@ -260,7 +271,16 @@ public class FirebaseService implements DatabaseServiceInterface{
 
     @Override
     public AgentFundingRequest addAgentFundingRequest(AgentFundingRequest agentFundingRequest) throws Exception {
-        return null;
+        Firestore fs = FirestoreClient.getFirestore();
+        ApiFuture<DocumentReference> future = fs.collection(Constants.AGENT_FUNDING_REQUESTS).add(agentFundingRequest);
+        String msg = Emoji.HAPPY.concat(Emoji.HAPPY.concat(Emoji.HAPPY)) +
+                "AgentFundingRequest added to Database: "
+                        .concat(" amount: ").concat(agentFundingRequest.getAmount())
+                        .concat(" ").concat(agentFundingRequest.getDate())
+                        + " path: "
+                        .concat(future.get().getPath());
+        LOGGER.info(msg);
+        return agentFundingRequest;
     }
 
     @Override
@@ -356,7 +376,6 @@ public class FirebaseService implements DatabaseServiceInterface{
     }
 
 
-
     @Override
     public Anchor getAnchor(String anchorId) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
@@ -402,6 +421,7 @@ public class FirebaseService implements DatabaseServiceInterface{
 
         return info;
     }
+
     @Override
     public Member getMemberByName(String firstName, String lastName) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
@@ -425,6 +445,7 @@ public class FirebaseService implements DatabaseServiceInterface{
 
         return info;
     }
+
     @Override
     public Member getMemberByEmail(String email) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
@@ -447,6 +468,7 @@ public class FirebaseService implements DatabaseServiceInterface{
 
         return info;
     }
+
     @Override
     public List<Member> getStokvelMembers(String stokvelId) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
@@ -463,6 +485,7 @@ public class FirebaseService implements DatabaseServiceInterface{
 
         return mList;
     }
+
     @Override
     public List<Agent> getAgents(String anchorId) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
@@ -479,6 +502,7 @@ public class FirebaseService implements DatabaseServiceInterface{
 
         return mList;
     }
+
     @Override
     public List<PaymentRequest> getPaymentRequests(String anchorId) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
@@ -497,6 +521,7 @@ public class FirebaseService implements DatabaseServiceInterface{
 
         return mList;
     }
+
     @Override
     public LoanApplication getLoanApplication(String loanId) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
@@ -542,6 +567,7 @@ public class FirebaseService implements DatabaseServiceInterface{
 
         return agent;
     }
+
     @Override
     public List<Client> getAnchorClients(String anchorId) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
@@ -557,6 +583,7 @@ public class FirebaseService implements DatabaseServiceInterface{
         LOGGER.info(Emoji.LEAF + "Found " + mList.size() + " Anchor Clients");
         return mList;
     }
+
     @Override
     public List<Client> getAgentClients(String agentId) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
@@ -572,6 +599,7 @@ public class FirebaseService implements DatabaseServiceInterface{
         LOGGER.info(Emoji.LEAF + "Found " + mList.size() + " Agent Clients");
         return mList;
     }
+
     @Override
     public List<LoanApplication> getAgentLoans(String agentId) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
@@ -588,6 +616,7 @@ public class FirebaseService implements DatabaseServiceInterface{
         LOGGER.info(Emoji.LEAF + "Found " + mList.size() + " Agent Loans");
         return mList;
     }
+
     @Override
     public List<LoanPayment> getLoanPayments(String loanId) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
@@ -604,6 +633,7 @@ public class FirebaseService implements DatabaseServiceInterface{
         LOGGER.info(Emoji.LEAF + "Found " + mList.size() + " Loan Payments");
         return mList;
     }
+
     @Override
     public Client getClientByNameAndAnchor(String anchorId, String firstName, String lastName) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
@@ -627,6 +657,7 @@ public class FirebaseService implements DatabaseServiceInterface{
 
         return agent;
     }
+
     @Override
     public Client getClientById(String clientId) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
@@ -650,6 +681,7 @@ public class FirebaseService implements DatabaseServiceInterface{
 
         return client;
     }
+
     @Override
     public String addAccountResponse(AccountResponse accountResponse) throws Exception {
         LOGGER.info("\uD83C\uDFBD Adding accountResponse to Firestore: ".concat(accountResponse.getAccountId()));
@@ -659,6 +691,7 @@ public class FirebaseService implements DatabaseServiceInterface{
 //        LOGGER.info("\uD83C\uDFBD AccountResponseWithDate added, \uD83C\uDFBD at path: ".concat(future2.get().getPath()));
         return "\uD83C\uDF51 AccountResponse added";
     }
+
     @Override
     public String addOperationResponse(OperationResponse operationResponse) throws Exception {
         LOGGER.info("\uD83C\uDFBD Adding operationResponse to Firestore: ".concat(operationResponse.getSourceAccount()));
@@ -668,6 +701,7 @@ public class FirebaseService implements DatabaseServiceInterface{
 //        LOGGER.info("\uD83C\uDFBD operationResponse added, \uD83C\uDFBD at path: ".concat(future2.get().getPath()));
         return "\uD83C\uDF51 operationResponse added";
     }
+
     @Override
     public String addTransactionResponse(TransactionResponse transactionResponse) throws Exception {
         LOGGER.info("\uD83C\uDFBD Adding transactionResponse to Firestore: createdAt: ".concat(transactionResponse.getCreatedAt()));
@@ -704,6 +738,7 @@ public class FirebaseService implements DatabaseServiceInterface{
 
         return mList;
     }
+
     public void deleteAuthUsers() throws Exception {
         LOGGER.info(Emoji.WARNING.concat(Emoji.WARNING.concat(Emoji.WARNING)
                 .concat(" DELETING ALL AUTH USERS from Firebase .... ").concat(Emoji.RED_DOT)));
@@ -714,38 +749,41 @@ public class FirebaseService implements DatabaseServiceInterface{
                     .concat(exportedUserRecord.getDisplayName()));
         }
     }
+
     public void deleteCollections() throws Exception {
         LOGGER.info(Emoji.WARNING.concat(Emoji.WARNING.concat(Emoji.WARNING)
                 .concat(" DELETING ALL DATA from Firestore .... ").concat(Emoji.RED_DOT)));
         Firestore fs = FirestoreClient.getFirestore();
         CollectionReference ref1 = fs.collection(Constants.ANCHORS);
-        deleteCollection(ref1,1000);
+        deleteCollection(ref1, 1000);
         CollectionReference ref2 = fs.collection(Constants.ANCHOR_USERS);
-        deleteCollection(ref2,1000);
+        deleteCollection(ref2, 1000);
         CollectionReference ref3 = fs.collection(Constants.AGENTS);
-        deleteCollection(ref3,1000);
+        deleteCollection(ref3, 1000);
         CollectionReference ref4 = fs.collection(Constants.LOAN_APPLICATIONS);
-        deleteCollection(ref4,1000);
+        deleteCollection(ref4, 1000);
         CollectionReference ref5 = fs.collection(Constants.LOAN_PAYMENTS);
-        deleteCollection(ref5,1000);
+        deleteCollection(ref5, 1000);
         CollectionReference ref6 = fs.collection(Constants.PAYMENT_REQUESTS);
-        deleteCollection(ref6,1000);
+        deleteCollection(ref6, 1000);
         CollectionReference ref7 = fs.collection(Constants.CLIENTS);
-        deleteCollection(ref7,1000);
+        deleteCollection(ref7, 1000);
         CollectionReference ref8 = fs.collection(Constants.STOKVELS);
-        deleteCollection(ref8,1000);
+        deleteCollection(ref8, 1000);
         CollectionReference ref9 = fs.collection(Constants.MEMBERS);
-        deleteCollection(ref9,1000);
+        deleteCollection(ref9, 1000);
         CollectionReference ref10 = fs.collection(Constants.MEMBER_PAYMENTS);
-        deleteCollection(ref10,1000);
+        deleteCollection(ref10, 1000);
         CollectionReference ref11 = fs.collection(Constants.STOKVEL_PAYMENTS);
-        deleteCollection(ref11,1000);
+        deleteCollection(ref11, 1000);
         CollectionReference ref12 = fs.collection(Constants.STOKVEL_GOALS);
-        deleteCollection(ref12,1000);
+        deleteCollection(ref12, 1000);
         LOGGER.info(Emoji.PEAR.concat(Emoji.PEAR.concat(Emoji.PEAR)
                 .concat(" DELETED ALL DATA from Firestore .... ").concat(Emoji.RED_TRIANGLE)));
     }
-    /** Delete a collection in batches to avoid out-of-memory errors.
+
+    /**
+     * Delete a collection in batches to avoid out-of-memory errors.
      * Batch size may be tuned based on document size (atmost 1MB) and application requirements.
      */
     private void deleteCollection(CollectionReference collection, int batchSize) {
@@ -770,8 +808,8 @@ public class FirebaseService implements DatabaseServiceInterface{
         }
     }
 
-	@Override
-	public Agent getAgentByAccount(String accountId) throws Exception {
+    @Override
+    public Agent getAgentByAccount(String accountId) throws Exception {
         Firestore fs = FirestoreClient.getFirestore();
         Agent agent;
         List<Agent> mList = new ArrayList<>();
@@ -792,12 +830,12 @@ public class FirebaseService implements DatabaseServiceInterface{
         }
 
         return agent;
-	
-	}
 
-	@Override
-	public Client getClientByAccount(String accountId) throws Exception {
-		Firestore fs = FirestoreClient.getFirestore();
+    }
+
+    @Override
+    public Client getClientByAccount(String accountId) throws Exception {
+        Firestore fs = FirestoreClient.getFirestore();
         Client client;
         List<Client> mList = new ArrayList<>();
         ApiFuture<QuerySnapshot> future = fs.collection(Constants.CLIENTS)
@@ -817,5 +855,5 @@ public class FirebaseService implements DatabaseServiceInterface{
         }
 
         return client;
-	}
+    }
 }

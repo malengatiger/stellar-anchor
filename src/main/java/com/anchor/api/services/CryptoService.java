@@ -1,5 +1,6 @@
 package com.anchor.api.services;
 
+import com.anchor.api.util.Emoji;
 import com.google.cloud.kms.v1.*;
 import com.google.cloud.storage.*;
 import com.google.protobuf.ByteString;
@@ -144,16 +145,25 @@ public class CryptoService {
     }
     public static final String DOWNLOAD_PATH = "downloaded_seed";
 
-    public String getDecryptedSeed(String accountId) throws IOException {
+    public String getDecryptedSeed(String accountId) throws Exception {
         downloadSeedFile(accountId);
         byte[] bytes = readFile(accountId);
         return decrypt(bytes);
     }
-    private void downloadSeedFile(String accountId) {
+    private void downloadSeedFile(String accountId) throws Exception {
+        LOGGER.info(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD).concat(" .... about to download seed file for: "
+                .concat(accountId).concat(" bucket: ").concat(bucketName).concat(Emoji.RED_APPLE)
+        .concat(" object: ".concat(objectName)).concat(" ").concat(Emoji.RED_APPLE)));
         Path destFilePath = Paths.get(DOWNLOAD_PATH.concat(accountId));
         Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
-
+        LOGGER.info(Emoji.YELLOW_BIRD.concat(Emoji.YELLOW_BIRD)
+                .concat(" serviceAccount email: ")
+                .concat(storage.getServiceAccount(projectId).getEmail()));
         Blob blob = storage.get(BlobId.of(bucketName, objectName.concat("_").concat(accountId)));
+        if (blob == null) {
+            LOGGER.info(Emoji.NOT_OK.concat(Emoji.NOT_OK).concat("Blob for downloading is fucking NULL? WTF?"));
+            throw new Exception(Emoji.NOT_OK + "KMS Blob for downloading is fucking NULL? WTF?");
+        }
         blob.downloadTo(destFilePath);
     }
 }

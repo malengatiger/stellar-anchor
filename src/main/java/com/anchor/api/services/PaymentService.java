@@ -126,6 +126,7 @@ public class PaymentService {
 
     public AgentFundingRequest fundAgent(AgentFundingRequest request) throws Exception {
         setServerAndNetwork();
+        LOGGER.info(Emoji.RAIN_DROP.concat(Emoji.RAIN_DROP) + ".... funding request coming in, check asset code ... : ".concat(G.toJson(request)));
         if (anchor == null) {
             setAnchor(request.getAnchorId());
         }

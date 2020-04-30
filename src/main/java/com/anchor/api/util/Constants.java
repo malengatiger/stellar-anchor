@@ -16,6 +16,8 @@ public class Constants {
             MEMBERS = "members",
             STOKVEL_GOALS = "stokvelGoals",
             INVITATIONS = "invitations",
+            BALANCES = "balances",
+            AGENT_FUNDING_REQUESTS = "agentFundingRequests",
             ANCHOR_USERS = "anchorUsers";
 
 

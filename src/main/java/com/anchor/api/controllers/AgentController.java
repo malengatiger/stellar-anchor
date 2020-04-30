@@ -239,7 +239,7 @@ public class AgentController {
      * the KYC/AML data required for a Client to be registered with both the Agent and the Anchor. The Client accesses
      * loans via an 'application' to the Agent that registered them.
      *
-     * @param client
+     * @param client see @Client
      * @return A new Client with brand-new Stellar account
      * @throws Exception
      */
@@ -262,38 +262,6 @@ public class AgentController {
         LOGGER.info(Emoji.LEAF.concat(Emoji.LEAF) + mClient);
         return mClient;
     }
-
-    @Autowired
-    private TOMLService tomlService;
-
-    @PostMapping(value = "/uploadTOML", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public byte[] uploadTOML(@RequestParam("anchorId") String anchorId,
-                             @RequestParam("file") MultipartFile multipartFile) throws Exception {
-
-        LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AnchorController:uploadTOML...");
-        byte[] bytes = multipartFile.getBytes();
-        File mFile = new File("file_" + System.currentTimeMillis());
-        Path path = Paths.get(mFile.getAbsolutePath());
-        Files.write(path, bytes);
-        LOGGER.info("....... multipart TOML file received: \uD83C\uDFBD "
-                .concat(" length: " + mFile.length() + " bytes"));
-        tomlService.encryptAndUploadFile(anchorId, mFile);
-        Files.delete(path);
-        LOGGER.info("\uD83C\uDFBD \uD83C\uDFBD \uD83C\uDFBD Returned from upload .... OK!");
-        return bytes;
-    }
-
-    @GetMapping(value = "/getTOML", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Object> getTOML(@RequestParam("anchorId") String anchorId) throws Exception {
-
-        LOGGER.info(Emoji.RAIN_DROPS.concat(Emoji.RAIN_DROPS) + "AnchorController:getTOML...");
-        Toml toml = tomlService.getToml(anchorId);
-        LOGGER.info("\uD83C\uDFBD \uD83C\uDFBD \uD83C\uDFBD Returned TOML from download .... "
-                .concat(" databaseUrl: ")
-                .concat(toml.getString("databaseUrl")));
-        return toml.toMap();
-    }
-
 
 
 }

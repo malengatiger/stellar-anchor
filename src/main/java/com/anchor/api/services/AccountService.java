@@ -13,6 +13,7 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import black.door.hate.HalRepresentation;
 import com.anchor.api.data.PaymentRequest;
 import com.anchor.api.data.account.AccountResponseBag;
 import com.anchor.api.data.anchor.Agent;
@@ -119,6 +120,11 @@ public class AccountService {
             throw new Exception("anchor.toml has not been found. upload the file from your computer");
         } else {
             final String id = toml.getString("anchorId");
+            if (id == null) {
+                String msg = Emoji.NOT_OK.concat("anchorId missing from anchor.toml ".concat(Emoji.FIRE));
+                LOGGER.info(msg);
+                throw new Exception(msg);
+            }
             anchor = firebaseService.getAnchor(id);
             if (anchor == null) {
                 LOGGER.info(Emoji.FIRE

@@ -1,6 +1,5 @@
 package com.anchor.api.util;
 
-import com.anchor.api.controllers.AgentController;
 import com.anchor.api.data.PaymentRequest;
 import com.anchor.api.data.anchor.*;
 import com.anchor.api.data.stokvel.Member;
@@ -17,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.stellar.sdk.responses.AccountResponse;
-import org.stellar.sdk.responses.SubmitTransactionResponse;
 
 import java.io.File;
 import java.util.*;
@@ -32,8 +30,8 @@ public class DemoDataGenerator {
         LOGGER.info(Emoji.RED_CAR.concat(Emoji.RED_CAR) + "Demo data DemoDataGenerator ready and able!");
     }
 
-    public static final String FUNDING_ACCOUNT = "GAGAJ2CFIYCE2VJDA7PZGVFYAC3EFHUI7M3RFSFXB47TBSHHQF3X4Y3D",
-            FUNDING_SEED = "SDHJPRWY4345IPVD7H2CH7VKFMBELW2ZYFPSRAVDYDSCU6ZD5EYCBFUH";
+    public static final String FUNDING_ACCOUNT = "GDFUXGDTRZPCII5BPTA2Z2ZJ3ZZ74TPXOY7KG5QIKZJ5VGPV6SEKHSEG",
+            FUNDING_SEED = "SDD2DIGVHCWEPRUW2HVNLMFWWLWJ3QZCYOBNO42TASFAGGH5GVSXPU6B";
     @Autowired
     private ApplicationContext context;
     @Autowired
@@ -51,6 +49,14 @@ public class DemoDataGenerator {
     private String basePassword;
 
     Anchor anchor;
+    //todo - document this shit somewhere ....
+    /*
+    Steps to recreate demo AnchorBank environment:
+    1. Run startAnchor - store anchorId
+    2. Run uploadTOML - upload and encrypt anchor.toml
+    3. Run startGeneration with the new anchorId
+
+     */
 
     public Anchor startAnchor(String anchorName) throws Exception {
         if (!status.equalsIgnoreCase("dev")) {
@@ -68,20 +74,26 @@ public class DemoDataGenerator {
             throw new Exception(Emoji.NOT_OK + "Demo Data Generation may not be run in PRODUCTION");
         }
         if (anchorId == null) {
-            throw new Exception(Emoji.NOT_OK + "Anchor ID missing");
+            throw new Exception(Emoji.NOT_OK + "anchorId is NULL");
         }
         anchor = firebaseService.getAnchor(anchorId);
         if (anchor == null) {
-            throw new Exception("Generator: Anchor is missing: " + anchorId);
+            throw new Exception("Generator: Anchor is missing from Database: " + anchorId);
         }
+
         File file = new File("anchor.toml");
-        LOGGER.info("\uD83C\uDFBD \uD83C\uDFBD Do We Have A File? ...".concat(file.getAbsolutePath()));
+        LOGGER.info("\uD83C\uDFBD \uD83C\uDFBD Do We Have A File? check path needed ...".concat(file.getAbsolutePath()));
         if (file.exists()) {
             tomlService.encryptAndUploadFile(anchor.getAnchorId(), file);
             LOGGER.info("\uD83C\uDF4E \uD83C\uDF4E \uD83C\uDF4E anchor.toml has been encrypted and uploaded via KMS \n"
                     + "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ANCHOR TOML uploaded OK!\n");
+        } else {
+            String msg = Emoji.NOT_OK.concat(Emoji.ERROR).concat((" .... anchor.toml file not found. " +
+                    "\uD83C\uDF3C CREATE in project root ").concat(Emoji.ERROR));
+            throw new Exception(msg);
         }
-        LOGGER.info(Emoji.HEART_BLUE + "Start Data Generation ".concat(Emoji.HEART_BLUE.concat(Emoji.HEART_BLUE)));
+        LOGGER.info("\n\n" + Emoji.HEART_BLUE.concat(Emoji.HEART_BLUE)
+                + "........ Start Demo Data Generation ........".concat(Emoji.HEART_BLUE.concat(Emoji.HEART_BLUE)));
         //
 
         // add data
