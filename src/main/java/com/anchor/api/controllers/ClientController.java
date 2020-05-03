@@ -99,7 +99,9 @@ public class ClientController {
         LOGGER.info("....... idFront file downloaded: \uD83C\uDFBD "
                 .concat(" length: " + file.length() + " file"));
 
-        return Files.readAllBytes(file.toPath());
+        byte[] bytes = Files.readAllBytes(file.toPath());
+        Files.delete(file.toPath());
+        return bytes;
     }
     @GetMapping(value = "/downloadIDBack", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public byte[] downloadIDBack(@RequestParam("id") String id) throws Exception {
@@ -110,6 +112,8 @@ public class ClientController {
         LOGGER.info("....... idFront file downloaded: \uD83C\uDFBD "
                 .concat(" length: " + file.length() + " file"));
 
-        return Files.readAllBytes(file.toPath());
+        byte[] bytes = Files.readAllBytes(file.toPath());
+        Files.delete(file.toPath());
+        return bytes;
     }
 }
