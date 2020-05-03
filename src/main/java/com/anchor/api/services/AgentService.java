@@ -351,7 +351,7 @@ public class AgentService {
 
         LOGGER.info(Emoji.LEMON + Emoji.LEMON + "....... creating Client ....... ");
         setAnchor(client.getAnchorId());
-        Agent agent = firebaseService.getAgent(client.getAgentId());
+        Agent agent = firebaseService.getAgent(client.getAgentIds().get(0));
         if (anchor == null) {
             throw new Exception("Missing anchor");
         }

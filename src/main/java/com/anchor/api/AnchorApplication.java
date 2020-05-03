@@ -6,6 +6,7 @@ import com.anchor.api.services.FirebaseService;
 import com.anchor.api.util.Emoji;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,12 +46,15 @@ public class AnchorApplication implements ApplicationListener<ApplicationReadyEv
 		});
 
 		app.run(args);
-		LOGGER.info(Emoji.PANDA.concat(Emoji.PANDA).concat(Emoji.PANDA) + " AnchorApplication started ...");
+		LOGGER.info(Emoji.PANDA.concat(Emoji.PANDA).concat(Emoji.PANDA) +
+				" AnchorApplication started OK! ".concat(Emoji.HAND2.concat(Emoji.HAND2))
+				+ " All services up and running.");
 	}
 	private static String getBanner() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("###############################################\n");
 		sb.append("#### "+Emoji.HEART_BLUE+"ANCHOR BANK NETWORK SERVICES "+Emoji.HEART_BLUE+"   ####\n");
+		sb.append("#### ".concat(Emoji.FLOWER_RED).concat(" ").concat(new DateTime().toDateTimeISO().toString().concat("     ####\n")));
 		sb.append("###############################################\n");
 		return sb.toString();
 	}

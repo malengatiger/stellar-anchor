@@ -13,7 +13,6 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import black.door.hate.HalRepresentation;
 import com.anchor.api.data.PaymentRequest;
 import com.anchor.api.data.account.AccountResponseBag;
 import com.anchor.api.data.anchor.Agent;

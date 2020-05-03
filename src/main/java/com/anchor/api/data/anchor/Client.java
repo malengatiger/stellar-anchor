@@ -2,6 +2,8 @@ package com.anchor.api.data.anchor;
 
 import com.anchor.api.data.transfer.sep9.PersonalKYCFields;
 
+import java.util.List;
+
 /*
     🍎 🍎 The Client wraps the functionality of Stellar Protocol SEP 009 and extends it for other Anchor related shit.
          Client is created by Agent and will accept loans and other interaction with the Agent
@@ -83,7 +85,6 @@ import com.anchor.api.data.transfer.sep9.PersonalKYCFields;
  */
 public class Client {
     private String anchorId,
-            agentId,
             clientId, startingFiatBalance;
     private double latitude, longitude;
     private String dateRegistered,
@@ -94,6 +95,7 @@ public class Client {
             password,
             secretSeed;
 
+    private List<String> agentIds;
     private String memo_type;
     private PersonalKYCFields personalKYCFields;
 
@@ -102,6 +104,14 @@ public class Client {
     }
     public void setPersonalKYCFields(PersonalKYCFields personalKYCFields) {
         this.personalKYCFields = personalKYCFields;
+    }
+
+    public List<String> getAgentIds() {
+        return agentIds;
+    }
+
+    public void setAgentIds(List<String> agentIds) {
+        this.agentIds = agentIds;
     }
 
     public String getStartingFiatBalance() {
@@ -190,14 +200,6 @@ public class Client {
 
     public void setAnchorId(String anchorId) {
         this.anchorId = anchorId;
-    }
-
-    public String getAgentId() {
-        return agentId;
-    }
-
-    public void setAgentId(String agentId) {
-        this.agentId = agentId;
     }
 
     public double getLatitude() {

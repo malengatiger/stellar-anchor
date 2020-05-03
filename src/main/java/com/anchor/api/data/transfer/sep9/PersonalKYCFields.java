@@ -94,13 +94,13 @@ public class PersonalKYCFields {
 
     String tax_id_name;
 
-    byte[] photo_proof_residence;
+    String photo_proof_residence;
 
-    byte[] photo_id_front;
+    String photo_id_front;
 
-    byte[] photo_id_back;
+    String photo_id_back;
 
-    byte[] notary_approval_of_photo_id;
+    String notary_approval_of_photo_id;
 
     public String getLast_name() {
         return last_name;
@@ -230,35 +230,35 @@ public class PersonalKYCFields {
         this.tax_id_name = tax_id_name;
     }
 
-    public byte[] getPhoto_proof_residence() {
+    public String getPhoto_proof_residence() {
         return photo_proof_residence;
     }
 
-    public void setPhoto_proof_residence(byte[] photo_proof_residence) {
+    public void setPhoto_proof_residence(String photo_proof_residence) {
         this.photo_proof_residence = photo_proof_residence;
     }
 
-    public byte[] getPhoto_id_front() {
+    public String getPhoto_id_front() {
         return photo_id_front;
     }
 
-    public void setPhoto_id_front(byte[] photo_id_front) {
+    public void setPhoto_id_front(String photo_id_front) {
         this.photo_id_front = photo_id_front;
     }
 
-    public byte[] getPhoto_id_back() {
+    public String getPhoto_id_back() {
         return photo_id_back;
     }
 
-    public void setPhoto_id_back(byte[] photo_id_back) {
+    public void setPhoto_id_back(String photo_id_back) {
         this.photo_id_back = photo_id_back;
     }
 
-    public byte[] getNotary_approval_of_photo_id() {
+    public String getNotary_approval_of_photo_id() {
         return notary_approval_of_photo_id;
     }
 
-    public void setNotary_approval_of_photo_id(byte[] notary_approval_of_photo_id) {
+    public void setNotary_approval_of_photo_id(String notary_approval_of_photo_id) {
         this.notary_approval_of_photo_id = notary_approval_of_photo_id;
     }
 }

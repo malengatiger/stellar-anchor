@@ -76,6 +76,16 @@ public class DataGenerationController {
         LOGGER.info(msg);
         return stokvel;
     }
+    @GetMapping(value = "/generateClients", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String generateClients(@RequestParam String anchorId,@RequestParam int count) throws Exception {
+        LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generateClients ..." +
+                "" + anchorId + "  count: " + count);
+        demoDataGenerator.generateAgentClients(anchorId, count);
+        String msg =  "\uD83D\uDC99 \uD83D\uDC9C generateAgentClients completed ... \uD83C\uDF3C \uD83C\uDF3C "
+                + anchorId + " \uD83D\uDC99 \uD83D\uDC9C STATUS: " + status;
+        LOGGER.info(msg);
+        return msg;
+    }
     @GetMapping(value = "/generateStokvelMembers", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Member> generateStokvelMembers(@RequestParam String anchorId, @RequestParam String stokvelId) throws Exception {
         LOGGER.info("\uD83D\uDD35 \uD83D\uDD35 \uD83D\uDD35 StellarAnchorApplication /generateStokvelMembers ...");

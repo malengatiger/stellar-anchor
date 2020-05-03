@@ -99,7 +99,7 @@ public class DemoDataGenerator {
         // add data
 
         addAgents();
-        addAgentClients();
+        generateAgentClients(anchorId, 5);
 
         LOGGER.info("\n\n\n"
                 .concat(Emoji.PRETZEL.concat(Emoji.PRETZEL.concat(Emoji.PRETZEL).concat(Emoji.ALIEN.concat(Emoji.ALIEN))
@@ -193,7 +193,7 @@ public class DemoDataGenerator {
             LoanPayment payment = new LoanPayment();
             payment.setAgentAccount(agent.getStellarAccountId());
             payment.setClientSeed(clientSeed);
-            payment.setAgentId(client.getAgentId());
+            payment.setAgentId(client.getAgentIds().get(0));
             payment.setClientId(client.getClientId());
             payment.setAnchorId(client.getAnchorId());
             payment.setAssetCode(application.getAssetCode());
@@ -272,7 +272,7 @@ public class DemoDataGenerator {
             LoanPayment payment = new LoanPayment();
             payment.setAgentAccount(agent.getStellarAccountId());
             payment.setClientSeed(clientSeed);
-            payment.setAgentId(client.getAgentId());
+            payment.setAgentId(client.getAgentIds().get(0));
             payment.setClientId(client.getClientId());
             payment.setAnchorId(client.getAnchorId());
             payment.setAssetCode(application.getAssetCode());
@@ -533,7 +533,7 @@ public class DemoDataGenerator {
             for (AccountService.AssetBag assetBag : assetBags) {
                 LoanApplication app = new LoanApplication();
                 app.setAnchorId(client.getAnchorId());
-                app.setAgentId(client.getAgentId());
+                app.setAgentId(client.getAgentIds().get(0));
                 app.setAmount(getRandomAmount());
                 app.setAssetCode(assetBag.getAssetCode());
                 app.setInterestRate(getRandomInterestRate());
@@ -641,11 +641,13 @@ public class DemoDataGenerator {
                 + " - \uD83D\uDC26 Agent Marule-Smythe created OK: ".concat(agent3.getFullName())));
     }
 
-    private void addAgentClients() throws Exception {
+    public void generateAgentClients(String anchorId, int count) throws Exception {
         setFirstNames();
         setLastNames();
+        agents = firebaseService.getAgents(anchorId);
+        anchor = firebaseService.getAnchor(anchorId);
         for (Agent agent : agents) {
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < count; i++) {
                 Client c1 = buildClient(agent.getAgentId());
                 int index1 = rand.nextInt(firstNames.size() - 1);
                 int index2 = rand.nextInt(lastNames.size() - 1);
@@ -661,7 +663,8 @@ public class DemoDataGenerator {
     private Client buildClient(String agentId) {
         Client c = new Client();
         c.setAnchorId(anchor.getAnchorId());
-        c.setAgentId(agentId);
+        c.setAgentIds(new ArrayList<>());
+        c.getAgentIds().add(agentId);
         c.setDateRegistered(new DateTime().toDateTimeISO().toString());
         c.setDateUpdated(new DateTime().toDateTimeISO().toString());
         c.setPassword(basePassword);
